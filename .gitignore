@@ -42,3 +42,5 @@ out/
 ### AI ###
 CLAUDE.md
 AGENTS.md
+.agents/
+.claude/
