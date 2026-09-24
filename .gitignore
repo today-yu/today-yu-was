@@ -35,3 +35,10 @@ out/
 
 ### VS Code ###
 .vscode/
+
+### Documentation ###
+/.local/
+
+### AI ###
+CLAUDE.md
+AGENTS.md
