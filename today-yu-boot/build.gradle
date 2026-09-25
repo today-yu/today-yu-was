@@ -1,0 +1,20 @@
+plugins {
+    id 'org.springframework.boot'
+}
+
+description = 'today-yu-was'
+
+dependencies {
+    implementation project(':today-yu-apis-user')
+    implementation project(':today-yu-apis-admin')
+    implementation project(':today-yu-apis-common')
+    implementation project(':today-yu-application')
+    implementation project(':today-yu-domain')
+    implementation project(':today-yu-infrastructure')
+    implementation project(':today-yu-persistence')
+    implementation project(':today-yu-common')
+
+    implementation 'org.springframework.boot:spring-boot-starter'
+
+    testImplementation 'org.springframework.boot:spring-boot-starter-test'
+}
