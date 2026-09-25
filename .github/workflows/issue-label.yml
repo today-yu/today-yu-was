@@ -1,0 +1,87 @@
+name: Classify issues
+
+on:
+  issues:
+    types:
+      - opened
+      - reopened
+      - edited
+
+jobs:
+  classify_issue:
+    runs-on: ubuntu-latest
+
+    permissions:
+      issues: write
+
+    steps:
+      - name: Read classification from title
+        id: classify
+        shell: bash
+        env:
+          TITLE: ${{ github.event.issue.title }}
+        run: |
+          label=""
+          issue_type=""
+          remove_labels=""
+
+          # 제목 맨 앞의 [키워드] 추출
+          if [[ "$TITLE" =~ ^[[:space:]]*\[([^]]+)\] ]]; then
+            token="$(
+              printf '%s' "${BASH_REMATCH[1]}" |
+              tr '[:upper:]' '[:lower:]' |
+              tr -d '[:space:]'
+            )"
+          else
+            token=""
+          fi
+
+          case "$token" in
+            feature)
+              label="feature"
+              issue_type="Feature"
+              remove_labels="refact,chore,docs,bug"
+              ;;
+            bug|fix)
+              label="bug"
+              issue_type="Bug"
+              remove_labels="feature,refact,chore,docs"
+              ;;
+            refact|refactor)
+              label="refact"
+              issue_type="Task"
+              remove_labels="feature,chore,docs,bug"
+              ;;
+            chore)
+              label="chore"
+              issue_type="Task"
+              remove_labels="feature,refact,docs,bug"
+              ;;
+            docs)
+              label="docs"
+              issue_type="Task"
+              remove_labels="feature,refact,chore,bug"
+              ;;
+            *)
+              echo "지원하지 않는 제목 형식입니다: $TITLE"
+              ;;
+          esac
+
+          echo "label=$label" >> "$GITHUB_OUTPUT"
+          echo "issue_type=$issue_type" >> "$GITHUB_OUTPUT"
+          echo "remove_labels=$remove_labels" >> "$GITHUB_OUTPUT"
+
+      - name: Apply label and issue type
+        if: ${{ steps.classify.outputs.label != '' }}
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_REPO: ${{ github.repository }}
+          NUMBER: ${{ github.event.issue.number }}
+          LABEL: ${{ steps.classify.outputs.label }}
+          ISSUE_TYPE: ${{ steps.classify.outputs.issue_type }}
+          REMOVE_LABELS: ${{ steps.classify.outputs.remove_labels }}
+        run: |
+          gh issue edit "$NUMBER" \
+            --remove-label "$REMOVE_LABELS" \
+            --add-label "$LABEL" \
+            --type "$ISSUE_TYPE"
