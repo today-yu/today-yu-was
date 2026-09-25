@@ -1,1 +1,13 @@
 rootProject.name = 'today-yu'
+
+include 'today-yu-boot'
+include 'today-yu-apis-user', 'today-yu-apis-admin', 'today-yu-apis-common'
+include 'today-yu-application'
+include 'today-yu-domain'
+include 'today-yu-infrastructure'
+include 'today-yu-persistence'
+include 'today-yu-common'
+
+project(':today-yu-apis-user').projectDir = file('today-yu-apis/today-yu-apis-user')
+project(':today-yu-apis-admin').projectDir = file('today-yu-apis/today-yu-apis-admin')
+project(':today-yu-apis-common').projectDir = file('today-yu-apis/today-yu-apis-common')
