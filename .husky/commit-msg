@@ -1,0 +1,32 @@
+COMMIT_MSG_FILE="$1"
+SUBJECT="$(head -n 1 "$COMMIT_MSG_FILE")"
+
+# Skip auto-generated messages
+if printf "%s" "$SUBJECT" | grep -Eq "^(Merge|Revert|fixup!|squash!) "; then
+  exit 0
+fi
+
+# Allowed commit types
+TYPE_RE="(feat|test|chore|docs|refact|fix)"
+
+# Issue number pattern (must be at the end)
+ISSUE_END_RE=" #[0-9]+$"
+
+# Commit message format:
+# <type>: <message (min 3 chars)> #<issue_number>
+SUBJECT_RE="^${TYPE_RE}: .{3,}${ISSUE_END_RE}"
+
+# Validate commit message format
+if ! printf "%s" "$SUBJECT" | grep -Eq "$SUBJECT_RE"; then
+  echo "❌ Invalid commit message format."
+  echo ""
+  echo " - Required format: <type>: <message (min 3 chars)> #<issue_number>"
+  echo " - Allowed types: feat / test / chore / docs / refact / fix"
+  echo ""
+  echo " - Examples:"
+  echo "    - feat: 로그인 기능 구현 #123"
+  echo "    - fix: NPE 수정 #8"
+  exit 1
+fi
+
+exit 0
