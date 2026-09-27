@@ -3,5 +3,10 @@ dependencies {
     implementation project(':today-yu-domain')
     implementation project(':today-yu-common')
 
+    /* Spring Context */
     implementation 'org.springframework:spring-context'
+    /* Redis */
+    implementation 'org.springframework.boot:spring-boot-starter-data-redis'
+    /* Jackson */
+    implementation 'org.springframework.boot:spring-boot-starter-jackson'
 }
