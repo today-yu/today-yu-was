@@ -9,4 +9,8 @@ public class SuccessResponse {
     public SuccessResponse(String message) {
         this.message = message;
     }
+    
+    public static SuccessResponse from(String message) {
+        return new SuccessResponse(message);
+    }
 }
