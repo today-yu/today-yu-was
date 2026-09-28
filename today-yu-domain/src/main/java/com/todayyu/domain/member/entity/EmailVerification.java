@@ -16,7 +16,7 @@ public class EmailVerification {
     private VerificationCode code;
     private LocalDateTime issuedAt;
     
-    private static final Long EMAIL_VERIFICATION_DURATION_MINUTE = 3L;
+    public static final Long EMAIL_VERIFICATION_DURATION_MINUTE = 3L;
     private static final Long REISSUE_POSSIBLE_OFFSET_MINUTE = 1L;
     
     @Builder

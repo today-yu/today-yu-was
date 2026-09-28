@@ -9,4 +9,8 @@ dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-data-redis'
     /* Jackson */
     implementation 'org.springframework.boot:spring-boot-starter-jackson'
+    /* Mail */
+    implementation 'org.springframework.boot:spring-boot-starter-mail'
+    /* Thymeleaf */
+    implementation 'org.springframework.boot:spring-boot-starter-thymeleaf'
 }
