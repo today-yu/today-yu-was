@@ -1,6 +1,6 @@
 package com.todayyu.application.member.dto;
 
-public record VerificationCodeIssueRequest(
+public record VerificationCodeIssueCommand(
         String email
 ) {
 }
