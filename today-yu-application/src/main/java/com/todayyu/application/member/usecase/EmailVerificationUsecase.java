@@ -34,7 +34,7 @@ public class EmailVerificationUsecase {
      * @param command 이메일 인증 코드 발급 요청 DTO
      */
     public void issueVerificationCode(VerificationCodeIssueCommand command) {
-        Email email = new Email(command.email());
+        Email email = command.email();
         LocalDateTime now = LocalDateTime.now();
         VerificationCode verificationCode = new VerificationCode(VerificationCodeGenerator.generate());
         
@@ -60,19 +60,18 @@ public class EmailVerificationUsecase {
      * @throws CustomException 인증 코드가 존재하지 않거나, 일치하지 않는 경우 - {@link MemberErrorType#EMAIL_VERIFICATION_FAIL}
      */
     public void verify(VerificationCodeVerifyCommand command) {
-        Email email = new Email(command.email());
-        VerificationCode code = new VerificationCode(command.code());
+        Email email = command.email();
         
         EmailVerification verification = readEmailVerificationPort.readByEmail(email)
                 .orElseThrow(() -> new CustomException(
                         MemberErrorType.EMAIL_VERIFICATION_FAIL,
-                        "발급된 인증 코드가 존재하지 않습니다. email = " + command.email())
+                        "발급된 인증 코드가 존재하지 않습니다. email = " + email.getValue())
                 );
         
-        if (!verification.verify(code)) {
+        if (!verification.verify(command.code())) {
             throw new CustomException(
                     MemberErrorType.EMAIL_VERIFICATION_FAIL,
-                    "인증 코드가 일치하지 않습니다. email = " + command.email()
+                    "인증 코드가 일치하지 않습니다. email = " + email.getValue()
             );
         }
         

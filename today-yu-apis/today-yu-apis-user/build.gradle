@@ -1,6 +1,7 @@
 dependencies {
     implementation project(':today-yu-apis-common')
     implementation project(':today-yu-application')
+    implementation project(':today-yu-domain')
     implementation project(':today-yu-common')
 
     /* Spring Web */

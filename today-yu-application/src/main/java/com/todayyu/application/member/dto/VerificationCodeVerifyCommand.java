@@ -1,7 +1,10 @@
 package com.todayyu.application.member.dto;
 
+import com.todayyu.domain.member.vo.Email;
+import com.todayyu.domain.member.vo.VerificationCode;
+
 public record VerificationCodeVerifyCommand(
-        String email,
-        String code
+        Email email,
+        VerificationCode code
 ) {
 }

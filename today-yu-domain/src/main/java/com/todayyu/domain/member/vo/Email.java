@@ -7,10 +7,8 @@ import java.util.regex.Pattern;
 
 @Getter
 public class Email {
-    private static final Pattern PATTERN = Pattern.compile(
-            "^[a-z0-9._%+-]+@[a-z0-9-]+(\\.[a-z0-9-]+)*\\.[a-z]{2,}$",
-            Pattern.CASE_INSENSITIVE
-    );
+    public static final String REGEX = "^[a-z0-9._%+-]+@[a-z0-9-]+(\\.[a-z0-9-]+)*\\.[a-z]{2,}$";
+    private static final Pattern PATTERN = Pattern.compile(REGEX, Pattern.CASE_INSENSITIVE);
 
     private final String value;
 
