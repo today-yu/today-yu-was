@@ -29,4 +29,9 @@ public class RedisEmailVerificationAdapter implements ReadEmailVerificationPort,
         
         emailVerificationStore.save(email, value, duration);
     }
+    
+    @Override
+    public void delete(EmailVerification emailVerification) {
+        emailVerificationStore.delete(emailVerification.getEmail().getValue());
+    }
 }
