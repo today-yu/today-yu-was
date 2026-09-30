@@ -11,6 +11,8 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Captor;
 import org.mockito.InjectMocks;
@@ -71,7 +73,7 @@ class AuthControllerTest {
 
         // then
         then(emailVerificationUsecase).should().issueVerificationCode(commandCaptor.capture());
-        assertEquals(EMAIL, commandCaptor.getValue().email());
+        assertEquals(EMAIL, commandCaptor.getValue().email().getValue());
     }
 
     @Test
@@ -89,15 +91,16 @@ class AuthControllerTest {
         then(emailVerificationUsecase).should(never()).issueVerificationCode(any());
     }
 
-    @Test
-    @DisplayName("이메일 형식이 잘못되면 유효성 검증 에러를 응답하고 인증 코드를 발급하지 않는다")
-    void issueVerificationCodeWithInvalidEmail() throws Exception {
+    @ParameterizedTest
+    @ValueSource(strings = {"invalid-email", "user@localhost", "user@yu..ac.kr"})
+    @DisplayName("이메일 형식이 Email VO의 형식과 다르면 유효성 검증 에러를 응답하고 인증 코드를 발급하지 않는다")
+    void issueVerificationCodeWithInvalidEmail(String email) throws Exception {
         // given & when
         mockMvc.perform(post(ISSUE_VERIFICATION_CODE_URL)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
-                                {"email": "invalid-email"}
-                                """))
+                                {"email": "%s"}
+                                """.formatted(email)))
                 .andExpect(status().isUnprocessableContent())
                 .andExpect(jsonPath("$.errorCode").value("COMMON-0002"))
                 .andExpect(jsonPath("$.errors.email").value("이메일 양식이 잘못되었습니다."));
@@ -152,8 +155,8 @@ class AuthControllerTest {
 
         // then
         then(emailVerificationUsecase).should().verify(verifyCommandCaptor.capture());
-        assertEquals(EMAIL, verifyCommandCaptor.getValue().email());
-        assertEquals(CODE, verifyCommandCaptor.getValue().code());
+        assertEquals(EMAIL, verifyCommandCaptor.getValue().email().getValue());
+        assertEquals(CODE, verifyCommandCaptor.getValue().code().getValue());
     }
 
     @Test
@@ -173,15 +176,16 @@ class AuthControllerTest {
         then(emailVerificationUsecase).should(never()).verify(any());
     }
 
-    @Test
-    @DisplayName("검증 요청의 이메일 형식이 잘못되면 유효성 검증 에러를 응답하고 인증 코드를 검증하지 않는다")
-    void verifyVerificationCodeWithInvalidEmail() throws Exception {
+    @ParameterizedTest
+    @ValueSource(strings = {"invalid-email", "user@localhost", "user@yu..ac.kr"})
+    @DisplayName("검증 요청의 이메일 형식이 Email VO의 형식과 다르면 유효성 검증 에러를 응답하고 인증 코드를 검증하지 않는다")
+    void verifyVerificationCodeWithInvalidEmail(String email) throws Exception {
         // given & when
         mockMvc.perform(post(VERIFY_VERIFICATION_CODE_URL)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
-                                {"email": "invalid-email", "code": "%s"}
-                                """.formatted(CODE)))
+                                {"email": "%s", "code": "%s"}
+                                """.formatted(email, CODE)))
                 .andExpect(status().isUnprocessableContent())
                 .andExpect(jsonPath("$.errorCode").value("COMMON-0002"))
                 .andExpect(jsonPath("$.errors.email").value("이메일 양식이 잘못되었습니다."));
@@ -226,7 +230,7 @@ class AuthControllerTest {
     }
 
     /**
-     * apis 모듈은 domain 모듈에 의존하지 않으므로, 도메인 에러 타입 대신 사용하는 테스트용 에러 타입
+     * 컨트롤러 테스트가 도메인 에러 타입 정의에 영향받지 않도록, 도메인 에러 타입 대신 사용하는 테스트용 에러 타입
      */
     private enum TestErrorType implements BaseErrorType {
         TOO_EARLY(ErrorCategory.TOO_MANY_REQUESTS, "TEST-0001", "재발급 제한 시간 내 요청입니다."),
