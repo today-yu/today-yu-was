@@ -1,6 +1,7 @@
 package com.todayyu.application.member.usecase;
 
 import com.todayyu.application.member.dto.VerificationCodeIssueCommand;
+import com.todayyu.application.member.dto.VerificationCodeVerifyCommand;
 import com.todayyu.application.member.port.VerificationCodeSender;
 import com.todayyu.application.member.port.read.ReadEmailVerificationPort;
 import com.todayyu.application.member.port.save.SaveEmailVerificationPort;
@@ -133,5 +134,43 @@ class EmailVerificationUsecaseTest {
         assertThrows(RuntimeException.class, () -> emailVerificationUsecase.issueVerificationCode(COMMAND));
 
         then(verificationCodeSender).should(never()).send(any());
+    }
+
+    @Test
+    @DisplayName("인증 코드가 일치하면 인증에 성공하고 저장된 이메일 인증을 삭제한다")
+    void verify() {
+        EmailVerification existing = new EmailVerification(EMAIL, new VerificationCode("123456"), LocalDateTime.now());
+        given(readEmailVerificationPort.readByEmail(EMAIL)).willReturn(Optional.of(existing));
+
+        emailVerificationUsecase.verify(new VerificationCodeVerifyCommand(EMAIL.getValue(), "123456"));
+
+        then(saveEmailVerificationPort).should().delete(existing);
+    }
+
+    @Test
+    @DisplayName("발급된 인증 코드가 없으면 인증에 실패한다")
+    void verifyWithoutIssuedCode() {
+        given(readEmailVerificationPort.readByEmail(EMAIL)).willReturn(Optional.empty());
+        VerificationCodeVerifyCommand command = new VerificationCodeVerifyCommand(EMAIL.getValue(), "123456");
+
+        CustomException exception = assertThrows(CustomException.class,
+                () -> emailVerificationUsecase.verify(command));
+
+        assertEquals(MemberErrorType.EMAIL_VERIFICATION_FAIL, exception.getErrorType());
+        then(saveEmailVerificationPort).should(never()).delete(any());
+    }
+
+    @Test
+    @DisplayName("인증 코드가 일치하지 않으면 인증에 실패하고 저장된 이메일 인증을 삭제하지 않는다")
+    void verifyWithMismatchedCode() {
+        EmailVerification existing = new EmailVerification(EMAIL, new VerificationCode("123456"), LocalDateTime.now());
+        given(readEmailVerificationPort.readByEmail(EMAIL)).willReturn(Optional.of(existing));
+        VerificationCodeVerifyCommand command = new VerificationCodeVerifyCommand(EMAIL.getValue(), "654321");
+
+        CustomException exception = assertThrows(CustomException.class,
+                () -> emailVerificationUsecase.verify(command));
+
+        assertEquals(MemberErrorType.EMAIL_VERIFICATION_FAIL, exception.getErrorType());
+        then(saveEmailVerificationPort).should(never()).delete(any());
     }
 }
