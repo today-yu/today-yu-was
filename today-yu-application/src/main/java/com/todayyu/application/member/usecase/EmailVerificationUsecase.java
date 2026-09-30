@@ -2,6 +2,7 @@ package com.todayyu.application.member.usecase;
 
 import com.todayyu.application.common.annotation.Usecase;
 import com.todayyu.application.member.dto.VerificationCodeIssueCommand;
+import com.todayyu.application.member.dto.VerificationCodeVerifyCommand;
 import com.todayyu.application.member.port.VerificationCodeSender;
 import com.todayyu.application.member.port.read.ReadEmailVerificationPort;
 import com.todayyu.application.member.port.save.SaveEmailVerificationPort;
@@ -28,10 +29,10 @@ public class EmailVerificationUsecase {
      * <p> 기존 이메일 인증 코드 발급 이력이 존재하는 경우, {@link EmailVerification#reissue(VerificationCode, LocalDateTime)}를
      *     호출하여 이메일 인증 객체를 생성하며, 재발급 제한 시간일 경우 예외를 발생한다.</p>
      *
-     * @param request 이메일 인증 코드 발급 요청 DTO
+     * @param command 이메일 인증 코드 발급 요청 DTO
      */
-    public void issueVerificationCode(VerificationCodeIssueCommand request) {
-        Email email = new Email(request.email());
+    public void issueVerificationCode(VerificationCodeIssueCommand command) {
+        Email email = new Email(command.email());
         LocalDateTime now = LocalDateTime.now();
         VerificationCode verificationCode = new VerificationCode(VerificationCodeGenerator.generate());
         
