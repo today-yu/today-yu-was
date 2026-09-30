@@ -30,7 +30,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 @ExtendWith(MockitoExtension.class)
 class AuthControllerTest {
-    private static final String ISSUE_VERIFICATION_CODE_URL = "/api/v1/auth/issue-verification-code";
+    private static final String ISSUE_VERIFICATION_CODE_URL = "/api/v1/auth/email-verification/issue";
     private static final String EMAIL = "user@example.com";
 
     @Mock

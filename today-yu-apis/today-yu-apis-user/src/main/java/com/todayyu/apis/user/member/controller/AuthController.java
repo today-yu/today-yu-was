@@ -17,7 +17,7 @@ import org.springframework.web.bind.annotation.RestController;
 public class AuthController {
     private final EmailVerificationUsecase emailVerificationUsecase;
     
-    @PostMapping("/issue-verification-code")
+    @PostMapping("/email-verification/issue")
     public ResponseEntity<?> issueVerificationCode(@Valid @RequestBody VerificationCodeIssueRequest request) {
         emailVerificationUsecase.issueVerificationCode(request.toCommand());
         return ResponseEntity.ok(SuccessResponse.from("이메일 인증 코드 발급에 성공하였습니다."));
