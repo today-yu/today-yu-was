@@ -38,7 +38,7 @@ public class EmailVerification {
     }
     
     /**
-     * 이메일 인증코드 재발급 메서드
+     * 이메일 인증 코드 재발급 메서드
      *
      * <p> 재발급 요청 시각이 이메일 재발급 제한 시각({@link #getReissuePossibleTime()}) 이전일 경우엔 재발급을 제한한다. </p>
      * <p> 그렇지 않을 경우, 새로운 인증 코드와 발급 시각으로 갱신한 이메일 인증 객체를 반환한다. </p>
@@ -61,11 +61,11 @@ public class EmailVerification {
     }
     
     /**
-     * 이메일 인증코드 재발급 가능 시각을 반환하는 메서드
+     * 이메일 인증 코드 재발급 가능 시각을 반환하는 메서드
      *
      * <p> 발급 시각({@link #issuedAt}) 이후 {@value #REISSUE_POSSIBLE_OFFSET_MINUTE} 시간(분)이 지난 시점 이후로 재발급이 가능하다. </p>
      *
-     * @return 이메일 인증코드 재발급 가능 시각
+     * @return 이메일 인증 코드 재발급 가능 시각
      */
     private LocalDateTime getReissuePossibleTime() {
         return issuedAt.plusMinutes(REISSUE_POSSIBLE_OFFSET_MINUTE);
@@ -80,5 +80,15 @@ public class EmailVerification {
      */
     public LocalDateTime getExpiredAt() {
         return issuedAt.plusMinutes(EMAIL_VERIFICATION_DURATION_MINUTE);
+    }
+    
+    /**
+     * 이메일 인증 코드 일치 여부를 검증하는 메서드
+     *
+     * @param code 입력된 이메일 인증 코드
+     * @return 인증 코드 일치 여부
+     */
+    public boolean verify(VerificationCode code) {
+        return code.equals(this.code);
     }
 }
