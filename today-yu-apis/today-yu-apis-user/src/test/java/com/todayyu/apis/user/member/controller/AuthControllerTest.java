@@ -2,6 +2,7 @@ package com.todayyu.apis.user.member.controller;
 
 import com.todayyu.apis.common.exception.GlobalExceptionHandler;
 import com.todayyu.application.member.dto.VerificationCodeIssueCommand;
+import com.todayyu.application.member.dto.VerificationCodeVerifyCommand;
 import com.todayyu.application.member.usecase.EmailVerificationUsecase;
 import com.todayyu.common.error.BaseErrorType;
 import com.todayyu.common.error.ErrorCategory;
@@ -31,7 +32,9 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @ExtendWith(MockitoExtension.class)
 class AuthControllerTest {
     private static final String ISSUE_VERIFICATION_CODE_URL = "/api/v1/auth/email-verification/issue";
+    private static final String VERIFY_VERIFICATION_CODE_URL = "/api/v1/auth/email-verification/verify";
     private static final String EMAIL = "user@example.com";
+    private static final String CODE = "123456";
 
     @Mock
     private EmailVerificationUsecase emailVerificationUsecase;
@@ -41,6 +44,9 @@ class AuthControllerTest {
 
     @Captor
     private ArgumentCaptor<VerificationCodeIssueCommand> commandCaptor;
+
+    @Captor
+    private ArgumentCaptor<VerificationCodeVerifyCommand> verifyCommandCaptor;
 
     private MockMvc mockMvc;
 
@@ -132,25 +138,123 @@ class AuthControllerTest {
                 .andExpect(jsonPath("$.message").value(TestErrorType.TOO_EARLY.getMessage()));
     }
 
+    @Test
+    @DisplayName("이메일 인증 코드 검증 요청 시 요청 이메일과 인증 코드로 검증을 요청하고 성공 응답을 반환한다")
+    void verifyVerificationCode() throws Exception {
+        // given & when
+        mockMvc.perform(post(VERIFY_VERIFICATION_CODE_URL)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {"email": "%s", "code": "%s"}
+                                """.formatted(EMAIL, CODE)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.message").value("이메일 인증에 성공하였습니다."));
+
+        // then
+        then(emailVerificationUsecase).should().verify(verifyCommandCaptor.capture());
+        assertEquals(EMAIL, verifyCommandCaptor.getValue().email());
+        assertEquals(CODE, verifyCommandCaptor.getValue().code());
+    }
+
+    @Test
+    @DisplayName("검증 요청에 이메일이 없으면 유효성 검증 에러를 응답하고 인증 코드를 검증하지 않는다")
+    void verifyVerificationCodeWithoutEmail() throws Exception {
+        // given & when
+        mockMvc.perform(post(VERIFY_VERIFICATION_CODE_URL)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {"code": "%s"}
+                                """.formatted(CODE)))
+                .andExpect(status().isUnprocessableContent())
+                .andExpect(jsonPath("$.errorCode").value("COMMON-0002"))
+                .andExpect(jsonPath("$.errors.email").value("이메일은 비어있을 수 없습니다."));
+
+        // then
+        then(emailVerificationUsecase).should(never()).verify(any());
+    }
+
+    @Test
+    @DisplayName("검증 요청의 이메일 형식이 잘못되면 유효성 검증 에러를 응답하고 인증 코드를 검증하지 않는다")
+    void verifyVerificationCodeWithInvalidEmail() throws Exception {
+        // given & when
+        mockMvc.perform(post(VERIFY_VERIFICATION_CODE_URL)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {"email": "invalid-email", "code": "%s"}
+                                """.formatted(CODE)))
+                .andExpect(status().isUnprocessableContent())
+                .andExpect(jsonPath("$.errorCode").value("COMMON-0002"))
+                .andExpect(jsonPath("$.errors.email").value("이메일 양식이 잘못되었습니다."));
+
+        // then
+        then(emailVerificationUsecase).should(never()).verify(any());
+    }
+
+    @Test
+    @DisplayName("검증 요청에 인증 코드가 없으면 유효성 검증 에러를 응답하고 인증 코드를 검증하지 않는다")
+    void verifyVerificationCodeWithoutCode() throws Exception {
+        // given & when
+        mockMvc.perform(post(VERIFY_VERIFICATION_CODE_URL)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {"email": "%s"}
+                                """.formatted(EMAIL)))
+                .andExpect(status().isUnprocessableContent())
+                .andExpect(jsonPath("$.errorCode").value("COMMON-0002"))
+                .andExpect(jsonPath("$.errors.code").value("인증 코드는 비어있을 수 없습니다."));
+
+        // then
+        then(emailVerificationUsecase).should(never()).verify(any());
+    }
+
+    @Test
+    @DisplayName("인증 코드 검증에 실패하면 에러 카테고리에 맞는 상태 코드와 에러 응답을 반환한다")
+    void verifyVerificationCodeWithBusinessException() throws Exception {
+        // given
+        willThrow(new CustomException(TestErrorType.VERIFICATION_FAIL))
+                .given(emailVerificationUsecase).verify(any());
+
+        // when & then
+        mockMvc.perform(post(VERIFY_VERIFICATION_CODE_URL)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {"email": "%s", "code": "%s"}
+                                """.formatted(EMAIL, CODE)))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.errorCode").value(TestErrorType.VERIFICATION_FAIL.getErrorCode()))
+                .andExpect(jsonPath("$.message").value(TestErrorType.VERIFICATION_FAIL.getMessage()));
+    }
+
     /**
      * apis 모듈은 domain 모듈에 의존하지 않으므로, 도메인 에러 타입 대신 사용하는 테스트용 에러 타입
      */
     private enum TestErrorType implements BaseErrorType {
-        TOO_EARLY;
+        TOO_EARLY(ErrorCategory.TOO_MANY_REQUESTS, "TEST-0001", "재발급 제한 시간 내 요청입니다."),
+        VERIFICATION_FAIL(ErrorCategory.BUSINESS, "TEST-0002", "인증 코드 검증에 실패하였습니다.");
+
+        private final ErrorCategory category;
+        private final String errorCode;
+        private final String message;
+
+        TestErrorType(ErrorCategory category, String errorCode, String message) {
+            this.category = category;
+            this.errorCode = errorCode;
+            this.message = message;
+        }
 
         @Override
         public ErrorCategory getCategory() {
-            return ErrorCategory.TOO_MANY_REQUESTS;
+            return category;
         }
 
         @Override
         public String getErrorCode() {
-            return "TEST-0001";
+            return errorCode;
         }
 
         @Override
         public String getMessage() {
-            return "재발급 제한 시간 내 요청입니다.";
+            return message;
         }
     }
 }
