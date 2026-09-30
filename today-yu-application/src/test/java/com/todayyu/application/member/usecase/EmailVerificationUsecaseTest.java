@@ -37,7 +37,7 @@ import static org.mockito.Mockito.never;
 @ExtendWith(MockitoExtension.class)
 class EmailVerificationUsecaseTest {
     private static final Email EMAIL = new Email("user@example.com");
-    private static final VerificationCodeIssueCommand COMMAND = new VerificationCodeIssueCommand(EMAIL.getValue());
+    private static final VerificationCodeIssueCommand COMMAND = new VerificationCodeIssueCommand(EMAIL);
 
     @Mock
     private ReadEmailVerificationPort readEmailVerificationPort;
@@ -142,7 +142,7 @@ class EmailVerificationUsecaseTest {
         EmailVerification existing = new EmailVerification(EMAIL, new VerificationCode("123456"), LocalDateTime.now());
         given(readEmailVerificationPort.readByEmail(EMAIL)).willReturn(Optional.of(existing));
 
-        emailVerificationUsecase.verify(new VerificationCodeVerifyCommand(EMAIL.getValue(), "123456"));
+        emailVerificationUsecase.verify(new VerificationCodeVerifyCommand(EMAIL, new VerificationCode("123456")));
 
         then(saveEmailVerificationPort).should().delete(existing);
     }
@@ -151,7 +151,7 @@ class EmailVerificationUsecaseTest {
     @DisplayName("발급된 인증 코드가 없으면 인증에 실패한다")
     void verifyWithoutIssuedCode() {
         given(readEmailVerificationPort.readByEmail(EMAIL)).willReturn(Optional.empty());
-        VerificationCodeVerifyCommand command = new VerificationCodeVerifyCommand(EMAIL.getValue(), "123456");
+        VerificationCodeVerifyCommand command = new VerificationCodeVerifyCommand(EMAIL, new VerificationCode("123456"));
 
         CustomException exception = assertThrows(CustomException.class,
                 () -> emailVerificationUsecase.verify(command));
@@ -165,7 +165,7 @@ class EmailVerificationUsecaseTest {
     void verifyWithMismatchedCode() {
         EmailVerification existing = new EmailVerification(EMAIL, new VerificationCode("123456"), LocalDateTime.now());
         given(readEmailVerificationPort.readByEmail(EMAIL)).willReturn(Optional.of(existing));
-        VerificationCodeVerifyCommand command = new VerificationCodeVerifyCommand(EMAIL.getValue(), "654321");
+        VerificationCodeVerifyCommand command = new VerificationCodeVerifyCommand(EMAIL, new VerificationCode("654321"));
 
         CustomException exception = assertThrows(CustomException.class,
                 () -> emailVerificationUsecase.verify(command));
