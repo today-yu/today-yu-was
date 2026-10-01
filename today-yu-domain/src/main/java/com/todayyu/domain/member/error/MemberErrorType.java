@@ -4,6 +4,11 @@ import com.todayyu.common.error.BaseErrorType;
 import com.todayyu.common.error.ErrorCategory;
 import lombok.RequiredArgsConstructor;
 
+/**
+ * Member 도메인의 불변식 위반 등으로 인해 발생하는 에러 타입
+ *
+ * <p> 에러 코드: {@code MEMBER-xxxx}</p>
+ */
 @RequiredArgsConstructor
 public enum MemberErrorType implements BaseErrorType {
     VERIFICATION_CODE_REISSUE_TOO_EARLY(ErrorCategory.TOO_MANY_REQUESTS, "MEMBER-0001", "이메일 인증 코드는 발급 후 1분이 지나야 재발급할 수 있습니다."),
