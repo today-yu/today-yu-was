@@ -14,6 +14,7 @@ import com.todayyu.domain.member.entity.Member;
 import com.todayyu.domain.member.vo.EncodedPassword;
 import com.todayyu.domain.member.vo.Nickname;
 import com.todayyu.domain.member.vo.NicknameModifier;
+import com.todayyu.domain.member.vo.Role;
 import lombok.RequiredArgsConstructor;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -38,10 +39,10 @@ public class SignupUsecase {
         }
         
         EncodedPassword encodedPassword = passwordPort.encode(command.password());
-        LocalAccount account = new LocalAccount(encodedPassword);
+        LocalAccount account = LocalAccount.withoutId(encodedPassword);
         Nickname nickname = generateNickname();
         
-        Member newMember = new Member(command.email(), nickname, account);
+        Member newMember = Member.withoutId(command.email(), nickname, Role.MEMBER, account);
         
         saveMemberPort.save(newMember);
     }
