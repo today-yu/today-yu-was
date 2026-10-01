@@ -21,6 +21,11 @@ public class LocalAccount implements Account {
         this.authProvider = AuthProvider.LOCAL;
     }
     
+    public LocalAccount(EncodedPassword encodedPassword) {
+        this.password = encodedPassword;
+        this.authProvider = AuthProvider.LOCAL;
+    }
+    
     @Override
     public AccountId getId() {
         return id;
