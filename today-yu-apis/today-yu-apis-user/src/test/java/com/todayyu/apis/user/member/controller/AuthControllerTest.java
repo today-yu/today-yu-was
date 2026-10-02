@@ -1,12 +1,15 @@
 package com.todayyu.apis.user.member.controller;
 
 import com.todayyu.apis.common.exception.GlobalExceptionHandler;
+import com.todayyu.application.member.dto.SignupCommand;
 import com.todayyu.application.member.dto.VerificationCodeIssueCommand;
 import com.todayyu.application.member.dto.VerificationCodeVerifyCommand;
 import com.todayyu.application.member.usecase.EmailVerificationUsecase;
+import com.todayyu.application.member.usecase.SignupUsecase;
 import com.todayyu.common.error.BaseErrorType;
 import com.todayyu.common.error.ErrorCategory;
 import com.todayyu.common.exception.CustomException;
+import com.todayyu.domain.member.vo.Password;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -36,10 +39,17 @@ class AuthControllerTest {
     private static final String ISSUE_VERIFICATION_CODE_URL = "/api/v1/auth/email-verification/issue";
     private static final String VERIFY_VERIFICATION_CODE_URL = "/api/v1/auth/email-verification/verify";
     private static final String EMAIL = "user@example.com";
+    private static final String SIGNUP_URL = "/api/v1/auth/sign-up";
     private static final String CODE = "123456";
+    private static final String PASSWORD = "password1234";
+    private static final String INVALID_PASSWORD_LENGTH_MESSAGE =
+            "비밀번호는 최소 " + Password.MIN_LENGTH + "자 이상, 최대 " + Password.MAX_LENGTH + "자 이하여야 합니다.";
 
     @Mock
     private EmailVerificationUsecase emailVerificationUsecase;
+
+    @Mock
+    private SignupUsecase signupUsecase;
 
     @InjectMocks
     private AuthController authController;
@@ -49,6 +59,9 @@ class AuthControllerTest {
 
     @Captor
     private ArgumentCaptor<VerificationCodeVerifyCommand> verifyCommandCaptor;
+
+    @Captor
+    private ArgumentCaptor<SignupCommand> signupCommandCaptor;
 
     private MockMvc mockMvc;
 
@@ -229,12 +242,123 @@ class AuthControllerTest {
                 .andExpect(jsonPath("$.message").value(TestErrorType.VERIFICATION_FAIL.getMessage()));
     }
 
+    @ParameterizedTest
+    @ValueSource(ints = {Password.MIN_LENGTH, Password.MAX_LENGTH})
+    @DisplayName("회원가입 요청 시 요청 이메일과 비밀번호로 회원가입을 요청하고 생성 응답을 반환한다")
+    void signup(int passwordLength) throws Exception {
+        // given
+        String password = "a".repeat(passwordLength);
+
+        // when
+        mockMvc.perform(post(SIGNUP_URL)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {"email": "%s", "password": "%s"}
+                                """.formatted(EMAIL, password)))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.message").value("회원가입에 성공하였습니다."));
+
+        // then
+        then(signupUsecase).should().signup(signupCommandCaptor.capture());
+        assertEquals(EMAIL, signupCommandCaptor.getValue().email().getValue());
+        assertEquals(password, signupCommandCaptor.getValue().password().getValue());
+    }
+
+    @Test
+    @DisplayName("회원가입 요청에 이메일이 없으면 유효성 검증 에러를 응답하고 회원가입을 하지 않는다")
+    void signupWithoutEmail() throws Exception {
+        // given & when
+        mockMvc.perform(post(SIGNUP_URL)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {"password": "%s"}
+                                """.formatted(PASSWORD)))
+                .andExpect(status().isUnprocessableContent())
+                .andExpect(jsonPath("$.errorCode").value("COMMON-0002"))
+                .andExpect(jsonPath("$.errors.email").value("이메일은 비어있을 수 없습니다."));
+
+        // then
+        then(signupUsecase).should(never()).signup(any());
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {"invalid-email", "user@localhost", "user@yu..ac.kr"})
+    @DisplayName("회원가입 요청의 이메일 형식이 Email VO의 형식과 다르면 유효성 검증 에러를 응답하고 회원가입을 하지 않는다")
+    void signupWithInvalidEmail(String email) throws Exception {
+        // given & when
+        mockMvc.perform(post(SIGNUP_URL)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {"email": "%s", "password": "%s"}
+                                """.formatted(email, PASSWORD)))
+                .andExpect(status().isUnprocessableContent())
+                .andExpect(jsonPath("$.errorCode").value("COMMON-0002"))
+                .andExpect(jsonPath("$.errors.email").value("이메일 양식이 잘못되었습니다."));
+
+        // then
+        then(signupUsecase).should(never()).signup(any());
+    }
+
+    @Test
+    @DisplayName("회원가입 요청에 비밀번호가 없으면 유효성 검증 에러를 응답하고 회원가입을 하지 않는다")
+    void signupWithoutPassword() throws Exception {
+        // given & when
+        mockMvc.perform(post(SIGNUP_URL)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {"email": "%s"}
+                                """.formatted(EMAIL)))
+                .andExpect(status().isUnprocessableContent())
+                .andExpect(jsonPath("$.errorCode").value("COMMON-0002"))
+                .andExpect(jsonPath("$.errors.password").value("비밀번호는 비어있을 수 없습니다."));
+
+        // then
+        then(signupUsecase).should(never()).signup(any());
+    }
+
+    @ParameterizedTest
+    @ValueSource(ints = {Password.MIN_LENGTH - 1, Password.MAX_LENGTH + 1})
+    @DisplayName("회원가입 요청의 비밀번호 길이가 허용 범위를 벗어나면 유효성 검증 에러를 응답하고 회원가입을 하지 않는다")
+    void signupWithInvalidPasswordLength(int passwordLength) throws Exception {
+        // given & when
+        mockMvc.perform(post(SIGNUP_URL)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {"email": "%s", "password": "%s"}
+                                """.formatted(EMAIL, "a".repeat(passwordLength))))
+                .andExpect(status().isUnprocessableContent())
+                .andExpect(jsonPath("$.errorCode").value("COMMON-0002"))
+                .andExpect(jsonPath("$.errors.password").value(INVALID_PASSWORD_LENGTH_MESSAGE));
+
+        // then
+        then(signupUsecase).should(never()).signup(any());
+    }
+
+    @Test
+    @DisplayName("회원가입 중 비즈니스 예외가 발생하면 에러 카테고리에 맞는 상태 코드와 에러 응답을 반환한다")
+    void signupWithBusinessException() throws Exception {
+        // given
+        willThrow(new CustomException(TestErrorType.DUPLICATED))
+                .given(signupUsecase).signup(any());
+
+        // when & then
+        mockMvc.perform(post(SIGNUP_URL)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {"email": "%s", "password": "%s"}
+                                """.formatted(EMAIL, PASSWORD)))
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.errorCode").value(TestErrorType.DUPLICATED.getErrorCode()))
+                .andExpect(jsonPath("$.message").value(TestErrorType.DUPLICATED.getMessage()));
+    }
+
     /**
      * 컨트롤러 테스트가 도메인 에러 타입 정의에 영향받지 않도록, 도메인 에러 타입 대신 사용하는 테스트용 에러 타입
      */
     private enum TestErrorType implements BaseErrorType {
         TOO_EARLY(ErrorCategory.TOO_MANY_REQUESTS, "TEST-0001", "재발급 제한 시간 내 요청입니다."),
-        VERIFICATION_FAIL(ErrorCategory.BUSINESS, "TEST-0002", "인증 코드 검증에 실패하였습니다.");
+        VERIFICATION_FAIL(ErrorCategory.BUSINESS, "TEST-0002", "인증 코드 검증에 실패하였습니다."),
+        DUPLICATED(ErrorCategory.CONFLICT, "TEST-0003", "이미 존재하는 리소스입니다.");
 
         private final ErrorCategory category;
         private final String errorCode;
