@@ -15,7 +15,7 @@ public class LocalAccount implements Account {
     
     private AuthProvider authProvider;
     
-    public LocalAccount(AccountId id, EncodedPassword password) {
+    private LocalAccount(AccountId id, EncodedPassword password) {
         this.id = id;
         this.password = password;
         this.authProvider = AuthProvider.LOCAL;
@@ -40,5 +40,16 @@ public class LocalAccount implements Account {
     @Override
     public int hashCode() {
         return Objects.hashCode(id);
+    }
+    
+    public static LocalAccount withoutId(EncodedPassword password) {
+        return new LocalAccount(null, password);
+    }
+    
+    public static LocalAccount withId(AccountId id, EncodedPassword password) {
+        if (id == null) {
+            throw new IllegalArgumentException("계정 아이디는 비어있을 수 없습니다.");
+        }
+        return new LocalAccount(id, password);
     }
 }

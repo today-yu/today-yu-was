@@ -13,7 +13,7 @@ public class SocialAccount implements Account {
     
     private SocialIdentity socialIdentity;
     
-    public SocialAccount(AccountId id, SocialIdentity socialIdentity) {
+    private SocialAccount(AccountId id, SocialIdentity socialIdentity) {
         this.id = id;
         this.socialIdentity = socialIdentity;
     }
@@ -37,5 +37,17 @@ public class SocialAccount implements Account {
     @Override
     public int hashCode() {
         return Objects.hashCode(id);
+    }
+    
+    public static SocialAccount withoutId(SocialIdentity socialIdentity) {
+        return new SocialAccount(null, socialIdentity);
+    }
+    
+    public static SocialAccount withId(AccountId id, SocialIdentity socialIdentity) {
+        if (id == null) {
+            throw new IllegalArgumentException("계정 아이디는 비어있을 수 없습니다.");
+        }
+        
+        return new SocialAccount(id, socialIdentity);
     }
 }
