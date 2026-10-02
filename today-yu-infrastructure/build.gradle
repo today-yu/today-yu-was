@@ -5,6 +5,8 @@ dependencies {
 
     /* Spring Context */
     implementation 'org.springframework:spring-context'
+    /* Password Encoding */
+    implementation 'org.springframework.security:spring-security-crypto'
     /* Redis */
     implementation 'org.springframework.boot:spring-boot-starter-data-redis'
     /* Jackson */
