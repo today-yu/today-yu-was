@@ -23,12 +23,13 @@ public class MemberJpaEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
     
-    @Column(name = "email")
+    @Column(name = "email", unique = true)
     private String email;
     
-    @Column(name = "nickname", nullable = false)
+    @Column(name = "nickname", nullable = false, unique = true)
     private String nickname;
     
+    @Column(name = "role", nullable = false)
     @Enumerated(value = EnumType.STRING)
     private Role role;
     
