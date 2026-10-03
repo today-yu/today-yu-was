@@ -4,7 +4,6 @@ import com.todayyu.common.exception.CustomException;
 import com.todayyu.domain.member.error.MemberErrorType;
 import com.todayyu.domain.member.vo.Email;
 import com.todayyu.domain.member.vo.VerificationCode;
-import lombok.Builder;
 import lombok.Getter;
 
 import java.time.LocalDateTime;
@@ -19,8 +18,19 @@ public class EmailVerification {
     public static final Long EMAIL_VERIFICATION_DURATION_MINUTE = 3L;
     private static final Long REISSUE_POSSIBLE_OFFSET_MINUTE = 1L;
     
-    @Builder
     public EmailVerification(Email email, VerificationCode code, LocalDateTime issuedAt) {
+        if (email == null) {
+            throw new IllegalArgumentException("이메일은 비어있을 수 없습니다.");
+        }
+        
+        if (code == null) {
+            throw new IllegalArgumentException("인증 코드는 비어있을 수 없습니다.");
+        }
+        
+        if (issuedAt == null) {
+            throw new IllegalArgumentException("인증 코드 발급 시각은 비어있을 수 없습니다.");
+        }
+        
         this.email = email;
         this.code = code;
         this.issuedAt = issuedAt;
@@ -53,11 +63,7 @@ public class EmailVerification {
             throw new CustomException(MemberErrorType.VERIFICATION_CODE_REISSUE_TOO_EARLY);
         }
         
-        return EmailVerification.builder()
-                .email(email)
-                .code(code)
-                .issuedAt(now)
-                .build();
+        return new EmailVerification(email, code, now);
     }
     
     /**
