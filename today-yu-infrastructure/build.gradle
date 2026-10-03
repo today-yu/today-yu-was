@@ -15,4 +15,8 @@ dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-mail'
     /* Thymeleaf */
     implementation 'org.springframework.boot:spring-boot-starter-thymeleaf'
+    /* JWT */
+    implementation 'io.jsonwebtoken:jjwt-api:0.13.0'
+    runtimeOnly 'io.jsonwebtoken:jjwt-impl:0.13.0'
+    runtimeOnly 'io.jsonwebtoken:jjwt-orgjson:0.13.0'
 }
