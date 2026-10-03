@@ -26,6 +26,12 @@ public class CustomException extends RuntimeException {
         this.data = null;
     }
     
+    public CustomException(BaseErrorType errorType, String detailMessage, Throwable cause) {
+        super(detailMessage, cause);
+        this.errorType = errorType;
+        this.data = null;
+    }
+    
     public CustomException(BaseErrorType errorType) {
         super(errorType.getMessage(), null);
         this.errorType = errorType;
