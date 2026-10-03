@@ -29,10 +29,6 @@ public class RedisEmailVerificationValue {
     }
     
     public EmailVerification toEmailVerification(Email email) {
-        return EmailVerification.builder()
-                .email(email)
-                .code(new VerificationCode(verificationCode))
-                .issuedAt(issuedAt)
-                .build();
+        return new EmailVerification(email, new VerificationCode(verificationCode), issuedAt);
     }
 }
