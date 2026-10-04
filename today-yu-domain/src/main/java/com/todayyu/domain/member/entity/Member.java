@@ -1,6 +1,7 @@
 package com.todayyu.domain.member.entity;
 
 import com.todayyu.domain.member.vo.Email;
+import com.todayyu.domain.member.vo.EncodedPassword;
 import com.todayyu.domain.member.vo.MemberId;
 import com.todayyu.domain.member.vo.Nickname;
 import com.todayyu.domain.member.vo.Role;
@@ -9,6 +10,7 @@ import lombok.Getter;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 
 @Getter
 public class Member {
@@ -55,5 +57,20 @@ public class Member {
         }
         
         return new Member(memberId, email, nickname, role, accounts);
+    }
+    
+    /**
+     * 회원의 암호화된 비밀번호({@link EncodedPassword})를 반환하는 메서드
+     *
+     * <p> 존재하지 않을 경우 `null`을 반환할 수 있으므로 {@link Optional}로 감싸 반환한다. </p>
+     *
+     * @return 암호회된 비밀번호
+     */
+    public Optional<EncodedPassword> getEncodedPassword() {
+        return accounts.stream()
+                .filter(LocalAccount.class::isInstance)
+                .map(LocalAccount.class::cast)
+                .map(LocalAccount::getPassword)
+                .findFirst();
     }
 }

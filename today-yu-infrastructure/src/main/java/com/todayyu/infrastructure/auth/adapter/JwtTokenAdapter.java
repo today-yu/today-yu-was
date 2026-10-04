@@ -1,6 +1,8 @@
 package com.todayyu.infrastructure.auth.adapter;
 
 import com.todayyu.application.auth.dto.AccessTokenClaims;
+import com.todayyu.application.auth.dto.IssuedAccessToken;
+import com.todayyu.application.auth.dto.IssuedRefreshToken;
 import com.todayyu.application.auth.dto.RefreshTokenClaims;
 import com.todayyu.application.auth.error.BusinessAuthErrorType;
 import com.todayyu.application.auth.port.TokenPort;
@@ -34,39 +36,47 @@ public class JwtTokenAdapter implements TokenPort {
      * Access Token을 발급하는 메서드
      *
      * <p> {@link #issue(MemberId, Instant, Duration, Map)}를 호출하여 Access Token을 발급한다. </p>
+     * <p> 토큰 만료 기한을 같이 포함한 DTO를 반환한다. </p>
      *
      * @param memberId 회원 ID
      * @param role 해당 회원의 역할({@link Role})
      * @param issuedAt 토큰 발급 시각
-     * @return {@link AccessToken} 객체
+     * @return {@link IssuedAccessToken} 객체
      */
     @Override
-    public AccessToken issueAccessToken(MemberId memberId, Role role, Instant issuedAt) {
-        return new AccessToken(issue(
+    public IssuedAccessToken issueAccessToken(MemberId memberId, Role role, Instant issuedAt) {
+        String token = issue(
                 memberId,
                 issuedAt,
                 jwtProperties.getAccessTokenExpiration(),
                 Map.of(ROLE_CLAIM_KEY, role.name(), TYPE_CLAIM_KEY, TYPE_ACCESS_TOKEN)
-        ));
+        );
+        Instant expiresAt = issuedAt.plus(jwtProperties.getAccessTokenExpiration());
+        
+        return new IssuedAccessToken(new AccessToken(token), expiresAt);
     }
     
     /**
      * Refresh Token을 발급하는 메서드
      *
      * <p> {@link #issue(MemberId, Instant, Duration, Map)}를 호출하여 Refresh Token을 발급한다. </p>
+     * <p> 토큰 만료 기한을 같이 포함한 DTO를 반환한다. </p>
      *
      * @param memberId 회원 ID
      * @param issuedAt 토큰 발급 시각
-     * @return {@link RefreshToken} 객체
+     * @return {@link IssuedRefreshToken} 객체
      */
     @Override
-    public RefreshToken issueRefreshToken(MemberId memberId, Instant issuedAt) {
-        return new RefreshToken(issue(
+    public IssuedRefreshToken issueRefreshToken(MemberId memberId, Instant issuedAt) {
+        String token = issue(
                 memberId,
                 issuedAt,
                 jwtProperties.getRefreshTokenExpiration(),
-                Map.of(TYPE_CLAIM_KEY, TYPE_REFRESH_TOKEN))
+                Map.of(TYPE_CLAIM_KEY, TYPE_REFRESH_TOKEN)
         );
+        Instant expiresAt = issuedAt.plus(jwtProperties.getRefreshTokenExpiration());
+        
+        return new IssuedRefreshToken(new RefreshToken(token), expiresAt);
     }
     
     /**

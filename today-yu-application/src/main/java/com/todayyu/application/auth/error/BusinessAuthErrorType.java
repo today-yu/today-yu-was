@@ -13,6 +13,7 @@ import lombok.RequiredArgsConstructor;
 public enum BusinessAuthErrorType implements BaseErrorType {
     INVALID_TOKEN(ErrorCategory.UNAUTHORIZED, "AUTH-1001", "유효하지 않은 토큰입니다."),
     EXPIRED_TOKEN(ErrorCategory.UNAUTHORIZED, "AUTH-1002", "만료된 토큰입니다."),
+    FAIL_SIGNIN(ErrorCategory.UNAUTHORIZED, "AUTH-1003", "로그인에 실패하였습니다. 아이디와 비밀번호를 확인해주세요."),
     ;
     
     private final ErrorCategory category;
