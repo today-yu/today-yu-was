@@ -5,4 +5,6 @@ import com.todayyu.domain.member.vo.Password;
 
 public interface PasswordPort {
     EncodedPassword encode(Password password);
+    boolean matches(Password rawPassword, EncodedPassword encodedPassword);
+    boolean matchesDummy(Password rawPassword);
 }
