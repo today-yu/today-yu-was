@@ -6,6 +6,7 @@ import com.todayyu.application.auth.dto.SigninCommand;
 import com.todayyu.application.auth.dto.SigninResult;
 import com.todayyu.application.auth.error.BusinessAuthErrorType;
 import com.todayyu.application.auth.port.TokenPort;
+import com.todayyu.application.auth.port.save.SaveRefreshTokenPort;
 import com.todayyu.application.member.port.PasswordPort;
 import com.todayyu.application.member.port.read.ReadMemberPort;
 import com.todayyu.common.exception.CustomException;
@@ -69,6 +70,9 @@ class SigninUsecaseTest {
     @Mock
     private TokenPort tokenPort;
 
+    @Mock
+    private SaveRefreshTokenPort saveRefreshTokenPort;
+
     @InjectMocks
     private SigninUsecase signinUsecase;
 
@@ -120,7 +124,25 @@ class SigninUsecaseTest {
     }
 
     @Test
-    @DisplayName("가입되지 않은 이메일이면 더미 비밀번호와 비교한 뒤 로그인에 실패하고 토큰을 발급하지 않는다")
+    @DisplayName("로그인에 성공하면 발급한 Refresh Token을 회원 ID와 함께 저장한다")
+    void signinSavesRefreshToken() {
+        // given
+        given(readMemberPort.readByEmail(EMAIL)).willReturn(Optional.of(localMember()));
+        given(passwordPort.matches(PASSWORD, ENCODED_PASSWORD)).willReturn(true);
+        given(tokenPort.issueAccessToken(eq(MEMBER_ID), eq(Role.MEMBER), any(Instant.class)))
+                .willReturn(ISSUED_ACCESS_TOKEN);
+        given(tokenPort.issueRefreshToken(eq(MEMBER_ID), any(Instant.class)))
+                .willReturn(ISSUED_REFRESH_TOKEN);
+
+        // when
+        signinUsecase.signin(COMMAND);
+
+        // then
+        then(saveRefreshTokenPort).should().save(MEMBER_ID, ISSUED_REFRESH_TOKEN);
+    }
+
+    @Test
+    @DisplayName("가입되지 않은 이메일이면 더미 비밀번호와 비교한 뒤 로그인에 실패하고 토큰을 발급·저장하지 않는다")
     void signinWithNotRegisteredEmail() {
         // given
         given(readMemberPort.readByEmail(EMAIL)).willReturn(Optional.empty());
@@ -134,10 +156,11 @@ class SigninUsecaseTest {
         then(passwordPort).should().matchesDummy(PASSWORD);
         then(passwordPort).should(never()).matches(any(), any());
         then(tokenPort).shouldHaveNoInteractions();
+        then(saveRefreshTokenPort).shouldHaveNoInteractions();
     }
 
     @Test
-    @DisplayName("로컬 계정이 없는 회원이면 더미 비밀번호와 비교한 뒤 로그인에 실패하고 토큰을 발급하지 않는다")
+    @DisplayName("로컬 계정이 없는 회원이면 더미 비밀번호와 비교한 뒤 로그인에 실패하고 토큰을 발급·저장하지 않는다")
     void signinWithoutLocalAccount() {
         // given
         given(readMemberPort.readByEmail(EMAIL)).willReturn(Optional.of(socialOnlyMember()));
@@ -151,10 +174,11 @@ class SigninUsecaseTest {
         then(passwordPort).should().matchesDummy(PASSWORD);
         then(passwordPort).should(never()).matches(any(), any());
         then(tokenPort).shouldHaveNoInteractions();
+        then(saveRefreshTokenPort).shouldHaveNoInteractions();
     }
 
     @Test
-    @DisplayName("비밀번호가 일치하지 않으면 로그인에 실패하고 토큰을 발급하지 않는다")
+    @DisplayName("비밀번호가 일치하지 않으면 로그인에 실패하고 토큰을 발급·저장하지 않는다")
     void signinWithWrongPassword() {
         // given
         given(readMemberPort.readByEmail(EMAIL)).willReturn(Optional.of(localMember()));
@@ -168,6 +192,7 @@ class SigninUsecaseTest {
         assertEquals(BusinessAuthErrorType.FAIL_SIGNIN, exception.getErrorType());
         then(passwordPort).should(never()).matchesDummy(any());
         then(tokenPort).shouldHaveNoInteractions();
+        then(saveRefreshTokenPort).shouldHaveNoInteractions();
     }
 
     private Member localMember() {
