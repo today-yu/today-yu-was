@@ -1,6 +1,8 @@
 package com.todayyu.infrastructure.auth.adapter;
 
 import com.todayyu.application.auth.dto.AccessTokenClaims;
+import com.todayyu.application.auth.dto.IssuedAccessToken;
+import com.todayyu.application.auth.dto.IssuedRefreshToken;
 import com.todayyu.application.auth.dto.RefreshTokenClaims;
 import com.todayyu.application.auth.error.BusinessAuthErrorType;
 import com.todayyu.common.exception.CustomException;
@@ -39,21 +41,23 @@ class JwtTokenAdapterTest {
     private final JwtTokenAdapter jwtTokenAdapter = new JwtTokenAdapter(new JwtProvider(properties), properties);
 
     @Test
-    @DisplayName("Access Token은 Access Token 만료 시간으로 발급된다")
+    @DisplayName("Access Token은 Access Token 만료 시간으로 발급되며, 토큰의 만료 시각과 같은 만료 시각을 함께 반환한다")
     void issueAccessTokenWithAccessTokenExpiration() {
         // when
-        AccessToken accessToken = jwtTokenAdapter.issueAccessToken(MEMBER_ID, Role.MEMBER, ISSUED_AT);
+        IssuedAccessToken issued = jwtTokenAdapter.issueAccessToken(MEMBER_ID, Role.MEMBER, ISSUED_AT);
 
         // then
-        Claims claims = parse(accessToken.getValue());
-        assertEquals(ISSUED_AT.plus(ACCESS_TOKEN_EXPIRATION), claims.getExpiration().toInstant());
+        Instant expectedExpiresAt = ISSUED_AT.plus(ACCESS_TOKEN_EXPIRATION);
+        Claims claims = parse(issued.accessToken().getValue());
+        assertEquals(expectedExpiresAt, claims.getExpiration().toInstant());
+        assertEquals(expectedExpiresAt, issued.expiresAt());
     }
 
     @Test
     @DisplayName("Access Token에는 회원 아이디, 권한, Access Token 타입이 담긴다")
     void issueAccessTokenWithClaims() {
         // when
-        AccessToken accessToken = jwtTokenAdapter.issueAccessToken(MEMBER_ID, Role.MEMBER, ISSUED_AT);
+        AccessToken accessToken = jwtTokenAdapter.issueAccessToken(MEMBER_ID, Role.MEMBER, ISSUED_AT).accessToken();
 
         // then
         Claims claims = parse(accessToken.getValue());
@@ -65,21 +69,23 @@ class JwtTokenAdapterTest {
     }
 
     @Test
-    @DisplayName("Refresh Token은 Refresh Token 만료 시간으로 발급된다")
+    @DisplayName("Refresh Token은 Refresh Token 만료 시간으로 발급되며, 토큰의 만료 시각과 같은 만료 시각을 함께 반환한다")
     void issueRefreshTokenWithRefreshTokenExpiration() {
         // when
-        RefreshToken refreshToken = jwtTokenAdapter.issueRefreshToken(MEMBER_ID, ISSUED_AT);
+        IssuedRefreshToken issued = jwtTokenAdapter.issueRefreshToken(MEMBER_ID, ISSUED_AT);
 
         // then
-        Claims claims = parse(refreshToken.getValue());
-        assertEquals(ISSUED_AT.plus(REFRESH_TOKEN_EXPIRATION), claims.getExpiration().toInstant());
+        Instant expectedExpiresAt = ISSUED_AT.plus(REFRESH_TOKEN_EXPIRATION);
+        Claims claims = parse(issued.refreshToken().getValue());
+        assertEquals(expectedExpiresAt, claims.getExpiration().toInstant());
+        assertEquals(expectedExpiresAt, issued.expiresAt());
     }
 
     @Test
     @DisplayName("Refresh Token에는 회원 아이디와 Refresh Token 타입만 담기고 권한은 담기지 않는다")
     void issueRefreshTokenWithClaims() {
         // when
-        RefreshToken refreshToken = jwtTokenAdapter.issueRefreshToken(MEMBER_ID, ISSUED_AT);
+        RefreshToken refreshToken = jwtTokenAdapter.issueRefreshToken(MEMBER_ID, ISSUED_AT).refreshToken();
 
         // then
         Claims claims = parse(refreshToken.getValue());
@@ -93,8 +99,8 @@ class JwtTokenAdapterTest {
     @DisplayName("같은 회원에게 같은 시각에 발급해도 토큰마다 다른 값이 생성된다")
     void issueUniqueTokenAtSameTime() {
         // when
-        AccessToken first = jwtTokenAdapter.issueAccessToken(MEMBER_ID, Role.MEMBER, ISSUED_AT);
-        AccessToken second = jwtTokenAdapter.issueAccessToken(MEMBER_ID, Role.MEMBER, ISSUED_AT);
+        AccessToken first = jwtTokenAdapter.issueAccessToken(MEMBER_ID, Role.MEMBER, ISSUED_AT).accessToken();
+        AccessToken second = jwtTokenAdapter.issueAccessToken(MEMBER_ID, Role.MEMBER, ISSUED_AT).accessToken();
 
         // then
         assertNotEquals(first.getValue(), second.getValue());
@@ -106,7 +112,7 @@ class JwtTokenAdapterTest {
     void parseAccessToken() {
         // given
         Instant issuedAt = now();
-        AccessToken accessToken = jwtTokenAdapter.issueAccessToken(MEMBER_ID, Role.MEMBER, issuedAt);
+        AccessToken accessToken = jwtTokenAdapter.issueAccessToken(MEMBER_ID, Role.MEMBER, issuedAt).accessToken();
 
         // when
         AccessTokenClaims claims = jwtTokenAdapter.parseAccessToken(accessToken);
@@ -122,7 +128,7 @@ class JwtTokenAdapterTest {
     void parseRefreshToken() {
         // given
         Instant issuedAt = now();
-        RefreshToken refreshToken = jwtTokenAdapter.issueRefreshToken(MEMBER_ID, issuedAt);
+        RefreshToken refreshToken = jwtTokenAdapter.issueRefreshToken(MEMBER_ID, issuedAt).refreshToken();
 
         // when
         RefreshTokenClaims claims = jwtTokenAdapter.parseRefreshToken(refreshToken);
@@ -136,7 +142,7 @@ class JwtTokenAdapterTest {
     @DisplayName("Refresh Token을 Access Token으로 파싱하면 유효하지 않은 토큰 예외가 발생한다")
     void parseRefreshTokenAsAccessToken() {
         // given
-        RefreshToken refreshToken = jwtTokenAdapter.issueRefreshToken(MEMBER_ID, now());
+        RefreshToken refreshToken = jwtTokenAdapter.issueRefreshToken(MEMBER_ID, now()).refreshToken();
         AccessToken disguised = new AccessToken(refreshToken.getValue());
 
         // when
@@ -151,7 +157,7 @@ class JwtTokenAdapterTest {
     @DisplayName("Access Token을 Refresh Token으로 파싱하면 유효하지 않은 토큰 예외가 발생한다")
     void parseAccessTokenAsRefreshToken() {
         // given
-        AccessToken accessToken = jwtTokenAdapter.issueAccessToken(MEMBER_ID, Role.MEMBER, now());
+        AccessToken accessToken = jwtTokenAdapter.issueAccessToken(MEMBER_ID, Role.MEMBER, now()).accessToken();
         RefreshToken disguised = new RefreshToken(accessToken.getValue());
 
         // when
@@ -167,7 +173,7 @@ class JwtTokenAdapterTest {
     void parseExpiredAccessToken() {
         // given
         Instant issuedAt = now().minus(ACCESS_TOKEN_EXPIRATION).minus(Duration.ofMinutes(1));
-        AccessToken accessToken = jwtTokenAdapter.issueAccessToken(MEMBER_ID, Role.MEMBER, issuedAt);
+        AccessToken accessToken = jwtTokenAdapter.issueAccessToken(MEMBER_ID, Role.MEMBER, issuedAt).accessToken();
 
         // when
         CustomException exception = assertThrows(CustomException.class,
@@ -182,7 +188,7 @@ class JwtTokenAdapterTest {
     void parseExpiredRefreshToken() {
         // given
         Instant issuedAt = now().minus(REFRESH_TOKEN_EXPIRATION).minus(Duration.ofMinutes(1));
-        RefreshToken refreshToken = jwtTokenAdapter.issueRefreshToken(MEMBER_ID, issuedAt);
+        RefreshToken refreshToken = jwtTokenAdapter.issueRefreshToken(MEMBER_ID, issuedAt).refreshToken();
 
         // when
         CustomException exception = assertThrows(CustomException.class,
@@ -199,7 +205,7 @@ class JwtTokenAdapterTest {
         JwtProperties otherProperties =
                 new JwtProperties(OTHER_KEY, ISSUER, ACCESS_TOKEN_EXPIRATION, REFRESH_TOKEN_EXPIRATION);
         JwtTokenAdapter otherAdapter = new JwtTokenAdapter(new JwtProvider(otherProperties), otherProperties);
-        AccessToken accessToken = otherAdapter.issueAccessToken(MEMBER_ID, Role.MEMBER, now());
+        AccessToken accessToken = otherAdapter.issueAccessToken(MEMBER_ID, Role.MEMBER, now()).accessToken();
 
         // when
         CustomException exception = assertThrows(CustomException.class,
