@@ -1,0 +1,24 @@
+package com.todayyu.apis.user.member.dto;
+
+import com.todayyu.apis.common.auth.AuthScheme;
+import com.todayyu.application.auth.dto.SigninResult;
+
+import java.time.Instant;
+
+public record SigninResponse(
+        String tokenType,
+        String accessToken,
+        Instant accessTokenExpiresAt,
+        String refreshToken,
+        Instant refreshTokenExpiresAt
+) {
+    public static SigninResponse from(SigninResult result) {
+        return new SigninResponse(
+                AuthScheme.BEARER,
+                result.accessToken().getValue(),
+                result.accessTokenExpiresAt(),
+                result.refreshToken().getValue(),
+                result.refreshTokenExpiresAt()
+        );
+    }
+}
