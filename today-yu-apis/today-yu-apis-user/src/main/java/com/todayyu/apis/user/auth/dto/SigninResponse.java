@@ -1,4 +1,4 @@
-package com.todayyu.apis.user.member.dto;
+package com.todayyu.apis.user.auth.dto;
 
 import com.todayyu.apis.common.auth.AuthScheme;
 import com.todayyu.application.auth.dto.SigninResult;
