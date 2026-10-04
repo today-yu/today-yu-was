@@ -53,7 +53,7 @@ public class AuthController {
         SigninResult result = signinUsecase.signin(request.toCommand());
         
         return ResponseEntity.ok()
-                .cacheControl(CacheControl.noCache())
+                .cacheControl(CacheControl.noStore())
                 .body(
                         SuccessResponse.from(
                                 "로그인에 성공하였습니다.",
