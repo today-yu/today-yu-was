@@ -6,6 +6,7 @@ import com.todayyu.application.auth.dto.SigninCommand;
 import com.todayyu.application.auth.dto.SigninResult;
 import com.todayyu.application.auth.error.BusinessAuthErrorType;
 import com.todayyu.application.auth.port.TokenPort;
+import com.todayyu.application.auth.port.save.SaveRefreshTokenPort;
 import com.todayyu.application.common.annotation.Usecase;
 import com.todayyu.application.member.port.PasswordPort;
 import com.todayyu.application.member.port.read.ReadMemberPort;
@@ -24,6 +25,7 @@ public class SigninUsecase {
     private final ReadMemberPort readMemberPort;
     private final PasswordPort passwordPort;
     private final TokenPort tokenPort;
+    private final SaveRefreshTokenPort saveRefreshTokenPort;
     
     /**
      * 로그인 메서드
@@ -33,6 +35,8 @@ public class SigninUsecase {
      *
      * <p> 또한, 보안을 위해 비밀번호 불일치 에러가 아니더라도 {@link PasswordPort#matchesDummy(Password)}를 호출하여
      *     Dummy 비밀번호 검증을 실시한다. </p>
+     *
+     * <p> 로그인에 성공하면 인증 토큰을 발급하며, 그 중 Refresh Token을 저장한다. </p>
      *
      * @param command 로그인 요청 DTO
      * @return 로그인 결과 {@link SigninResult} 객체
@@ -63,6 +67,9 @@ public class SigninUsecase {
         Instant now = Instant.now();
         IssuedAccessToken issuedAccessToken = tokenPort.issueAccessToken(member.getId(), member.getRole(), now);
         IssuedRefreshToken issuedRefreshToken = tokenPort.issueRefreshToken(member.getId(), now);
+        
+        saveRefreshTokenPort.save(member.getId(), issuedRefreshToken);
+        
         return SigninResult.from(issuedAccessToken, issuedRefreshToken);
     }
 }
