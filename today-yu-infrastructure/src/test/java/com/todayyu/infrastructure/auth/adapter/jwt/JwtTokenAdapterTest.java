@@ -1,4 +1,4 @@
-package com.todayyu.infrastructure.auth.adapter;
+package com.todayyu.infrastructure.auth.adapter.jwt;
 
 import com.todayyu.application.auth.dto.AccessTokenClaims;
 import com.todayyu.application.auth.dto.IssuedAccessToken;
