@@ -20,6 +20,7 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.web.util.matcher.RequestMatcher;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
@@ -29,8 +30,20 @@ import java.io.IOException;
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
     private final AuthenticationUsecase authenticationUsecase;
     private final SecurityErrorResponseWriter responseWriter;
+    private final RequestMatcher publicEndpointRequestMatcher;
     
     private static final String AUTHORIZATION_PREFIX = AuthScheme.BEARER + " ";
+    
+    /**
+     * 인증이 필요하지 않는 공개 엔드포인트(Public Endpoint) 여부를 검증하는 메서드
+     *
+     * @param request HTTP 요청
+     * @return 필터를 거치지 않아도 되는지 여부
+     */
+    @Override
+    protected boolean shouldNotFilter(HttpServletRequest request) throws ServletException {
+        return publicEndpointRequestMatcher.matches(request);
+    }
     
     /**
      * JWT 토큰을 통한 인증 정보 등록 메서드

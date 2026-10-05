@@ -14,6 +14,9 @@ import org.springframework.security.web.AuthenticationEntryPoint;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.access.AccessDeniedHandler;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.security.web.servlet.util.matcher.PathPatternRequestMatcher;
+import org.springframework.security.web.util.matcher.OrRequestMatcher;
+import org.springframework.security.web.util.matcher.RequestMatcher;
 
 @Configuration
 @EnableWebSecurity
@@ -24,7 +27,11 @@ public class SecurityConfig {
     private final AuthenticationUsecase authenticationUsecase;
     private final SecurityErrorResponseWriter securityErrorResponseWriter;
     
-    private static final String[] PUBLIC_ENDPOINTS = {"/api/v1/auth/**"};
+    private static final RequestMatcher PUBLIC_ENDPOINTS = new OrRequestMatcher(
+            PathPatternRequestMatcher.pathPattern("/api/v1/auth/sign-in"),
+            PathPatternRequestMatcher.pathPattern("/api/v1/auth/sign-up"),
+            PathPatternRequestMatcher.pathPattern("/api/v1/auth/email-verification/**")
+    );
     
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) {
@@ -44,7 +51,7 @@ public class SecurityConfig {
                         .authenticationEntryPoint(authenticationEntryPoint)
                         .accessDeniedHandler(accessDeniedHandler))
                 .addFilterBefore(
-                        new JwtAuthenticationFilter(authenticationUsecase, securityErrorResponseWriter),
+                        new JwtAuthenticationFilter(authenticationUsecase, securityErrorResponseWriter, PUBLIC_ENDPOINTS),
                         UsernamePasswordAuthenticationFilter.class
                 )
                 .build();
