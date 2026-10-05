@@ -121,7 +121,13 @@ public class JwtTokenAdapter implements TokenPort {
         Claims claims = jwtProvider.parse(accessToken.getValue());
         validateType(claims, TYPE_ACCESS_TOKEN);
         
-        return new AccessTokenClaims(parseMemberId(claims), parseTokenId(claims), parseRole(claims), parseExpiration(claims));
+        return new AccessTokenClaims(
+                parseMemberId(claims),
+                parseTokenId(claims),
+                parseSessionId(claims),
+                parseRole(claims),
+                parseExpiration(claims)
+        );
     }
     
     /**
@@ -137,7 +143,7 @@ public class JwtTokenAdapter implements TokenPort {
         Claims claims = jwtProvider.parse(refreshToken.getValue());
         validateType(claims, TYPE_REFRESH_TOKEN);
         
-        return new RefreshTokenClaims(parseMemberId(claims), parseExpiration(claims));
+        return new RefreshTokenClaims(parseMemberId(claims), parseSessionId(claims), parseExpiration(claims));
     }
     
     /**
@@ -190,6 +196,21 @@ public class JwtTokenAdapter implements TokenPort {
             return new TokenId(claims.getId());
         } catch (IllegalArgumentException e) {
             throw new CustomException(BusinessAuthErrorType.INVALID_TOKEN, "토큰 ID(jti)가 잘못되었습니다.", e);
+        }
+    }
+    
+    /**
+     * 토큰을 파싱하여 세션 ID를 반환하는 메서드
+     *
+     * @param claims 토큰 클레임({@link Claims}) 객체
+     * @return 세션 ID 객체
+     * @throws CustomException {@link BusinessAuthErrorType#INVALID_TOKEN} - 세션 ID가 잘못된 경우
+     */
+    private SessionId parseSessionId(Claims claims) {
+        try {
+            return SessionId.from(claims.get(SESSION_ID_CLAIM_KEY, String.class));
+        } catch (IllegalArgumentException e) {
+            throw new CustomException(BusinessAuthErrorType.INVALID_TOKEN, "토큰의 세션 ID가 잘못되었습니다.", e);
         }
     }
     
