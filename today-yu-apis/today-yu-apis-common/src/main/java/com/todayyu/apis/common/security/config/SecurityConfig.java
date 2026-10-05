@@ -1,5 +1,8 @@
 package com.todayyu.apis.common.security.config;
 
+import com.todayyu.apis.common.security.filter.JwtAuthenticationFilter;
+import com.todayyu.apis.common.security.handler.SecurityErrorResponseWriter;
+import com.todayyu.application.auth.usecase.AuthenticationUsecase;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -10,6 +13,10 @@ import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.web.AuthenticationEntryPoint;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.access.AccessDeniedHandler;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.security.web.servlet.util.matcher.PathPatternRequestMatcher;
+import org.springframework.security.web.util.matcher.OrRequestMatcher;
+import org.springframework.security.web.util.matcher.RequestMatcher;
 
 @Configuration
 @EnableWebSecurity
@@ -17,8 +24,14 @@ import org.springframework.security.web.access.AccessDeniedHandler;
 public class SecurityConfig {
     private final AuthenticationEntryPoint authenticationEntryPoint;
     private final AccessDeniedHandler accessDeniedHandler;
+    private final AuthenticationUsecase authenticationUsecase;
+    private final SecurityErrorResponseWriter securityErrorResponseWriter;
     
-    private static final String[] PUBLIC_ENDPOINTS = {"/api/v1/auth/**"};
+    private static final RequestMatcher PUBLIC_ENDPOINTS = new OrRequestMatcher(
+            PathPatternRequestMatcher.pathPattern("/api/v1/auth/sign-in"),
+            PathPatternRequestMatcher.pathPattern("/api/v1/auth/sign-up"),
+            PathPatternRequestMatcher.pathPattern("/api/v1/auth/email-verification/**")
+    );
     
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) {
@@ -37,6 +50,10 @@ public class SecurityConfig {
                         -> exception
                         .authenticationEntryPoint(authenticationEntryPoint)
                         .accessDeniedHandler(accessDeniedHandler))
+                .addFilterBefore(
+                        new JwtAuthenticationFilter(authenticationUsecase, securityErrorResponseWriter, PUBLIC_ENDPOINTS),
+                        UsernamePasswordAuthenticationFilter.class
+                )
                 .build();
     }
 }

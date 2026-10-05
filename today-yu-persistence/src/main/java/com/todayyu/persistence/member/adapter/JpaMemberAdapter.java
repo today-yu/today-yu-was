@@ -5,6 +5,7 @@ import com.todayyu.application.member.port.save.SaveMemberPort;
 import com.todayyu.domain.member.entity.Account;
 import com.todayyu.domain.member.entity.Member;
 import com.todayyu.domain.member.vo.Email;
+import com.todayyu.domain.member.vo.MemberId;
 import com.todayyu.persistence.common.PersistenceAdapter;
 import com.todayyu.persistence.member.entity.AccountJpaEntity;
 import com.todayyu.persistence.member.entity.MemberJpaEntity;
@@ -25,6 +26,28 @@ public class JpaMemberAdapter implements ReadMemberPort, SaveMemberPort {
     private final AccountJpaRepository accountRepository;
     private final MemberMapper memberMapper;
     private final AccountMapper accountMapper;
+    
+    /**
+     * 회원 ID({@link MemberId})를 통해 회원({@link Member})를 조회해 반환하는 메서드
+     *
+     * @param memberId 회원 ID 객체
+     * @return 회원 객체
+     */
+    @Override
+    public Optional<Member> readByMemberId(MemberId memberId) {
+        Optional<MemberJpaEntity> optionalMemberJpaEntity = memberRepository.findById(memberId.getValue());
+        
+        if (optionalMemberJpaEntity.isEmpty()) {
+            return Optional.ofNullable(null);
+        }
+        
+        MemberJpaEntity memberJpaEntity = optionalMemberJpaEntity.get();
+        List<Account> accounts = accountRepository.findByMemberId(memberJpaEntity.getId()).stream()
+                .map(accountMapper::toDomain)
+                .toList();
+        
+        return Optional.of(memberMapper.toDomain(memberJpaEntity, accounts));
+    }
     
     /**
      * 이메일({@link Email})을 통해 회원({@link Member})을 조회해 반환하는 메서드
