@@ -7,6 +7,7 @@ import com.todayyu.application.auth.port.TokenPort;
 import com.todayyu.application.member.port.read.ReadMemberPort;
 import com.todayyu.common.exception.CustomException;
 import com.todayyu.domain.auth.vo.AccessToken;
+import com.todayyu.domain.auth.vo.TokenId;
 import com.todayyu.domain.member.entity.LocalAccount;
 import com.todayyu.domain.member.entity.Member;
 import com.todayyu.domain.member.vo.AccountId;
@@ -38,7 +39,7 @@ class AuthenticationUsecaseTest {
     private static final MemberId MEMBER_ID = new MemberId(1L);
     private static final AccessToken ACCESS_TOKEN = new AccessToken("access-token");
     private static final AccessTokenClaims CLAIMS =
-            new AccessTokenClaims(MEMBER_ID, Role.MEMBER, Instant.parse("2026-10-04T00:30:00Z"));
+            new AccessTokenClaims(MEMBER_ID, new TokenId("token-id"), Role.MEMBER, Instant.parse("2026-10-04T00:30:00Z"));
 
     @Mock
     private TokenPort tokenPort;
