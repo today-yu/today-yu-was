@@ -151,7 +151,7 @@ class SigninUsecaseTest {
     }
 
     @Test
-    @DisplayName("로그인에 성공하면 발급한 Refresh Token을 회원 ID와 함께 저장한다")
+    @DisplayName("로그인에 성공하면 발급한 Refresh Token을 회원 ID, 토큰 발급에 사용한 세션 ID와 함께 저장한다")
     void signinSavesRefreshToken() {
         // given
         given(readMemberPort.readByEmail(EMAIL)).willReturn(Optional.of(localMember()));
@@ -165,7 +165,8 @@ class SigninUsecaseTest {
         signinUsecase.signin(COMMAND);
 
         // then
-        then(saveRefreshTokenPort).should().save(MEMBER_ID, ISSUED_REFRESH_TOKEN);
+        then(tokenPort).should().issueRefreshToken(eq(MEMBER_ID), refreshTokenSessionIdCaptor.capture(), any(Instant.class));
+        then(saveRefreshTokenPort).should().save(MEMBER_ID, refreshTokenSessionIdCaptor.getValue(), ISSUED_REFRESH_TOKEN);
     }
 
     @Test
