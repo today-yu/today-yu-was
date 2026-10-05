@@ -4,6 +4,7 @@ import com.todayyu.application.auth.dto.AccessTokenClaims;
 import com.todayyu.application.auth.dto.AuthenticatedMember;
 import com.todayyu.application.auth.error.BusinessAuthErrorType;
 import com.todayyu.application.auth.port.TokenPort;
+import com.todayyu.application.auth.port.read.ReadBlacklistTokenPort;
 import com.todayyu.application.member.port.read.ReadMemberPort;
 import com.todayyu.common.exception.CustomException;
 import com.todayyu.domain.auth.vo.AccessToken;
@@ -34,19 +35,24 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.then;
 import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
 
 @ExtendWith(MockitoExtension.class)
 class AuthenticationUsecaseTest {
     private static final MemberId MEMBER_ID = new MemberId(1L);
+    private static final TokenId TOKEN_ID = new TokenId("token-id");
     private static final AccessToken ACCESS_TOKEN = new AccessToken("access-token");
     private static final AccessTokenClaims CLAIMS =
-            new AccessTokenClaims(MEMBER_ID, new TokenId("token-id"), SessionId.create(), Role.MEMBER, Instant.parse("2026-10-04T00:30:00Z"));
+            new AccessTokenClaims(MEMBER_ID, TOKEN_ID, SessionId.create(), Role.MEMBER, Instant.parse("2026-10-04T00:30:00Z"));
 
     @Mock
     private TokenPort tokenPort;
 
     @Mock
     private ReadMemberPort readMemberPort;
+
+    @Mock
+    private ReadBlacklistTokenPort readBlacklistTokenPort;
 
     @InjectMocks
     private AuthenticationUsecase authenticationUsecase;
@@ -59,11 +65,42 @@ class AuthenticationUsecaseTest {
         given(readMemberPort.readByMemberId(MEMBER_ID)).willReturn(Optional.of(member()));
 
         // when
-        AuthenticatedMember result = authenticationUsecase.extractMemberIdFromAccessToken(ACCESS_TOKEN);
+        AuthenticatedMember result = authenticationUsecase.authenticate(ACCESS_TOKEN);
 
         // then
         assertEquals(MEMBER_ID, result.memberId());
         assertEquals(Role.MEMBER, result.role());
+    }
+
+    @Test
+    @DisplayName("Access Token은 한 번만 파싱하고, 파싱한 토큰 ID로 블랙리스트 여부를 확인한다")
+    void authenticateParsesTokenOnce() {
+        // given
+        given(tokenPort.parseAccessToken(ACCESS_TOKEN)).willReturn(CLAIMS);
+        given(readMemberPort.readByMemberId(MEMBER_ID)).willReturn(Optional.of(member()));
+
+        // when
+        authenticationUsecase.authenticate(ACCESS_TOKEN);
+
+        // then
+        then(tokenPort).should(times(1)).parseAccessToken(ACCESS_TOKEN);
+        then(readBlacklistTokenPort).should().isBlacklistToken(TOKEN_ID);
+    }
+
+    @Test
+    @DisplayName("블랙리스트로 등록된 토큰이면 유효하지 않은 토큰 예외가 발생하고 회원을 조회하지 않는다")
+    void authenticateWithBlacklistToken() {
+        // given
+        given(tokenPort.parseAccessToken(ACCESS_TOKEN)).willReturn(CLAIMS);
+        given(readBlacklistTokenPort.isBlacklistToken(TOKEN_ID)).willReturn(true);
+
+        // when
+        CustomException exception = assertThrows(CustomException.class,
+                () -> authenticationUsecase.authenticate(ACCESS_TOKEN));
+
+        // then
+        assertEquals(BusinessAuthErrorType.INVALID_TOKEN, exception.getErrorType());
+        then(readMemberPort).should(never()).readByMemberId(any());
     }
 
     @Test
@@ -75,14 +112,14 @@ class AuthenticationUsecaseTest {
 
         // when
         CustomException exception = assertThrows(CustomException.class,
-                () -> authenticationUsecase.extractMemberIdFromAccessToken(ACCESS_TOKEN));
+                () -> authenticationUsecase.authenticate(ACCESS_TOKEN));
 
         // then
         assertEquals(BusinessAuthErrorType.INVALID_TOKEN, exception.getErrorType());
     }
 
     @Test
-    @DisplayName("Access Token 파싱에 실패하면 예외를 그대로 전파하고 회원을 조회하지 않는다")
+    @DisplayName("Access Token 파싱에 실패하면 예외를 그대로 전파하고 블랙리스트와 회원을 조회하지 않는다")
     void authenticateWithInvalidToken() {
         // given
         given(tokenPort.parseAccessToken(ACCESS_TOKEN))
@@ -90,10 +127,11 @@ class AuthenticationUsecaseTest {
 
         // when
         CustomException exception = assertThrows(CustomException.class,
-                () -> authenticationUsecase.extractMemberIdFromAccessToken(ACCESS_TOKEN));
+                () -> authenticationUsecase.authenticate(ACCESS_TOKEN));
 
         // then
         assertEquals(BusinessAuthErrorType.EXPIRED_TOKEN, exception.getErrorType());
+        then(readBlacklistTokenPort).shouldHaveNoInteractions();
         then(readMemberPort).should(never()).readByMemberId(any());
     }
 
