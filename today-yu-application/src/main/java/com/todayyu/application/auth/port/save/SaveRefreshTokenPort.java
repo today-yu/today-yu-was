@@ -5,4 +5,5 @@ import com.todayyu.domain.member.vo.MemberId;
 
 public interface SaveRefreshTokenPort {
     void save(MemberId memberId, IssuedRefreshToken issuedRefreshToken);
+    void deleteByMemberId(MemberId memberId);
 }

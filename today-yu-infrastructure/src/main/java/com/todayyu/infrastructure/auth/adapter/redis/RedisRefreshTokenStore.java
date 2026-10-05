@@ -16,4 +16,8 @@ public class RedisRefreshTokenStore {
     public void save(String key, String refreshToken, Duration duration) {
         redisTemplate.opsForValue().set(KEY_PREFIX + key, refreshToken, duration);
     }
+    
+    public void delete(String key) {
+        redisTemplate.delete(KEY_PREFIX + key);
+    }
 }

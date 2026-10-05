@@ -9,6 +9,7 @@ import com.todayyu.application.auth.port.TokenPort;
 import com.todayyu.common.exception.CustomException;
 import com.todayyu.domain.auth.vo.AccessToken;
 import com.todayyu.domain.auth.vo.RefreshToken;
+import com.todayyu.domain.auth.vo.TokenId;
 import com.todayyu.domain.member.vo.MemberId;
 import com.todayyu.domain.member.vo.Role;
 import com.todayyu.infrastructure.common.annotation.Adapter;
@@ -110,7 +111,7 @@ public class JwtTokenAdapter implements TokenPort {
         Claims claims = jwtProvider.parse(accessToken.getValue());
         validateType(claims, TYPE_ACCESS_TOKEN);
         
-        return new AccessTokenClaims(parseMemberId(claims), parseRole(claims), parseExpiration(claims));
+        return new AccessTokenClaims(parseMemberId(claims), parseTokenId(claims), parseRole(claims), parseExpiration(claims));
     }
     
     /**
@@ -164,6 +165,21 @@ public class JwtTokenAdapter implements TokenPort {
             return new MemberId(Long.parseLong(claims.getSubject()));
         } catch (IllegalArgumentException e) {
             throw new CustomException(BusinessAuthErrorType.INVALID_TOKEN, "토큰 Subject가 잘못되었습니다.", e);
+        }
+    }
+    
+    /**
+     * 토큰을 파싱하여 토큰 ID(jti)를 반환하는 메서드
+     *
+     * @param claims 토큰 클레임({@link Claims}) 객체
+     * @return 토큰 ID 객체
+     * @throws CustomException {@link BusinessAuthErrorType#INVALID_TOKEN} - 토큰 ID가 잘못된 경우
+     */
+    private TokenId parseTokenId(Claims claims) {
+        try {
+            return new TokenId(claims.getId());
+        } catch (IllegalArgumentException e) {
+            throw new CustomException(BusinessAuthErrorType.INVALID_TOKEN, "토큰 ID(jti)가 잘못되었습니다.", e);
         }
     }
     
