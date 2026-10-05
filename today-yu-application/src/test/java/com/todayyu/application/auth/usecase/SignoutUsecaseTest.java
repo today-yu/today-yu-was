@@ -7,6 +7,7 @@ import com.todayyu.application.auth.port.save.SaveBlacklistTokenPort;
 import com.todayyu.application.auth.port.save.SaveRefreshTokenPort;
 import com.todayyu.common.exception.CustomException;
 import com.todayyu.domain.auth.vo.AccessToken;
+import com.todayyu.domain.auth.vo.SessionId;
 import com.todayyu.domain.auth.vo.TokenId;
 import com.todayyu.domain.member.vo.MemberId;
 import com.todayyu.domain.member.vo.Role;
@@ -30,10 +31,11 @@ import static org.mockito.Mockito.never;
 class SignoutUsecaseTest {
     private static final MemberId MEMBER_ID = new MemberId(1L);
     private static final TokenId TOKEN_ID = new TokenId("token-id");
+    private static final SessionId SESSION_ID = SessionId.create();
     private static final Instant EXPIRES_AT = Instant.parse("2026-10-04T00:30:00Z");
     private static final AccessToken ACCESS_TOKEN = new AccessToken("access-token");
     private static final AccessTokenClaims CLAIMS =
-            new AccessTokenClaims(MEMBER_ID, TOKEN_ID, Role.MEMBER, EXPIRES_AT);
+            new AccessTokenClaims(MEMBER_ID, TOKEN_ID, SESSION_ID, Role.MEMBER, EXPIRES_AT);
 
     @Mock
     private TokenPort tokenPort;
@@ -48,7 +50,7 @@ class SignoutUsecaseTest {
     private SignoutUsecase signoutUsecase;
 
     @Test
-    @DisplayName("로그아웃하면 Access Token을 만료 기한까지 블랙리스트에 등록하고 회원의 Refresh Token을 삭제한다")
+    @DisplayName("로그아웃하면 Access Token을 만료 기한까지 블랙리스트에 등록하고 해당 세션의 Refresh Token을 삭제한다")
     void signout() {
         // given
         given(tokenPort.parseAccessToken(ACCESS_TOKEN)).willReturn(CLAIMS);
@@ -58,7 +60,7 @@ class SignoutUsecaseTest {
 
         // then
         then(saveBlacklistTokenPort).should().save(TOKEN_ID, EXPIRES_AT);
-        then(saveRefreshTokenPort).should().deleteByMemberId(MEMBER_ID);
+        then(saveRefreshTokenPort).should().delete(MEMBER_ID, SESSION_ID);
     }
 
     @Test
@@ -75,6 +77,6 @@ class SignoutUsecaseTest {
         // then
         assertEquals(BusinessAuthErrorType.EXPIRED_TOKEN, exception.getErrorType());
         then(saveBlacklistTokenPort).should(never()).save(any(), any());
-        then(saveRefreshTokenPort).should(never()).deleteByMemberId(any());
+        then(saveRefreshTokenPort).should(never()).delete(any(), any());
     }
 }

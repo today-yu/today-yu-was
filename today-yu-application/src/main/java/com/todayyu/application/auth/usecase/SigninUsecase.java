@@ -11,6 +11,7 @@ import com.todayyu.application.common.annotation.Usecase;
 import com.todayyu.application.member.port.PasswordPort;
 import com.todayyu.application.member.port.read.ReadMemberPort;
 import com.todayyu.common.exception.CustomException;
+import com.todayyu.domain.auth.vo.SessionId;
 import com.todayyu.domain.member.entity.Member;
 import com.todayyu.domain.member.vo.EncodedPassword;
 import com.todayyu.domain.member.vo.Password;
@@ -65,10 +66,11 @@ public class SigninUsecase {
         }
         
         Instant now = Instant.now();
-        IssuedAccessToken issuedAccessToken = tokenPort.issueAccessToken(member.getId(), member.getRole(), now);
-        IssuedRefreshToken issuedRefreshToken = tokenPort.issueRefreshToken(member.getId(), now);
+        SessionId sessionId = SessionId.create();
+        IssuedAccessToken issuedAccessToken = tokenPort.issueAccessToken(member.getId(), member.getRole(), sessionId, now);
+        IssuedRefreshToken issuedRefreshToken = tokenPort.issueRefreshToken(member.getId(), sessionId, now);
         
-        saveRefreshTokenPort.save(member.getId(), issuedRefreshToken);
+        saveRefreshTokenPort.save(member.getId(), sessionId, issuedRefreshToken);
         
         return SigninResult.from(issuedAccessToken, issuedRefreshToken);
     }

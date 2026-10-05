@@ -9,6 +9,7 @@ import com.todayyu.application.auth.port.TokenPort;
 import com.todayyu.common.exception.CustomException;
 import com.todayyu.domain.auth.vo.AccessToken;
 import com.todayyu.domain.auth.vo.RefreshToken;
+import com.todayyu.domain.auth.vo.SessionId;
 import com.todayyu.domain.auth.vo.TokenId;
 import com.todayyu.domain.member.vo.MemberId;
 import com.todayyu.domain.member.vo.Role;
@@ -32,6 +33,7 @@ public class JwtTokenAdapter implements TokenPort {
     private static final String TYPE_CLAIM_KEY = "type";
     private static final String TYPE_ACCESS_TOKEN = "access";
     private static final String TYPE_REFRESH_TOKEN = "refresh";
+    private static final String SESSION_ID_CLAIM_KEY = "sid";
     
     /**
      * Access Token을 발급하는 메서드
@@ -41,16 +43,20 @@ public class JwtTokenAdapter implements TokenPort {
      *
      * @param memberId 회원 ID
      * @param role 해당 회원의 역할({@link Role})
+     * @param sessionId 토큰이 발급된 세션 ID
      * @param issuedAt 토큰 발급 시각
      * @return {@link IssuedAccessToken} 객체
      */
     @Override
-    public IssuedAccessToken issueAccessToken(MemberId memberId, Role role, Instant issuedAt) {
+    public IssuedAccessToken issueAccessToken(MemberId memberId, Role role, SessionId sessionId, Instant issuedAt) {
         String token = issue(
                 memberId,
                 issuedAt,
                 jwtProperties.getAccessTokenExpiration(),
-                Map.of(ROLE_CLAIM_KEY, role.name(), TYPE_CLAIM_KEY, TYPE_ACCESS_TOKEN)
+                Map.of(
+                        ROLE_CLAIM_KEY, role.name(), TYPE_CLAIM_KEY, TYPE_ACCESS_TOKEN,
+                        SESSION_ID_CLAIM_KEY, sessionId.getValue()
+                )
         );
         Instant expiresAt = issuedAt.plus(jwtProperties.getAccessTokenExpiration());
         
@@ -64,16 +70,20 @@ public class JwtTokenAdapter implements TokenPort {
      * <p> 토큰 만료 기한을 같이 포함한 DTO를 반환한다. </p>
      *
      * @param memberId 회원 ID
+     * @param sessionId 토큰이 발급된 세션 ID
      * @param issuedAt 토큰 발급 시각
      * @return {@link IssuedRefreshToken} 객체
      */
     @Override
-    public IssuedRefreshToken issueRefreshToken(MemberId memberId, Instant issuedAt) {
+    public IssuedRefreshToken issueRefreshToken(MemberId memberId, SessionId sessionId, Instant issuedAt) {
         String token = issue(
                 memberId,
                 issuedAt,
                 jwtProperties.getRefreshTokenExpiration(),
-                Map.of(TYPE_CLAIM_KEY, TYPE_REFRESH_TOKEN)
+                Map.of(
+                        TYPE_CLAIM_KEY, TYPE_REFRESH_TOKEN,
+                        SESSION_ID_CLAIM_KEY, sessionId.getValue()
+                )
         );
         Instant expiresAt = issuedAt.plus(jwtProperties.getRefreshTokenExpiration());
         
@@ -111,7 +121,13 @@ public class JwtTokenAdapter implements TokenPort {
         Claims claims = jwtProvider.parse(accessToken.getValue());
         validateType(claims, TYPE_ACCESS_TOKEN);
         
-        return new AccessTokenClaims(parseMemberId(claims), parseTokenId(claims), parseRole(claims), parseExpiration(claims));
+        return new AccessTokenClaims(
+                parseMemberId(claims),
+                parseTokenId(claims),
+                parseSessionId(claims),
+                parseRole(claims),
+                parseExpiration(claims)
+        );
     }
     
     /**
@@ -127,7 +143,7 @@ public class JwtTokenAdapter implements TokenPort {
         Claims claims = jwtProvider.parse(refreshToken.getValue());
         validateType(claims, TYPE_REFRESH_TOKEN);
         
-        return new RefreshTokenClaims(parseMemberId(claims), parseExpiration(claims));
+        return new RefreshTokenClaims(parseMemberId(claims), parseSessionId(claims), parseExpiration(claims));
     }
     
     /**
@@ -180,6 +196,21 @@ public class JwtTokenAdapter implements TokenPort {
             return new TokenId(claims.getId());
         } catch (IllegalArgumentException e) {
             throw new CustomException(BusinessAuthErrorType.INVALID_TOKEN, "토큰 ID(jti)가 잘못되었습니다.", e);
+        }
+    }
+    
+    /**
+     * 토큰을 파싱하여 세션 ID를 반환하는 메서드
+     *
+     * @param claims 토큰 클레임({@link Claims}) 객체
+     * @return 세션 ID 객체
+     * @throws CustomException {@link BusinessAuthErrorType#INVALID_TOKEN} - 세션 ID가 잘못된 경우
+     */
+    private SessionId parseSessionId(Claims claims) {
+        try {
+            return SessionId.from(claims.get(SESSION_ID_CLAIM_KEY, String.class));
+        } catch (IllegalArgumentException e) {
+            throw new CustomException(BusinessAuthErrorType.INVALID_TOKEN, "토큰의 세션 ID가 잘못되었습니다.", e);
         }
     }
     

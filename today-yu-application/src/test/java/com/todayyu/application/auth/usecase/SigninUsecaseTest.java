@@ -12,6 +12,7 @@ import com.todayyu.application.member.port.read.ReadMemberPort;
 import com.todayyu.common.exception.CustomException;
 import com.todayyu.domain.auth.vo.AccessToken;
 import com.todayyu.domain.auth.vo.RefreshToken;
+import com.todayyu.domain.auth.vo.SessionId;
 import com.todayyu.domain.member.entity.Account;
 import com.todayyu.domain.member.entity.LocalAccount;
 import com.todayyu.domain.member.entity.Member;
@@ -82,15 +83,21 @@ class SigninUsecaseTest {
     @Captor
     private ArgumentCaptor<Instant> refreshTokenIssuedAtCaptor;
 
+    @Captor
+    private ArgumentCaptor<SessionId> accessTokenSessionIdCaptor;
+
+    @Captor
+    private ArgumentCaptor<SessionId> refreshTokenSessionIdCaptor;
+
     @Test
     @DisplayName("이메일과 비밀번호가 일치하면 Access Token과 Refresh Token을 만료 시각과 함께 발급한다")
     void signin() {
         // given
         given(readMemberPort.readByEmail(EMAIL)).willReturn(Optional.of(localMember()));
         given(passwordPort.matches(PASSWORD, ENCODED_PASSWORD)).willReturn(true);
-        given(tokenPort.issueAccessToken(eq(MEMBER_ID), eq(Role.MEMBER), any(Instant.class)))
+        given(tokenPort.issueAccessToken(eq(MEMBER_ID), eq(Role.MEMBER), any(SessionId.class), any(Instant.class)))
                 .willReturn(ISSUED_ACCESS_TOKEN);
-        given(tokenPort.issueRefreshToken(eq(MEMBER_ID), any(Instant.class)))
+        given(tokenPort.issueRefreshToken(eq(MEMBER_ID), any(SessionId.class), any(Instant.class)))
                 .willReturn(ISSUED_REFRESH_TOKEN);
 
         // when
@@ -109,36 +116,57 @@ class SigninUsecaseTest {
         // given
         given(readMemberPort.readByEmail(EMAIL)).willReturn(Optional.of(localMember()));
         given(passwordPort.matches(PASSWORD, ENCODED_PASSWORD)).willReturn(true);
-        given(tokenPort.issueAccessToken(eq(MEMBER_ID), eq(Role.MEMBER), any(Instant.class)))
+        given(tokenPort.issueAccessToken(eq(MEMBER_ID), eq(Role.MEMBER), any(SessionId.class), any(Instant.class)))
                 .willReturn(ISSUED_ACCESS_TOKEN);
-        given(tokenPort.issueRefreshToken(eq(MEMBER_ID), any(Instant.class)))
+        given(tokenPort.issueRefreshToken(eq(MEMBER_ID), any(SessionId.class), any(Instant.class)))
                 .willReturn(ISSUED_REFRESH_TOKEN);
 
         // when
         signinUsecase.signin(COMMAND);
 
         // then
-        then(tokenPort).should().issueAccessToken(eq(MEMBER_ID), eq(Role.MEMBER), accessTokenIssuedAtCaptor.capture());
-        then(tokenPort).should().issueRefreshToken(eq(MEMBER_ID), refreshTokenIssuedAtCaptor.capture());
+        then(tokenPort).should().issueAccessToken(eq(MEMBER_ID), eq(Role.MEMBER), any(SessionId.class), accessTokenIssuedAtCaptor.capture());
+        then(tokenPort).should().issueRefreshToken(eq(MEMBER_ID), any(SessionId.class), refreshTokenIssuedAtCaptor.capture());
         assertEquals(accessTokenIssuedAtCaptor.getValue(), refreshTokenIssuedAtCaptor.getValue());
     }
 
     @Test
-    @DisplayName("로그인에 성공하면 발급한 Refresh Token을 회원 ID와 함께 저장한다")
-    void signinSavesRefreshToken() {
+    @DisplayName("Access Token과 Refresh Token은 같은 세션 ID로 발급한다")
+    void signinWithSameSessionId() {
         // given
         given(readMemberPort.readByEmail(EMAIL)).willReturn(Optional.of(localMember()));
         given(passwordPort.matches(PASSWORD, ENCODED_PASSWORD)).willReturn(true);
-        given(tokenPort.issueAccessToken(eq(MEMBER_ID), eq(Role.MEMBER), any(Instant.class)))
+        given(tokenPort.issueAccessToken(eq(MEMBER_ID), eq(Role.MEMBER), any(SessionId.class), any(Instant.class)))
                 .willReturn(ISSUED_ACCESS_TOKEN);
-        given(tokenPort.issueRefreshToken(eq(MEMBER_ID), any(Instant.class)))
+        given(tokenPort.issueRefreshToken(eq(MEMBER_ID), any(SessionId.class), any(Instant.class)))
                 .willReturn(ISSUED_REFRESH_TOKEN);
 
         // when
         signinUsecase.signin(COMMAND);
 
         // then
-        then(saveRefreshTokenPort).should().save(MEMBER_ID, ISSUED_REFRESH_TOKEN);
+        then(tokenPort).should().issueAccessToken(eq(MEMBER_ID), eq(Role.MEMBER), accessTokenSessionIdCaptor.capture(), any(Instant.class));
+        then(tokenPort).should().issueRefreshToken(eq(MEMBER_ID), refreshTokenSessionIdCaptor.capture(), any(Instant.class));
+        assertEquals(accessTokenSessionIdCaptor.getValue(), refreshTokenSessionIdCaptor.getValue());
+    }
+
+    @Test
+    @DisplayName("로그인에 성공하면 발급한 Refresh Token을 회원 ID, 토큰 발급에 사용한 세션 ID와 함께 저장한다")
+    void signinSavesRefreshToken() {
+        // given
+        given(readMemberPort.readByEmail(EMAIL)).willReturn(Optional.of(localMember()));
+        given(passwordPort.matches(PASSWORD, ENCODED_PASSWORD)).willReturn(true);
+        given(tokenPort.issueAccessToken(eq(MEMBER_ID), eq(Role.MEMBER), any(SessionId.class), any(Instant.class)))
+                .willReturn(ISSUED_ACCESS_TOKEN);
+        given(tokenPort.issueRefreshToken(eq(MEMBER_ID), any(SessionId.class), any(Instant.class)))
+                .willReturn(ISSUED_REFRESH_TOKEN);
+
+        // when
+        signinUsecase.signin(COMMAND);
+
+        // then
+        then(tokenPort).should().issueRefreshToken(eq(MEMBER_ID), refreshTokenSessionIdCaptor.capture(), any(Instant.class));
+        then(saveRefreshTokenPort).should().save(MEMBER_ID, refreshTokenSessionIdCaptor.getValue(), ISSUED_REFRESH_TOKEN);
     }
 
     @Test

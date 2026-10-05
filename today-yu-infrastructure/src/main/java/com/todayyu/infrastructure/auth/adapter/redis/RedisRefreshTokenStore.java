@@ -13,11 +13,15 @@ public class RedisRefreshTokenStore {
     
     private static final String KEY_PREFIX = "refresh-token:";
     
-    public void save(String key, String refreshToken, Duration duration) {
-        redisTemplate.opsForValue().set(KEY_PREFIX + key, refreshToken, duration);
+    public void save(String memberId, String sessionId, String refreshToken, Duration duration) {
+        redisTemplate.opsForValue().set(key(memberId, sessionId), refreshToken, duration);
     }
     
-    public void delete(String key) {
-        redisTemplate.delete(KEY_PREFIX + key);
+    public void delete(String memberId, String sessionId) {
+        redisTemplate.delete(key(memberId, sessionId));
+    }
+    
+    private String key(String memberId, String sessionId) {
+        return KEY_PREFIX + memberId + ":" + sessionId;
     }
 }
