@@ -22,6 +22,7 @@ import java.time.Duration;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.Date;
+import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
@@ -112,7 +113,7 @@ class JwtTokenAdapterTest {
     }
 
     @Test
-    @DisplayName("발급한 Access Token을 파싱하면 회원 아이디, 권한, 만료 시각을 얻는다")
+    @DisplayName("발급한 Access Token을 파싱하면 회원 아이디, 세션 ID, 권한, 만료 시각을 얻는다")
     void parseAccessToken() {
         // given
         Instant issuedAt = now();
@@ -123,12 +124,13 @@ class JwtTokenAdapterTest {
 
         // then
         assertEquals(MEMBER_ID, claims.memberId());
+        assertEquals(SESSION_ID, claims.sessionId());
         assertEquals(Role.MEMBER, claims.role());
         assertEquals(issuedAt.plus(ACCESS_TOKEN_EXPIRATION), claims.expiresAt());
     }
 
     @Test
-    @DisplayName("발급한 Refresh Token을 파싱하면 회원 아이디와 만료 시각을 얻는다")
+    @DisplayName("발급한 Refresh Token을 파싱하면 회원 아이디, 세션 ID, 만료 시각을 얻는다")
     void parseRefreshToken() {
         // given
         Instant issuedAt = now();
@@ -139,6 +141,7 @@ class JwtTokenAdapterTest {
 
         // then
         assertEquals(MEMBER_ID, claims.memberId());
+        assertEquals(SESSION_ID, claims.sessionId());
         assertEquals(issuedAt.plus(REFRESH_TOKEN_EXPIRATION), claims.expiresAt());
     }
 
@@ -214,6 +217,46 @@ class JwtTokenAdapterTest {
         // when
         CustomException exception = assertThrows(CustomException.class,
                 () -> jwtTokenAdapter.parseAccessToken(accessToken));
+
+        // then
+        assertEquals(BusinessAuthErrorType.INVALID_TOKEN, exception.getErrorType());
+    }
+
+    @Test
+    @DisplayName("세션 ID가 없는 Access Token을 파싱하면 유효하지 않은 토큰 예외가 발생한다")
+    void parseAccessTokenWithoutSessionId() {
+        // given
+        String token = new JwtProvider(properties).issue(
+                String.valueOf(MEMBER_ID.getValue()),
+                now(),
+                ACCESS_TOKEN_EXPIRATION,
+                Map.of("role", Role.MEMBER.name(), "type", "access")
+        );
+        AccessToken accessToken = new AccessToken(token);
+
+        // when
+        CustomException exception = assertThrows(CustomException.class,
+                () -> jwtTokenAdapter.parseAccessToken(accessToken));
+
+        // then
+        assertEquals(BusinessAuthErrorType.INVALID_TOKEN, exception.getErrorType());
+    }
+
+    @Test
+    @DisplayName("세션 ID가 없는 Refresh Token을 파싱하면 유효하지 않은 토큰 예외가 발생한다")
+    void parseRefreshTokenWithoutSessionId() {
+        // given
+        String token = new JwtProvider(properties).issue(
+                String.valueOf(MEMBER_ID.getValue()),
+                now(),
+                REFRESH_TOKEN_EXPIRATION,
+                Map.of("type", "refresh")
+        );
+        RefreshToken refreshToken = new RefreshToken(token);
+
+        // when
+        CustomException exception = assertThrows(CustomException.class,
+                () -> jwtTokenAdapter.parseRefreshToken(refreshToken));
 
         // then
         assertEquals(BusinessAuthErrorType.INVALID_TOKEN, exception.getErrorType());
