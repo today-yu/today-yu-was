@@ -70,7 +70,7 @@ public class SigninUsecase {
         IssuedAccessToken issuedAccessToken = tokenPort.issueAccessToken(member.getId(), member.getRole(), sessionId, now);
         IssuedRefreshToken issuedRefreshToken = tokenPort.issueRefreshToken(member.getId(), sessionId, now);
         
-        saveRefreshTokenPort.save(member.getId(), issuedRefreshToken);
+        saveRefreshTokenPort.save(member.getId(), sessionId, issuedRefreshToken);
         
         return SigninResult.from(issuedAccessToken, issuedRefreshToken);
     }
