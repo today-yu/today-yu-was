@@ -69,7 +69,7 @@ class SecurityConfigTest {
     @DisplayName("보호된 엔드포인트에 유효한 토큰으로 요청하면 인증된 회원 정보로 요청이 처리된다")
     void protectedEndpointWithValidToken() throws Exception {
         // given
-        given(authenticationUsecase.extractMemberIdFromAccessToken(any()))
+        given(authenticationUsecase.authenticate(any()))
                 .willReturn(new AuthenticatedMember(new MemberId(1L), Role.MEMBER));
 
         // when & then
@@ -90,7 +90,7 @@ class SecurityConfigTest {
     @DisplayName("보호된 엔드포인트에 만료된 토큰으로 요청하면 만료 에러 코드로 응답한다")
     void protectedEndpointWithExpiredToken() throws Exception {
         // given
-        given(authenticationUsecase.extractMemberIdFromAccessToken(any()))
+        given(authenticationUsecase.authenticate(any()))
                 .willThrow(new CustomException(BusinessAuthErrorType.EXPIRED_TOKEN));
 
         // when & then

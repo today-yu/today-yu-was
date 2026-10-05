@@ -79,7 +79,7 @@ class JwtAuthenticationFilterTest {
     void doFilterWithValidToken() throws Exception {
         // given
         MockHttpServletRequest request = request(PROTECTED_URI, "Bearer access-token");
-        given(authenticationUsecase.extractMemberIdFromAccessToken(any()))
+        given(authenticationUsecase.authenticate(any()))
                 .willReturn(new AuthenticatedMember(MEMBER_ID, Role.MEMBER));
 
         // when
@@ -101,14 +101,14 @@ class JwtAuthenticationFilterTest {
     void doFilterExtractsTokenWithoutPrefix() throws Exception {
         // given
         MockHttpServletRequest request = request(PROTECTED_URI, "Bearer access-token");
-        given(authenticationUsecase.extractMemberIdFromAccessToken(any()))
+        given(authenticationUsecase.authenticate(any()))
                 .willReturn(new AuthenticatedMember(MEMBER_ID, Role.MEMBER));
 
         // when
         filter.doFilter(request, response, filterChain);
 
         // then
-        then(authenticationUsecase).should().extractMemberIdFromAccessToken(accessTokenCaptor.capture());
+        then(authenticationUsecase).should().authenticate(accessTokenCaptor.capture());
         assertEquals("access-token", accessTokenCaptor.getValue().getValue());
     }
 
@@ -165,7 +165,7 @@ class JwtAuthenticationFilterTest {
     void doFilterWithAuthenticationFailure(BusinessAuthErrorType errorType) throws Exception {
         // given
         MockHttpServletRequest request = request(PROTECTED_URI, "Bearer access-token");
-        given(authenticationUsecase.extractMemberIdFromAccessToken(any()))
+        given(authenticationUsecase.authenticate(any()))
                 .willThrow(new CustomException(errorType));
 
         // when
