@@ -3,6 +3,7 @@ package com.todayyu.apis.common.security.config;
 import com.todayyu.apis.common.security.filter.JwtAuthenticationFilter;
 import com.todayyu.apis.common.security.handler.SecurityErrorResponseWriter;
 import com.todayyu.application.auth.usecase.AuthenticationUsecase;
+import com.todayyu.domain.member.vo.Role;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -33,6 +34,10 @@ public class SecurityConfig {
             PathPatternRequestMatcher.pathPattern("/api/v1/auth/email-verification/**")
     );
     
+    private static final RequestMatcher MEMBER_ENDPOINTS = new OrRequestMatcher(
+            PathPatternRequestMatcher.pathPattern("/api/v1/auth/sign-out")
+    );
+    
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) {
         return http
@@ -45,6 +50,7 @@ public class SecurityConfig {
                 .authorizeHttpRequests(authorize
                         -> authorize
                         .requestMatchers(PUBLIC_ENDPOINTS).permitAll()
+                        .requestMatchers(MEMBER_ENDPOINTS).hasRole(Role.MEMBER.name())
                         .anyRequest().authenticated())
                 .exceptionHandling(exception
                         -> exception
