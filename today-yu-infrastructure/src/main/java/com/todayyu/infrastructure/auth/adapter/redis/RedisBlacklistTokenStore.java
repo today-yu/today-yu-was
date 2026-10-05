@@ -14,7 +14,11 @@ public class RedisBlacklistTokenStore {
     private static final String KEY_PREFIX = "blacklist-token:";
     private static final String BLACKLISTED = "1";
     
-    public void save(String key, Duration duration) {
-        redisTemplate.opsForValue().set(KEY_PREFIX + key, BLACKLISTED, duration);
+    public void save(String tokenId, Duration duration) {
+        redisTemplate.opsForValue().set(KEY_PREFIX + tokenId, BLACKLISTED, duration);
+    }
+    
+    public boolean exists(String tokenId) {
+        return Boolean.TRUE.equals(redisTemplate.hasKey(KEY_PREFIX + tokenId));
     }
 }
