@@ -72,7 +72,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         
         try {
             AccessToken accessToken = parseAccessToken(authorization);
-            AuthenticatedMember member = authenticationUsecase.extractMemberIdFromAccessToken(accessToken);
+            AuthenticatedMember member = authenticationUsecase.authenticate(accessToken);
             UserDetails userDetails = new CustomUserDetails(member.memberId(), member.role());
             
             setAuthentication(userDetails);
