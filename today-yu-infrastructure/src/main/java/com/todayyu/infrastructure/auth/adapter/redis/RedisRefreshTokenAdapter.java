@@ -33,4 +33,14 @@ public class RedisRefreshTokenAdapter implements SaveRefreshTokenPort {
         
         refreshTokenStore.save(key, token, duration);
     }
+    
+    /**
+     * Redis에 저장된 Refresh Token을 제거하는 메서드
+     *
+     * @param memberId 회원 ID
+     */
+    @Override
+    public void deleteByMemberId(MemberId memberId) {
+        refreshTokenStore.delete(String.valueOf(memberId.getValue()));
+    }
 }
