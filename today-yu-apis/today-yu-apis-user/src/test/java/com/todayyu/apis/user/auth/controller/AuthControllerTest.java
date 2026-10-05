@@ -4,7 +4,9 @@ import com.todayyu.apis.common.auth.AuthScheme;
 import com.todayyu.apis.common.exception.GlobalExceptionHandler;
 import com.todayyu.application.auth.dto.SigninCommand;
 import com.todayyu.application.auth.dto.SigninResult;
+import com.todayyu.application.auth.error.BusinessAuthErrorType;
 import com.todayyu.application.auth.usecase.SigninUsecase;
+import com.todayyu.application.auth.usecase.SignoutUsecase;
 import com.todayyu.common.error.BaseErrorType;
 import com.todayyu.common.error.ErrorCategory;
 import com.todayyu.common.exception.CustomException;
@@ -22,6 +24,7 @@ import org.mockito.Captor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
@@ -42,6 +45,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @ExtendWith(MockitoExtension.class)
 class AuthControllerTest {
     private static final String SIGNIN_URL = "/api/v1/auth/sign-in";
+    private static final String SIGNOUT_URL = "/api/v1/auth/sign-out";
     private static final String EMAIL = "user@example.com";
     private static final String PASSWORD = "password1234";
     private static final String INVALID_PASSWORD_LENGTH_MESSAGE =
@@ -54,11 +58,17 @@ class AuthControllerTest {
     @Mock
     private SigninUsecase signinUsecase;
 
+    @Mock
+    private SignoutUsecase signoutUsecase;
+
     @InjectMocks
     private AuthController authController;
 
     @Captor
     private ArgumentCaptor<SigninCommand> signinCommandCaptor;
+
+    @Captor
+    private ArgumentCaptor<AccessToken> accessTokenCaptor;
 
     private MockMvc mockMvc;
 
@@ -182,6 +192,59 @@ class AuthControllerTest {
                         .content("""
                                 {"email": "%s", "password": "%s"}
                                 """.formatted(EMAIL, PASSWORD)))
+                .andExpect(status().isUnauthorized())
+                .andExpect(jsonPath("$.errorCode").value(TestErrorType.UNAUTHORIZED.getErrorCode()))
+                .andExpect(jsonPath("$.message").value(TestErrorType.UNAUTHORIZED.getMessage()));
+    }
+
+    @Test
+    @DisplayName("로그아웃 요청 시 Authorization 헤더의 Access Token으로 로그아웃을 요청하고 성공 응답을 반환한다")
+    void signout() throws Exception {
+        // given & when
+        mockMvc.perform(post(SIGNOUT_URL)
+                        .header(HttpHeaders.AUTHORIZATION, AuthScheme.BEARER + " " + ACCESS_TOKEN))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.message").value("로그아웃에 성공하였습니다."));
+
+        // then
+        then(signoutUsecase).should().signout(accessTokenCaptor.capture());
+        assertEquals(ACCESS_TOKEN, accessTokenCaptor.getValue().getValue());
+    }
+
+    @Test
+    @DisplayName("로그아웃 요청에 Authorization 헤더가 없으면 잘못된 요청 에러를 응답하고 로그아웃을 하지 않는다")
+    void signoutWithoutAuthorizationHeader() throws Exception {
+        // given & when
+        mockMvc.perform(post(SIGNOUT_URL))
+                .andExpect(status().isBadRequest());
+
+        // then
+        then(signoutUsecase).should(never()).signout(any());
+    }
+
+    @Test
+    @DisplayName("로그아웃 요청의 Access Token이 비어있으면 유효하지 않은 토큰 에러를 응답하고 로그아웃을 하지 않는다")
+    void signoutWithBlankAccessToken() throws Exception {
+        // given & when
+        mockMvc.perform(post(SIGNOUT_URL)
+                        .header(HttpHeaders.AUTHORIZATION, AuthScheme.BEARER + " "))
+                .andExpect(status().isUnauthorized())
+                .andExpect(jsonPath("$.errorCode").value(BusinessAuthErrorType.INVALID_TOKEN.getErrorCode()));
+
+        // then
+        then(signoutUsecase).should(never()).signout(any());
+    }
+
+    @Test
+    @DisplayName("로그아웃 중 비즈니스 예외가 발생하면 에러 카테고리에 맞는 상태 코드와 에러 응답을 반환한다")
+    void signoutWithBusinessException() throws Exception {
+        // given
+        willThrow(new CustomException(TestErrorType.UNAUTHORIZED))
+                .given(signoutUsecase).signout(any());
+
+        // when & then
+        mockMvc.perform(post(SIGNOUT_URL)
+                        .header(HttpHeaders.AUTHORIZATION, AuthScheme.BEARER + " " + ACCESS_TOKEN))
                 .andExpect(status().isUnauthorized())
                 .andExpect(jsonPath("$.errorCode").value(TestErrorType.UNAUTHORIZED.getErrorCode()))
                 .andExpect(jsonPath("$.message").value(TestErrorType.UNAUTHORIZED.getMessage()));
