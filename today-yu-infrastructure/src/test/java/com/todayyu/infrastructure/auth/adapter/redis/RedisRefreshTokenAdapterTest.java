@@ -2,6 +2,7 @@ package com.todayyu.infrastructure.auth.adapter.redis;
 
 import com.todayyu.application.auth.dto.IssuedRefreshToken;
 import com.todayyu.domain.auth.vo.RefreshToken;
+import com.todayyu.domain.auth.vo.SessionId;
 import com.todayyu.domain.member.vo.MemberId;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -27,6 +28,7 @@ import static org.mockito.Mockito.never;
 @ExtendWith(MockitoExtension.class)
 class RedisRefreshTokenAdapterTest {
     private static final MemberId MEMBER_ID = new MemberId(1L);
+    private static final SessionId SESSION_ID = SessionId.create();
     private static final RefreshToken REFRESH_TOKEN = new RefreshToken("refresh-token");
     private static final Duration REFRESH_TOKEN_EXPIRATION = Duration.ofDays(14);
 
@@ -40,13 +42,18 @@ class RedisRefreshTokenAdapterTest {
     private ArgumentCaptor<Duration> durationCaptor;
 
     @Test
-    @DisplayName("회원 ID를 키로, Refresh Token을 값으로 만료 시각까지 남은 시간 동안 저장한다")
+    @DisplayName("회원 ID와 세션 ID를 키로, Refresh Token을 값으로 만료 시각까지 남은 시간 동안 저장한다")
     void save() {
         IssuedRefreshToken issuedRefreshToken = new IssuedRefreshToken(REFRESH_TOKEN, Instant.now().plus(REFRESH_TOKEN_EXPIRATION));
 
-        adapter.save(MEMBER_ID, issuedRefreshToken);
+        adapter.save(MEMBER_ID, SESSION_ID, issuedRefreshToken);
 
-        then(store).should().save(eq(String.valueOf(MEMBER_ID.getValue())), eq(REFRESH_TOKEN.getValue()), durationCaptor.capture());
+        then(store).should().save(
+                eq(String.valueOf(MEMBER_ID.getValue())),
+                eq(SESSION_ID.getValue()),
+                eq(REFRESH_TOKEN.getValue()),
+                durationCaptor.capture()
+        );
         Duration duration = durationCaptor.getValue();
         assertTrue(duration.compareTo(REFRESH_TOKEN_EXPIRATION) <= 0);
         assertFalse(duration.isZero() || duration.isNegative());
@@ -57,7 +64,15 @@ class RedisRefreshTokenAdapterTest {
     void saveExpiredToken() {
         IssuedRefreshToken issuedRefreshToken = new IssuedRefreshToken(REFRESH_TOKEN, Instant.now().minusSeconds(1));
 
-        assertThrows(IllegalArgumentException.class, () -> adapter.save(MEMBER_ID, issuedRefreshToken));
-        then(store).should(never()).save(anyString(), anyString(), any(Duration.class));
+        assertThrows(IllegalArgumentException.class, () -> adapter.save(MEMBER_ID, SESSION_ID, issuedRefreshToken));
+        then(store).should(never()).save(anyString(), anyString(), anyString(), any(Duration.class));
+    }
+
+    @Test
+    @DisplayName("회원 ID와 세션 ID에 해당하는 Refresh Token을 삭제한다")
+    void delete() {
+        adapter.delete(MEMBER_ID, SESSION_ID);
+
+        then(store).should().delete(String.valueOf(MEMBER_ID.getValue()), SESSION_ID.getValue());
     }
 }
