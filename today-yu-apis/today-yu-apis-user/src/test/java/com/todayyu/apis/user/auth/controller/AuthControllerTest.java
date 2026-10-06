@@ -4,6 +4,7 @@ import com.todayyu.apis.common.auth.AuthScheme;
 import com.todayyu.apis.common.exception.GlobalExceptionHandler;
 import com.todayyu.application.auth.dto.ReissueAuthTokenCommand;
 import com.todayyu.application.auth.dto.SigninCommand;
+import com.todayyu.application.auth.dto.SignoutCommand;
 import com.todayyu.application.auth.dto.AuthTokenResult;
 import com.todayyu.application.auth.error.BusinessAuthErrorType;
 import com.todayyu.application.auth.usecase.ReissueAuthTokenUsecase;
@@ -74,7 +75,7 @@ class AuthControllerTest {
     private ArgumentCaptor<SigninCommand> signinCommandCaptor;
 
     @Captor
-    private ArgumentCaptor<AccessToken> accessTokenCaptor;
+    private ArgumentCaptor<SignoutCommand> signoutCommandCaptor;
 
     @Captor
     private ArgumentCaptor<ReissueAuthTokenCommand> reissueAuthTokenCommandCaptor;
@@ -216,8 +217,8 @@ class AuthControllerTest {
                 .andExpect(jsonPath("$.message").value("로그아웃에 성공하였습니다."));
 
         // then
-        then(signoutUsecase).should().signout(accessTokenCaptor.capture());
-        assertEquals(ACCESS_TOKEN, accessTokenCaptor.getValue().getValue());
+        then(signoutUsecase).should().signout(signoutCommandCaptor.capture());
+        assertEquals(ACCESS_TOKEN, signoutCommandCaptor.getValue().accessToken().getValue());
     }
 
     @Test
