@@ -1,6 +1,7 @@
 package com.todayyu.application.auth.usecase;
 
 import com.todayyu.application.auth.dto.AccessTokenClaims;
+import com.todayyu.application.auth.dto.SignoutCommand;
 import com.todayyu.application.auth.error.BusinessAuthErrorType;
 import com.todayyu.application.auth.port.TokenPort;
 import com.todayyu.application.auth.port.save.SaveBlacklistTokenPort;
@@ -34,6 +35,7 @@ class SignoutUsecaseTest {
     private static final SessionId SESSION_ID = SessionId.create();
     private static final Instant EXPIRES_AT = Instant.parse("2026-10-04T00:30:00Z");
     private static final AccessToken ACCESS_TOKEN = new AccessToken("access-token");
+    private static final SignoutCommand COMMAND = new SignoutCommand(ACCESS_TOKEN);
     private static final AccessTokenClaims CLAIMS =
             new AccessTokenClaims(MEMBER_ID, TOKEN_ID, SESSION_ID, Role.MEMBER, EXPIRES_AT);
 
@@ -56,7 +58,7 @@ class SignoutUsecaseTest {
         given(tokenPort.parseAccessToken(ACCESS_TOKEN)).willReturn(CLAIMS);
 
         // when
-        signoutUsecase.signout(ACCESS_TOKEN);
+        signoutUsecase.signout(COMMAND);
 
         // then
         then(saveBlacklistTokenPort).should().save(TOKEN_ID, EXPIRES_AT);
@@ -72,7 +74,7 @@ class SignoutUsecaseTest {
 
         // when
         CustomException exception = assertThrows(CustomException.class,
-                () -> signoutUsecase.signout(ACCESS_TOKEN));
+                () -> signoutUsecase.signout(COMMAND));
 
         // then
         assertEquals(BusinessAuthErrorType.EXPIRED_TOKEN, exception.getErrorType());

@@ -1,6 +1,7 @@
 package com.todayyu.application.auth.usecase;
 
 import com.todayyu.application.auth.dto.AccessTokenClaims;
+import com.todayyu.application.auth.dto.SignoutCommand;
 import com.todayyu.application.auth.port.TokenPort;
 import com.todayyu.application.auth.port.save.SaveBlacklistTokenPort;
 import com.todayyu.application.auth.port.save.SaveRefreshTokenPort;
@@ -27,10 +28,10 @@ public class SignoutUsecase {
      *
      * <p> 로그아웃 후, 저장된 해당 세션의 Refresh Token을 제거한다. </p>
      *
-     * @param accessToken
+     * @param command 로그아웃 요청 DTO
      */
-    public void signout(AccessToken accessToken) {
-        AccessTokenClaims claims = tokenPort.parseAccessToken(accessToken);
+    public void signout(SignoutCommand command) {
+        AccessTokenClaims claims = tokenPort.parseAccessToken(command.accessToken());
         MemberId memberId = claims.memberId();
         SessionId sessionId = claims.sessionId();
         TokenId tokenId = claims.tokenId();
