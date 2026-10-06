@@ -1,7 +1,7 @@
 package com.todayyu.apis.user.auth.dto;
 
 import com.todayyu.apis.common.auth.AuthScheme;
-import com.todayyu.application.auth.dto.SigninResult;
+import com.todayyu.application.auth.dto.AuthTokenResult;
 
 import java.time.Instant;
 
@@ -12,7 +12,7 @@ public record SigninResponse(
         String refreshToken,
         Instant refreshTokenExpiresAt
 ) {
-    public static SigninResponse from(SigninResult result) {
+    public static SigninResponse from(AuthTokenResult result) {
         return new SigninResponse(
                 AuthScheme.BEARER,
                 result.accessToken().getValue(),

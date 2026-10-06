@@ -3,7 +3,7 @@ package com.todayyu.application.auth.usecase;
 import com.todayyu.application.auth.dto.IssuedAccessToken;
 import com.todayyu.application.auth.dto.IssuedRefreshToken;
 import com.todayyu.application.auth.dto.SigninCommand;
-import com.todayyu.application.auth.dto.SigninResult;
+import com.todayyu.application.auth.dto.AuthTokenResult;
 import com.todayyu.application.auth.error.BusinessAuthErrorType;
 import com.todayyu.application.auth.port.TokenPort;
 import com.todayyu.application.auth.port.save.SaveRefreshTokenPort;
@@ -101,7 +101,7 @@ class SigninUsecaseTest {
                 .willReturn(ISSUED_REFRESH_TOKEN);
 
         // when
-        SigninResult result = signinUsecase.signin(COMMAND);
+        AuthTokenResult result = signinUsecase.signin(COMMAND);
 
         // then
         assertEquals(ISSUED_ACCESS_TOKEN.accessToken(), result.accessToken());

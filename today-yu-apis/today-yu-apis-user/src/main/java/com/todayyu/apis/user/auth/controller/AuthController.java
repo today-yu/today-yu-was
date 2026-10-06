@@ -4,7 +4,7 @@ import com.todayyu.apis.common.auth.AuthScheme;
 import com.todayyu.apis.common.response.SuccessResponse;
 import com.todayyu.apis.user.auth.dto.SigninRequest;
 import com.todayyu.apis.user.auth.dto.SigninResponse;
-import com.todayyu.application.auth.dto.SigninResult;
+import com.todayyu.application.auth.dto.AuthTokenResult;
 import com.todayyu.application.auth.error.BusinessAuthErrorType;
 import com.todayyu.application.auth.usecase.SigninUsecase;
 import com.todayyu.application.auth.usecase.SignoutUsecase;
@@ -31,7 +31,7 @@ public class AuthController {
     
     @PostMapping("/sign-in")
     public ResponseEntity<?> signin(@Valid @RequestBody SigninRequest request) {
-        SigninResult result = signinUsecase.signin(request.toCommand());
+        AuthTokenResult result = signinUsecase.signin(request.toCommand());
         
         return ResponseEntity.ok()
                 .cacheControl(CacheControl.noStore())

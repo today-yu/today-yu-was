@@ -3,7 +3,7 @@ package com.todayyu.application.auth.usecase;
 import com.todayyu.application.auth.dto.IssuedAccessToken;
 import com.todayyu.application.auth.dto.IssuedRefreshToken;
 import com.todayyu.application.auth.dto.SigninCommand;
-import com.todayyu.application.auth.dto.SigninResult;
+import com.todayyu.application.auth.dto.AuthTokenResult;
 import com.todayyu.application.auth.error.BusinessAuthErrorType;
 import com.todayyu.application.auth.port.TokenPort;
 import com.todayyu.application.auth.port.save.SaveRefreshTokenPort;
@@ -40,9 +40,9 @@ public class SigninUsecase {
      * <p> 로그인에 성공하면 인증 토큰을 발급하며, 그 중 Refresh Token을 저장한다. </p>
      *
      * @param command 로그인 요청 DTO
-     * @return 로그인 결과 {@link SigninResult} 객체
+     * @return 로그인 결과 {@link AuthTokenResult} 객체
      */
-    public SigninResult signin(SigninCommand command) {
+    public AuthTokenResult signin(SigninCommand command) {
         Optional<Member> optionalMember = readMemberPort.readByEmail(command.email());
         
         // 해당 이메일로 가입된 계정이 존재하지 않는 경우
@@ -72,6 +72,6 @@ public class SigninUsecase {
         
         saveRefreshTokenPort.save(member.getId(), sessionId, issuedRefreshToken);
         
-        return SigninResult.from(issuedAccessToken, issuedRefreshToken);
+        return AuthTokenResult.from(issuedAccessToken, issuedRefreshToken);
     }
 }

@@ -3,7 +3,7 @@ package com.todayyu.apis.user.auth.controller;
 import com.todayyu.apis.common.auth.AuthScheme;
 import com.todayyu.apis.common.exception.GlobalExceptionHandler;
 import com.todayyu.application.auth.dto.SigninCommand;
-import com.todayyu.application.auth.dto.SigninResult;
+import com.todayyu.application.auth.dto.AuthTokenResult;
 import com.todayyu.application.auth.error.BusinessAuthErrorType;
 import com.todayyu.application.auth.usecase.SigninUsecase;
 import com.todayyu.application.auth.usecase.SignoutUsecase;
@@ -83,7 +83,7 @@ class AuthControllerTest {
     @DisplayName("로그인 요청 시 요청 이메일과 비밀번호로 로그인을 요청하고, 캐시되지 않는 응답으로 토큰과 만료 시각을 반환한다")
     void signin() throws Exception {
         // given
-        given(signinUsecase.signin(any())).willReturn(new SigninResult(
+        given(signinUsecase.signin(any())).willReturn(new AuthTokenResult(
                 new AccessToken(ACCESS_TOKEN), ACCESS_TOKEN_EXPIRES_AT,
                 new RefreshToken(REFRESH_TOKEN), REFRESH_TOKEN_EXPIRES_AT
         ));
