@@ -3,7 +3,7 @@ package com.todayyu.apis.user.auth.controller;
 import com.todayyu.apis.common.auth.AuthScheme;
 import com.todayyu.apis.common.response.SuccessResponse;
 import com.todayyu.apis.user.auth.dto.SigninRequest;
-import com.todayyu.apis.user.auth.dto.SigninResponse;
+import com.todayyu.apis.user.auth.dto.AuthTokenResponse;
 import com.todayyu.application.auth.dto.AuthTokenResult;
 import com.todayyu.application.auth.error.BusinessAuthErrorType;
 import com.todayyu.application.auth.usecase.SigninUsecase;
@@ -38,7 +38,7 @@ public class AuthController {
                 .body(
                         SuccessResponse.from(
                                 "로그인에 성공하였습니다.",
-                                SigninResponse.from(result)
+                                AuthTokenResponse.from(result)
                         )
                 );
     }

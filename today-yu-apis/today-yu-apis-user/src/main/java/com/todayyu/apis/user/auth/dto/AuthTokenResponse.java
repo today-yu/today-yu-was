@@ -5,15 +5,15 @@ import com.todayyu.application.auth.dto.AuthTokenResult;
 
 import java.time.Instant;
 
-public record SigninResponse(
+public record AuthTokenResponse(
         String tokenType,
         String accessToken,
         Instant accessTokenExpiresAt,
         String refreshToken,
         Instant refreshTokenExpiresAt
 ) {
-    public static SigninResponse from(AuthTokenResult result) {
-        return new SigninResponse(
+    public static AuthTokenResponse from(AuthTokenResult result) {
+        return new AuthTokenResponse(
                 AuthScheme.BEARER,
                 result.accessToken().getValue(),
                 result.accessTokenExpiresAt(),
