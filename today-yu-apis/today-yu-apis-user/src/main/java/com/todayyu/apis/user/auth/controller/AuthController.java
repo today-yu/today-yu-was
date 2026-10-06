@@ -2,10 +2,12 @@ package com.todayyu.apis.user.auth.controller;
 
 import com.todayyu.apis.common.auth.AuthScheme;
 import com.todayyu.apis.common.response.SuccessResponse;
+import com.todayyu.apis.user.auth.dto.ReissueAuthTokenRequest;
 import com.todayyu.apis.user.auth.dto.SigninRequest;
-import com.todayyu.apis.user.auth.dto.SigninResponse;
-import com.todayyu.application.auth.dto.SigninResult;
+import com.todayyu.apis.user.auth.dto.AuthTokenResponse;
+import com.todayyu.application.auth.dto.AuthTokenResult;
 import com.todayyu.application.auth.error.BusinessAuthErrorType;
+import com.todayyu.application.auth.usecase.ReissueAuthTokenUsecase;
 import com.todayyu.application.auth.usecase.SigninUsecase;
 import com.todayyu.application.auth.usecase.SignoutUsecase;
 import com.todayyu.common.exception.CustomException;
@@ -26,19 +28,20 @@ import org.springframework.web.bind.annotation.RestController;
 public class AuthController {
     private final SigninUsecase signinUsecase;
     private final SignoutUsecase signoutUsecase;
+    private final ReissueAuthTokenUsecase reissueAuthTokenUsecase;
     
     private static final String AUTHORIZATION_PREFIX = AuthScheme.BEARER + " ";
     
     @PostMapping("/sign-in")
     public ResponseEntity<?> signin(@Valid @RequestBody SigninRequest request) {
-        SigninResult result = signinUsecase.signin(request.toCommand());
+        AuthTokenResult result = signinUsecase.signin(request.toCommand());
         
         return ResponseEntity.ok()
                 .cacheControl(CacheControl.noStore())
                 .body(
                         SuccessResponse.from(
                                 "로그인에 성공하였습니다.",
-                                SigninResponse.from(result)
+                                AuthTokenResponse.from(result)
                         )
                 );
     }
@@ -48,6 +51,20 @@ public class AuthController {
         AccessToken accessToken = parseAccessToken(authorization);
         signoutUsecase.signout(accessToken);
         return ResponseEntity.ok(SuccessResponse.from("로그아웃에 성공하였습니다."));
+    }
+    
+    @PostMapping("/reissue")
+    public ResponseEntity<?> reissueAuthToken(@Valid @RequestBody ReissueAuthTokenRequest request) {
+        AuthTokenResult result = reissueAuthTokenUsecase.reissue(request.toCommand());
+        
+        return ResponseEntity.ok()
+                .cacheControl(CacheControl.noStore())
+                .body(
+                        SuccessResponse.from(
+                                "인증 토큰 재발급에 성공하였습니다.",
+                                AuthTokenResponse.from(result)
+                        )
+                );
     }
     
     /**

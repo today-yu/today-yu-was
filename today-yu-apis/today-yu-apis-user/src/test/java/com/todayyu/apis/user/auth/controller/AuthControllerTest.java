@@ -2,9 +2,11 @@ package com.todayyu.apis.user.auth.controller;
 
 import com.todayyu.apis.common.auth.AuthScheme;
 import com.todayyu.apis.common.exception.GlobalExceptionHandler;
+import com.todayyu.application.auth.dto.ReissueAuthTokenCommand;
 import com.todayyu.application.auth.dto.SigninCommand;
-import com.todayyu.application.auth.dto.SigninResult;
+import com.todayyu.application.auth.dto.AuthTokenResult;
 import com.todayyu.application.auth.error.BusinessAuthErrorType;
+import com.todayyu.application.auth.usecase.ReissueAuthTokenUsecase;
 import com.todayyu.application.auth.usecase.SigninUsecase;
 import com.todayyu.application.auth.usecase.SignoutUsecase;
 import com.todayyu.common.error.BaseErrorType;
@@ -46,6 +48,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 class AuthControllerTest {
     private static final String SIGNIN_URL = "/api/v1/auth/sign-in";
     private static final String SIGNOUT_URL = "/api/v1/auth/sign-out";
+    private static final String REISSUE_URL = "/api/v1/auth/reissue";
     private static final String EMAIL = "user@example.com";
     private static final String PASSWORD = "password1234";
     private static final String INVALID_PASSWORD_LENGTH_MESSAGE =
@@ -61,6 +64,9 @@ class AuthControllerTest {
     @Mock
     private SignoutUsecase signoutUsecase;
 
+    @Mock
+    private ReissueAuthTokenUsecase reissueAuthTokenUsecase;
+
     @InjectMocks
     private AuthController authController;
 
@@ -69,6 +75,9 @@ class AuthControllerTest {
 
     @Captor
     private ArgumentCaptor<AccessToken> accessTokenCaptor;
+
+    @Captor
+    private ArgumentCaptor<ReissueAuthTokenCommand> reissueAuthTokenCommandCaptor;
 
     private MockMvc mockMvc;
 
@@ -83,7 +92,7 @@ class AuthControllerTest {
     @DisplayName("로그인 요청 시 요청 이메일과 비밀번호로 로그인을 요청하고, 캐시되지 않는 응답으로 토큰과 만료 시각을 반환한다")
     void signin() throws Exception {
         // given
-        given(signinUsecase.signin(any())).willReturn(new SigninResult(
+        given(signinUsecase.signin(any())).willReturn(new AuthTokenResult(
                 new AccessToken(ACCESS_TOKEN), ACCESS_TOKEN_EXPIRES_AT,
                 new RefreshToken(REFRESH_TOKEN), REFRESH_TOKEN_EXPIRES_AT
         ));
@@ -245,6 +254,86 @@ class AuthControllerTest {
         // when & then
         mockMvc.perform(post(SIGNOUT_URL)
                         .header(HttpHeaders.AUTHORIZATION, AuthScheme.BEARER + " " + ACCESS_TOKEN))
+                .andExpect(status().isUnauthorized())
+                .andExpect(jsonPath("$.errorCode").value(TestErrorType.UNAUTHORIZED.getErrorCode()))
+                .andExpect(jsonPath("$.message").value(TestErrorType.UNAUTHORIZED.getMessage()));
+    }
+
+    @Test
+    @DisplayName("인증 토큰 재발급 요청 시 요청 Refresh Token으로 재발급을 요청하고, 캐시되지 않는 응답으로 토큰과 만료 시각을 반환한다")
+    void reissueAuthToken() throws Exception {
+        // given
+        given(reissueAuthTokenUsecase.reissue(any())).willReturn(new AuthTokenResult(
+                new AccessToken(ACCESS_TOKEN), ACCESS_TOKEN_EXPIRES_AT,
+                new RefreshToken(REFRESH_TOKEN), REFRESH_TOKEN_EXPIRES_AT
+        ));
+
+        // when
+        mockMvc.perform(post(REISSUE_URL)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {"refreshToken": "%s"}
+                                """.formatted("old-refresh-token")))
+                .andExpect(status().isOk())
+                .andExpect(header().string("Cache-Control", "no-store"))
+                .andExpect(jsonPath("$.message").value("인증 토큰 재발급에 성공하였습니다."))
+                .andExpect(jsonPath("$.data.tokenType").value(AuthScheme.BEARER))
+                .andExpect(jsonPath("$.data.accessToken").value(ACCESS_TOKEN))
+                .andExpect(jsonPath("$.data.accessTokenExpiresAt").value(ACCESS_TOKEN_EXPIRES_AT.toString()))
+                .andExpect(jsonPath("$.data.refreshToken").value(REFRESH_TOKEN))
+                .andExpect(jsonPath("$.data.refreshTokenExpiresAt").value(REFRESH_TOKEN_EXPIRES_AT.toString()));
+
+        // then
+        then(reissueAuthTokenUsecase).should().reissue(reissueAuthTokenCommandCaptor.capture());
+        assertEquals("old-refresh-token", reissueAuthTokenCommandCaptor.getValue().refreshToken().getValue());
+    }
+
+    @Test
+    @DisplayName("인증 토큰 재발급 요청에 Refresh Token이 없으면 유효성 검증 에러를 응답하고 재발급을 하지 않는다")
+    void reissueAuthTokenWithoutRefreshToken() throws Exception {
+        // given & when
+        mockMvc.perform(post(REISSUE_URL)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{}"))
+                .andExpect(status().isUnprocessableContent())
+                .andExpect(jsonPath("$.errorCode").value("COMMON-0002"))
+                .andExpect(jsonPath("$.errors.refreshToken").value("Refresh Token은 비어있을 수 없습니다."));
+
+        // then
+        then(reissueAuthTokenUsecase).should(never()).reissue(any());
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {"", " "})
+    @DisplayName("인증 토큰 재발급 요청의 Refresh Token이 비어있으면 유효성 검증 에러를 응답하고 재발급을 하지 않는다")
+    void reissueAuthTokenWithBlankRefreshToken(String refreshToken) throws Exception {
+        // given & when
+        mockMvc.perform(post(REISSUE_URL)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {"refreshToken": "%s"}
+                                """.formatted(refreshToken)))
+                .andExpect(status().isUnprocessableContent())
+                .andExpect(jsonPath("$.errorCode").value("COMMON-0002"))
+                .andExpect(jsonPath("$.errors.refreshToken").value("Refresh Token은 비어있을 수 없습니다."));
+
+        // then
+        then(reissueAuthTokenUsecase).should(never()).reissue(any());
+    }
+
+    @Test
+    @DisplayName("인증 토큰 재발급 중 비즈니스 예외가 발생하면 에러 카테고리에 맞는 상태 코드와 에러 응답을 반환한다")
+    void reissueAuthTokenWithBusinessException() throws Exception {
+        // given
+        willThrow(new CustomException(TestErrorType.UNAUTHORIZED))
+                .given(reissueAuthTokenUsecase).reissue(any());
+
+        // when & then
+        mockMvc.perform(post(REISSUE_URL)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {"refreshToken": "%s"}
+                                """.formatted(REFRESH_TOKEN)))
                 .andExpect(status().isUnauthorized())
                 .andExpect(jsonPath("$.errorCode").value(TestErrorType.UNAUTHORIZED.getErrorCode()))
                 .andExpect(jsonPath("$.message").value(TestErrorType.UNAUTHORIZED.getMessage()));
