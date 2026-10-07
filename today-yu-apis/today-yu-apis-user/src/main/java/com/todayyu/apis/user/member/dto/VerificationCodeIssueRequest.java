@@ -1,7 +1,7 @@
 package com.todayyu.apis.user.member.dto;
 
 import com.todayyu.application.member.dto.VerificationCodeIssueCommand;
-import com.todayyu.domain.member.vo.Email;
+import com.todayyu.domain.common.vo.Email;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Pattern;
 

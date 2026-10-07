@@ -2,7 +2,7 @@ package com.todayyu.persistence.member.mapper;
 
 import com.todayyu.domain.member.entity.Account;
 import com.todayyu.domain.member.entity.Member;
-import com.todayyu.domain.member.vo.Email;
+import com.todayyu.domain.common.vo.Email;
 import com.todayyu.domain.member.vo.MemberId;
 import com.todayyu.domain.member.vo.Nickname;
 import com.todayyu.persistence.common.Mapper;

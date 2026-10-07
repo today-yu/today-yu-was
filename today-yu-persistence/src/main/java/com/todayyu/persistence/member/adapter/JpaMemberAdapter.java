@@ -4,7 +4,7 @@ import com.todayyu.application.member.port.read.ReadMemberPort;
 import com.todayyu.application.member.port.save.SaveMemberPort;
 import com.todayyu.domain.member.entity.Account;
 import com.todayyu.domain.member.entity.Member;
-import com.todayyu.domain.member.vo.Email;
+import com.todayyu.domain.common.vo.Email;
 import com.todayyu.domain.member.vo.MemberId;
 import com.todayyu.persistence.common.PersistenceAdapter;
 import com.todayyu.persistence.member.entity.AccountJpaEntity;

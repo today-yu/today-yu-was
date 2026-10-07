@@ -8,7 +8,7 @@ import com.todayyu.application.member.port.save.SaveEmailVerificationPort;
 import com.todayyu.common.exception.CustomException;
 import com.todayyu.domain.member.entity.EmailVerification;
 import com.todayyu.domain.member.error.MemberErrorType;
-import com.todayyu.domain.member.vo.Email;
+import com.todayyu.domain.common.vo.Email;
 import com.todayyu.domain.member.vo.VerificationCode;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;

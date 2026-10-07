@@ -20,7 +20,7 @@ import com.todayyu.domain.member.entity.SocialAccount;
 import com.todayyu.domain.member.vo.AccountId;
 import com.todayyu.domain.member.vo.AuthProvider;
 import com.todayyu.domain.member.vo.AuthProviderUserId;
-import com.todayyu.domain.member.vo.Email;
+import com.todayyu.domain.common.vo.Email;
 import com.todayyu.domain.member.vo.EncodedPassword;
 import com.todayyu.domain.member.vo.MemberId;
 import com.todayyu.domain.member.vo.Nickname;
