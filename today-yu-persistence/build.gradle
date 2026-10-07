@@ -6,7 +6,9 @@ dependencies {
     /* JPA */
     implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
     testImplementation 'org.springframework.boot:spring-boot-starter-data-jpa-test'
-
+    /* QueryDSL */
+    implementation 'io.github.openfeign.querydsl:querydsl-jpa:7.7'
+    annotationProcessor 'io.github.openfeign.querydsl:querydsl-apt:7.7:jpa'
     /* MySQL Driver */
     runtimeOnly 'com.mysql:mysql-connector-j'
 }
