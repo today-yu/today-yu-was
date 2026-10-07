@@ -1,4 +1,4 @@
-package com.todayyu.domain.member.vo;
+package com.todayyu.domain.common.vo;
 
 import lombok.Getter;
 
