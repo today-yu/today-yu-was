@@ -3,7 +3,7 @@ package com.todayyu.infrastructure.member.adapter.redis;
 import com.todayyu.application.member.port.read.ReadEmailVerificationPort;
 import com.todayyu.application.member.port.save.SaveEmailVerificationPort;
 import com.todayyu.domain.member.entity.EmailVerification;
-import com.todayyu.domain.member.vo.Email;
+import com.todayyu.domain.common.vo.Email;
 import com.todayyu.infrastructure.common.annotation.Adapter;
 import lombok.RequiredArgsConstructor;
 

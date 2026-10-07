@@ -1,6 +1,6 @@
 package com.todayyu.domain.member.entity;
 
-import com.todayyu.domain.member.vo.Email;
+import com.todayyu.domain.common.vo.Email;
 import com.todayyu.domain.member.vo.EncodedPassword;
 import com.todayyu.domain.member.vo.MemberId;
 import com.todayyu.domain.member.vo.Nickname;

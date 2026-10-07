@@ -10,7 +10,7 @@ import com.todayyu.application.member.util.VerificationCodeGenerator;
 import com.todayyu.common.exception.CustomException;
 import com.todayyu.domain.member.entity.EmailVerification;
 import com.todayyu.domain.member.error.MemberErrorType;
-import com.todayyu.domain.member.vo.Email;
+import com.todayyu.domain.common.vo.Email;
 import com.todayyu.domain.member.vo.VerificationCode;
 import lombok.RequiredArgsConstructor;
 

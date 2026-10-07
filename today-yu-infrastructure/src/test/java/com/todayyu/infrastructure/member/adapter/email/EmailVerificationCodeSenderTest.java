@@ -1,7 +1,7 @@
 package com.todayyu.infrastructure.member.adapter.email;
 
 import com.todayyu.domain.member.entity.EmailVerification;
-import com.todayyu.domain.member.vo.Email;
+import com.todayyu.domain.common.vo.Email;
 import com.todayyu.domain.member.vo.VerificationCode;
 import com.todayyu.infrastructure.email.sender.EmailSender;
 import com.todayyu.infrastructure.email.template.EmailTemplate;
