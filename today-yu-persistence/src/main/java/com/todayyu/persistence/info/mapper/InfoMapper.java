@@ -12,33 +12,33 @@ public class InfoMapper {
     /**
      * {@link Info}를 {@link InfoJpaEntity}로 변환하는 메서드
      *
-     * @param info {@link Info} 객체
+     * @param domainEntity {@link Info} 객체
      * @return {@link InfoJpaEntity} 객체
      */
-    public InfoJpaEntity toJpaEntity(Info info) {
+    public InfoJpaEntity toJpaEntity(Info domainEntity) {
         return InfoJpaEntity.builder()
-                .category(info.getCategory())
-                .title(info.getTitle().getValue())
-                .content(info.getContent().getValue())
-                .publishedAt(info.getPublishedAt())
-                .updatedAt(info.getUpdatedAt())
+                .category(domainEntity.getCategory())
+                .title(domainEntity.getTitle().getValue())
+                .content(domainEntity.getContent().getValue())
+                .publishedAt(domainEntity.getPublishedAt())
+                .updatedAt(domainEntity.getUpdatedAt())
                 .build();
     }
     
     /**
      * {@link InfoJpaEntity}를 {@link Info}로 변환하는 메서드
      *
-     * @param infoJpaEntity {@link InfoJpaEntity} 객체
+     * @param jpaEntity {@link InfoJpaEntity} 객체
      * @return {@link Info} 객체
      */
-    public Info toDomain(InfoJpaEntity infoJpaEntity) {
+    public Info toDomain(InfoJpaEntity jpaEntity) {
         return Info.withId(
-                new InfoId(infoJpaEntity.getId()),
-                infoJpaEntity.getCategory(),
-                new InfoTitle(infoJpaEntity.getTitle()),
-                new InfoContent(infoJpaEntity.getContent()),
-                infoJpaEntity.getPublishedAt(),
-                infoJpaEntity.getUpdatedAt()
+                new InfoId(jpaEntity.getId()),
+                jpaEntity.getCategory(),
+                new InfoTitle(jpaEntity.getTitle()),
+                new InfoContent(jpaEntity.getContent()),
+                jpaEntity.getPublishedAt(),
+                jpaEntity.getUpdatedAt()
         );
     }
 }
