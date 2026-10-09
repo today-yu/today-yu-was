@@ -36,7 +36,8 @@ public class SecurityConfig {
     );
     
     private static final RequestMatcher MEMBER_ENDPOINTS = new OrRequestMatcher(
-            PathPatternRequestMatcher.pathPattern("/api/v1/auth/sign-out")
+            PathPatternRequestMatcher.pathPattern("/api/v1/auth/sign-out"),
+            PathPatternRequestMatcher.pathPattern("/api/v1/infos/**")
     );
     
     @Bean
