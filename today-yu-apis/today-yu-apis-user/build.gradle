@@ -7,7 +7,9 @@ dependencies {
     /* Spring Web */
     implementation 'org.springframework.boot:spring-boot-starter-webmvc'
     implementation 'org.springframework.boot:spring-boot-starter-validation'
-
     testImplementation 'org.springframework.boot:spring-boot-starter-webmvc-test'
     testImplementation 'org.springframework.boot:spring-boot-starter-validation-test'
+    /* Spring Security */
+    implementation 'org.springframework.security:spring-security-core'
+    testImplementation 'org.springframework.security:spring-security-web'
 }
