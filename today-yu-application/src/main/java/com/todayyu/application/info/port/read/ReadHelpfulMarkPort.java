@@ -9,5 +9,5 @@ import java.util.Map;
 public interface ReadHelpfulMarkPort {
     long countByInfoId(InfoId infoId);
     boolean existsByInfoIdAndMemberId(InfoId infoId, MemberId memberId);
-    Map<InfoId, Long> countByInfoIds(List<InfoId> list);
+    Map<InfoId, Long> countByInfoIds(List<InfoId> infoIds);
 }

@@ -7,11 +7,15 @@ import com.todayyu.persistence.common.PersistenceAdapter;
 import com.todayyu.persistence.info.repository.HelpfulMarkJpaRepository;
 import lombok.RequiredArgsConstructor;
 
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
+
 @PersistenceAdapter
 @RequiredArgsConstructor
 public class JpaHelpfulMarkAdapter implements ReadHelpfulMarkPort {
     private final HelpfulMarkJpaRepository helpfulMarkRepository;
-
+    
     /**
      * 정보 ID({@link InfoId})를 통해 해당 정보의 '도움이 되는 정보에요' 수를 조회해 반환하는 메서드
      *
@@ -22,16 +26,37 @@ public class JpaHelpfulMarkAdapter implements ReadHelpfulMarkPort {
     public long countByInfoId(InfoId infoId) {
         return helpfulMarkRepository.countByInfoId(infoId.getValue());
     }
-
+    
     /**
      * 정보 ID({@link InfoId})와 회원 ID({@link MemberId})를 통해 회원이 해당 정보에 '도움이 되는 정보에요'를 눌렀는지 조회하는 메서드
      *
-     * @param infoId 정보 ID 객체
+     * @param infoId   정보 ID 객체
      * @param memberId 회원 ID 객체
      * @return '도움이 되는 정보에요'를 눌렀으면 {@code true}, 아니면 {@code false}
      */
     @Override
     public boolean existsByInfoIdAndMemberId(InfoId infoId, MemberId memberId) {
         return helpfulMarkRepository.existsByInfoIdAndMemberId(infoId.getValue(), memberId.getValue());
+    }
+    
+    /**
+     * 정보 ID({@link InfoId}) 목록을 통해 각 정보의 '도움이 되는 정보에요' 수를 조회해 반환하는 메서드
+     *
+     * <p> 정보 ID별로 '도움이 되는 정보에요' 수를 집계하므로, '도움이 되는 정보에요'가 없는 정보는 결과에 포함되지 않는다. </p>
+     *
+     * @param infoIds 정보 ID 객체 목록
+     * @return 정보 ID별 '도움이 되는 정보에요' 수
+     */
+    @Override
+    public Map<InfoId, Long> countByInfoIds(List<InfoId> infoIds) {
+        if (infoIds.isEmpty()) {
+            return Map.of();
+        }
+        
+        return helpfulMarkRepository.countByInfoIds(infoIds.stream().map(InfoId::getValue).toList()).stream()
+                .collect(Collectors.toMap(
+                        projection -> new InfoId(projection.infoId()),
+                        projection -> projection.count()
+                ));
     }
 }
