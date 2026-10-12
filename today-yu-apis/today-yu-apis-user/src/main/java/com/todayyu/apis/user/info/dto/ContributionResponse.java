@@ -1,14 +1,13 @@
 package com.todayyu.apis.user.info.dto;
 
 import com.todayyu.application.info.dto.ContributionResult;
-import com.todayyu.application.info.dto.ContributionType;
 
 import java.time.LocalDateTime;
 
 public record ContributionResponse(
         Long memberId,
         String nickname,
-        ContributionType type,
+        String type,
         Long requestId,
         LocalDateTime requestedAt
 ) {
@@ -16,7 +15,7 @@ public record ContributionResponse(
         return new ContributionResponse(
                 result.memberId().getValue(),
                 result.nickname().getValue(),
-                result.type(),
+                result.type().name(),
                 result.requestId(),
                 result.requestedAt()
         );
