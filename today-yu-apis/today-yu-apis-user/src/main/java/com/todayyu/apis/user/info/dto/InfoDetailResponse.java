@@ -1,14 +1,13 @@
 package com.todayyu.apis.user.info.dto;
 
 import com.todayyu.application.info.dto.InfoDetailResult;
-import com.todayyu.domain.info.vo.InfoCategory;
 
 import java.time.LocalDateTime;
 import java.util.List;
 
 public record InfoDetailResponse(
         Long id,
-        InfoCategory category,
+        String category,
         String title,
         String content,
         LocalDateTime publishedAt,
@@ -21,7 +20,7 @@ public record InfoDetailResponse(
     public static InfoDetailResponse from(InfoDetailResult result) {
         return new InfoDetailResponse(
                 result.id().getValue(),
-                result.category(),
+                result.category().name(),
                 result.title().getValue(),
                 result.content().getValue(),
                 result.publishedAt(),
