@@ -4,7 +4,7 @@ import com.todayyu.application.common.annotation.Usecase;
 import com.todayyu.application.common.dto.CursorResult;
 import com.todayyu.application.info.dto.GetInfosQuery;
 import com.todayyu.application.info.dto.InfoCursor;
-import com.todayyu.application.info.dto.InfoResult;
+import com.todayyu.application.info.dto.InfoSummaryResult;
 import com.todayyu.application.info.dto.InfoSummaryView;
 import com.todayyu.application.info.port.read.ReadHelpfulMarkPort;
 import com.todayyu.application.info.port.read.ReadInfoPort;
@@ -40,7 +40,7 @@ public class GetInfosUsecase {
      * @return 정보 목록
      */
     @Transactional(readOnly = true)
-    public CursorResult<InfoResult, InfoCursor> getInfos(GetInfosQuery query) {
+    public CursorResult<InfoSummaryResult, InfoCursor> getInfos(GetInfosQuery query) {
         int size = query.size();
         List<InfoSummaryView> views = readInfoPort.readByCursor(
                 query.category(),
@@ -56,9 +56,9 @@ public class GetInfosUsecase {
                 ? Map.of()
                 : readHelpfulMarkPort.countByInfoIds(contents.stream().map(InfoSummaryView::infoId).toList());
         
-        List<InfoResult> results = contents.stream()
+        List<InfoSummaryResult> results = contents.stream()
                 .map(view
-                        -> InfoResult.of(view, helpfulMarkCounts.getOrDefault(view.infoId(), 0L)))
+                        -> InfoSummaryResult.of(view, helpfulMarkCounts.getOrDefault(view.infoId(), 0L)))
                 .toList();
         
         // TODO: 스크랩 여부 추가

@@ -3,7 +3,7 @@ package com.todayyu.application.info.usecase;
 import com.todayyu.application.common.dto.CursorResult;
 import com.todayyu.application.info.dto.GetInfosQuery;
 import com.todayyu.application.info.dto.InfoCursor;
-import com.todayyu.application.info.dto.InfoResult;
+import com.todayyu.application.info.dto.InfoSummaryResult;
 import com.todayyu.application.info.dto.InfoSortType;
 import com.todayyu.application.info.dto.InfoSummaryView;
 import com.todayyu.application.info.port.read.ReadHelpfulMarkPort;
@@ -59,12 +59,12 @@ class GetInfosUsecaseTest {
                 .willReturn(Map.of(first.infoId(), 3L, second.infoId(), 1L));
 
         // when
-        CursorResult<InfoResult, InfoCursor> result = getInfosUsecase.getInfos(QUERY);
+        CursorResult<InfoSummaryResult, InfoCursor> result = getInfosUsecase.getInfos(QUERY);
 
         // then
-        List<InfoResult> expected = List.of(
-                InfoResult.of(first, 3L),
-                InfoResult.of(second, 1L)
+        List<InfoSummaryResult> expected = List.of(
+                InfoSummaryResult.of(first, 3L),
+                InfoSummaryResult.of(second, 1L)
         );
         assertEquals(expected, result.contents());
         assertTrue(result.hasNext());
@@ -83,7 +83,7 @@ class GetInfosUsecaseTest {
                 .willReturn(Map.of(first.infoId(), 3L, second.infoId(), 1L));
 
         // when
-        CursorResult<InfoResult, InfoCursor> result = getInfosUsecase.getInfos(QUERY);
+        CursorResult<InfoSummaryResult, InfoCursor> result = getInfosUsecase.getInfos(QUERY);
 
         // then
         assertEquals(2, result.contents().size());
@@ -103,7 +103,7 @@ class GetInfosUsecaseTest {
                 .willReturn(Map.of(marked.infoId(), 3L));
 
         // when
-        CursorResult<InfoResult, InfoCursor> result = getInfosUsecase.getInfos(QUERY);
+        CursorResult<InfoSummaryResult, InfoCursor> result = getInfosUsecase.getInfos(QUERY);
 
         // then
         assertEquals(3L, result.contents().get(0).helpfulMarkCount());
@@ -117,7 +117,7 @@ class GetInfosUsecaseTest {
         given(readInfoPort.readByCursor(CATEGORY, SORT_TYPE, CURSOR, SIZE + 1)).willReturn(List.of());
 
         // when
-        CursorResult<InfoResult, InfoCursor> result = getInfosUsecase.getInfos(QUERY);
+        CursorResult<InfoSummaryResult, InfoCursor> result = getInfosUsecase.getInfos(QUERY);
 
         // then
         assertTrue(result.contents().isEmpty());
