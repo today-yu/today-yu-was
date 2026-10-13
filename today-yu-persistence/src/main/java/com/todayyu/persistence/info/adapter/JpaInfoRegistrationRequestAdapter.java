@@ -15,12 +15,25 @@ import com.todayyu.persistence.info.repository.InfoRegistrationRequestJpaReposit
 import lombok.RequiredArgsConstructor;
 
 import java.util.List;
+import java.util.Optional;
 
 @PersistenceAdapter
 @RequiredArgsConstructor
 public class JpaInfoRegistrationRequestAdapter implements ReadInfoRegistrationRequestPort, SaveInfoRegistrationRequestPort {
     private final InfoRegistrationRequestJpaRepository infoRegistrationRequestRepository;
     private final InfoRegistrationRequestMapper infoRegistrationRequestMapper;
+    
+    /**
+     * 정보 등록 요청 ID({@link InfoRegistrationRequestId})를 통해 정보 등록 요청을 조회하는 메서드
+     *
+     * @param id 정보 등록 요청 ID
+     * @return 정보 등록 요청
+     */
+    @Override
+    public Optional<InfoRegistrationRequest> readById(InfoRegistrationRequestId id) {
+        return infoRegistrationRequestRepository.findById(id.getValue())
+                .map(infoRegistrationRequestMapper::toDomain);
+    }
     
     /**
      * 정보 ID({@link InfoId})와 요청 상태({@link InfoRequestStatus})를 통해 정보 등록 요청 목록을
