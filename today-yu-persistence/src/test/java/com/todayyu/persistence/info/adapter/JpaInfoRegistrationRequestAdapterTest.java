@@ -26,6 +26,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.then;
@@ -99,6 +100,61 @@ class JpaInfoRegistrationRequestAdapterTest {
         // then
         assertTrue(result.isEmpty());
         then(infoRegistrationRequestMapper).shouldHaveNoInteractions();
+    }
+
+    @Test
+    @DisplayName("정보 등록 요청을 JPA 엔티티로 변환해 저장하고, 저장된 JPA 엔티티를 도메인 엔티티로 변환해 반환한다")
+    void save() {
+        // given
+        InfoRegistrationRequest newRequest = InfoRegistrationRequest.withoutId(
+                new MemberId(FIRST_REQUESTER_ID),
+                InfoCategory.ACADEMIC,
+                new InfoRegistrationRequestContent("수강신청 일정을 등록해주세요."),
+                new Email("requester@yu.ac.kr"),
+                REQUESTED_AT
+        );
+        InfoRegistrationRequestJpaEntity newJpaEntity = pendingJpaEntity(null);
+        InfoRegistrationRequestJpaEntity savedJpaEntity = pendingJpaEntity(FIRST_REQUEST_ID);
+        InfoRegistrationRequest savedRequest = pendingRequest(FIRST_REQUEST_ID);
+
+        given(infoRegistrationRequestMapper.toJpaEntity(newRequest)).willReturn(newJpaEntity);
+        given(infoRegistrationRequestRepository.save(newJpaEntity)).willReturn(savedJpaEntity);
+        given(infoRegistrationRequestMapper.toDomain(savedJpaEntity)).willReturn(savedRequest);
+
+        // when
+        InfoRegistrationRequest result = infoRegistrationRequestAdapter.save(newRequest);
+
+        // then
+        assertSame(savedRequest, result);
+        assertEquals(new InfoRegistrationRequestId(FIRST_REQUEST_ID), result.getId());
+        then(infoRegistrationRequestRepository).should().save(newJpaEntity);
+    }
+
+    private InfoRegistrationRequestJpaEntity pendingJpaEntity(Long requestId) {
+        InfoRegistrationRequestJpaEntity jpaEntity = InfoRegistrationRequestJpaEntity.builder()
+                .requesterId(FIRST_REQUESTER_ID)
+                .category(InfoCategory.ACADEMIC)
+                .content("수강신청 일정을 등록해주세요.")
+                .status(InfoRequestStatus.PENDING)
+                .contactEmail("requester@yu.ac.kr")
+                .requestedAt(REQUESTED_AT)
+                .build();
+        ReflectionTestUtils.setField(jpaEntity, "id", requestId);
+        return jpaEntity;
+    }
+
+    private InfoRegistrationRequest pendingRequest(Long requestId) {
+        return InfoRegistrationRequest.withId(
+                new InfoRegistrationRequestId(requestId),
+                new MemberId(FIRST_REQUESTER_ID),
+                InfoCategory.ACADEMIC,
+                new InfoRegistrationRequestContent("수강신청 일정을 등록해주세요."),
+                InfoRequestStatus.PENDING,
+                null,
+                new Email("requester@yu.ac.kr"),
+                null,
+                REQUESTED_AT
+        );
     }
 
     private InfoRegistrationRequestJpaEntity jpaEntity(Long requestId, Long requesterId) {
