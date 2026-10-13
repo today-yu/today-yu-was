@@ -7,7 +7,7 @@ import lombok.RequiredArgsConstructor;
 /**
  * Info 도메인에서 비즈니스 로직 처리 중 발생하는 에러 타입
  *
- * <p> 에러 코드: {@code INFO-1xxx} </p>
+ * <p> 에러 코드: {@code INFO-10xx} </p>
  */
 @RequiredArgsConstructor
 public enum BusinessInfoErrorType implements BaseErrorType {
