@@ -1,4 +1,4 @@
-package com.todayyu.apis.user.auth.dto;
+package com.todayyu.apis.user.auth.dto.request;
 
 import com.todayyu.application.auth.dto.command.ReissueAuthTokenCommand;
 import com.todayyu.domain.auth.vo.RefreshToken;

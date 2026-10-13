@@ -1,4 +1,4 @@
-package com.todayyu.apis.user.auth.dto;
+package com.todayyu.apis.user.auth.dto.request;
 
 import com.todayyu.application.auth.dto.command.SigninCommand;
 import com.todayyu.domain.common.vo.Email;
