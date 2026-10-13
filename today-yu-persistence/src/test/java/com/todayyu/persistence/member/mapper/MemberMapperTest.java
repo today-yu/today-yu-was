@@ -12,6 +12,7 @@ import com.todayyu.domain.member.vo.Role;
 import com.todayyu.persistence.member.entity.MemberJpaEntity;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.springframework.test.util.ReflectionTestUtils;
 
 import java.util.List;
 
@@ -47,11 +48,11 @@ class MemberMapperTest {
     void toDomain() {
         // given
         MemberJpaEntity jpaEntity = MemberJpaEntity.builder()
-                .id(MEMBER_ID)
                 .email(EMAIL)
                 .nickname(NICKNAME)
                 .role(Role.MEMBER)
                 .build();
+        ReflectionTestUtils.setField(jpaEntity, "id", MEMBER_ID);
         List<Account> accounts = List.of(
                 LocalAccount.withId(new AccountId(10L), new EncodedPassword("encoded-password")));
 

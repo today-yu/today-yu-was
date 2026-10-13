@@ -34,8 +34,7 @@ public class MemberJpaEntity {
     private Role role;
     
     @Builder
-    public MemberJpaEntity(Long id, String email, String nickname, Role role) {
-        this.id = id;
+    public MemberJpaEntity(String email, String nickname, Role role) {
         this.email = email;
         this.nickname = nickname;
         this.role = role;
