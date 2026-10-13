@@ -89,6 +89,13 @@ class InfoUpdateRequestTest {
     }
 
     @Test
+    @DisplayName("확인 시각 없이 신규 정보 수정 요청을 생성할 수 없다")
+    void createWithoutIdWithoutObservedAt() {
+        assertThrows(IllegalArgumentException.class,
+                () -> InfoUpdateRequest.withoutId(REQUESTER_ID, INFO_ID, CONTENT, CONTACT_EMAIL, null, REQUESTED_AT));
+    }
+
+    @Test
     @DisplayName("저장된 정보 수정 요청으로 아이디를 가진 정보 수정 요청을 생성할 수 있다")
     void createWithId() {
         // when
@@ -151,6 +158,15 @@ class InfoUpdateRequestTest {
                 () -> InfoUpdateRequest.withId(
                         REQUEST_ID, REQUESTER_ID, InfoRequestStatus.PENDING, INFO_ID, CONTENT,
                         null, null, OBSERVED_AT, REQUESTED_AT));
+    }
+
+    @Test
+    @DisplayName("확인 시각 없이 저장된 정보 수정 요청을 생성할 수 없다")
+    void createWithIdWithoutObservedAt() {
+        assertThrows(IllegalArgumentException.class,
+                () -> InfoUpdateRequest.withId(
+                        REQUEST_ID, REQUESTER_ID, InfoRequestStatus.PENDING, INFO_ID, CONTENT,
+                        CONTACT_EMAIL, null, null, REQUESTED_AT));
     }
 
     @Test

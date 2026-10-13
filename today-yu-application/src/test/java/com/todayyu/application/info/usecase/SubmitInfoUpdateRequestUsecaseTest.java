@@ -83,23 +83,6 @@ class SubmitInfoUpdateRequestUsecaseTest {
     }
 
     @Test
-    @DisplayName("확인 시각이 없어도 정보 수정 요청을 저장한다")
-    void submitWithoutObservedAt() {
-        // given
-        SubmitInfoUpdateRequestCommand command =
-                new SubmitInfoUpdateRequestCommand(REQUESTER_ID, INFO_ID, CONTENT, CONTACT_EMAIL, null);
-        given(readInfoPort.existsById(INFO_ID)).willReturn(true);
-        given(saveInfoUpdateRequestPort.save(any())).willReturn(savedRequest(1L));
-
-        // when
-        submitInfoUpdateRequestUsecase.submit(command);
-
-        // then
-        then(saveInfoUpdateRequestPort).should().save(requestCaptor.capture());
-        assertNull(requestCaptor.getValue().getObservedAt());
-    }
-
-    @Test
     @DisplayName("저장된 정보 수정 요청의 ID를 반환한다")
     void submitReturnsSavedId() {
         // given
