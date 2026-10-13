@@ -4,7 +4,7 @@ import com.todayyu.apis.common.auth.AuthScheme;
 import com.todayyu.apis.common.security.handler.CustomAuthenticationEntryPoint;
 import com.todayyu.apis.common.security.handler.SecurityErrorResponseWriter;
 import com.todayyu.apis.common.security.principal.CustomUserDetails;
-import com.todayyu.application.auth.dto.AuthenticatedMemberResult;
+import com.todayyu.application.auth.dto.result.AuthenticatedMemberResult;
 import com.todayyu.application.auth.error.BusinessAuthErrorType;
 import com.todayyu.application.auth.usecase.AuthenticationUsecase;
 import com.todayyu.common.exception.CustomException;

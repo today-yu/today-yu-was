@@ -1,5 +1,7 @@
-package com.todayyu.application.auth.dto;
+package com.todayyu.application.auth.dto.result;
 
+import com.todayyu.application.auth.dto.IssuedAccessToken;
+import com.todayyu.application.auth.dto.IssuedRefreshToken;
 import com.todayyu.domain.auth.vo.AccessToken;
 import com.todayyu.domain.auth.vo.RefreshToken;
 

@@ -5,7 +5,7 @@ import com.todayyu.apis.common.exception.GlobalExceptionHandler;
 import com.todayyu.application.auth.dto.command.ReissueAuthTokenCommand;
 import com.todayyu.application.auth.dto.command.SigninCommand;
 import com.todayyu.application.auth.dto.command.SignoutCommand;
-import com.todayyu.application.auth.dto.AuthTokenResult;
+import com.todayyu.application.auth.dto.result.AuthTokenResult;
 import com.todayyu.application.auth.error.BusinessAuthErrorType;
 import com.todayyu.application.auth.usecase.ReissueAuthTokenUsecase;
 import com.todayyu.application.auth.usecase.SigninUsecase;

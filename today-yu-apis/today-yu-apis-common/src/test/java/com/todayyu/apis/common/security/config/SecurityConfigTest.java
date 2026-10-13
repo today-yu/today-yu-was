@@ -2,7 +2,7 @@ package com.todayyu.apis.common.security.config;
 
 import com.todayyu.apis.common.security.handler.SecurityErrorResponseWriter;
 import com.todayyu.apis.common.security.principal.CustomUserDetails;
-import com.todayyu.application.auth.dto.AuthenticatedMemberResult;
+import com.todayyu.application.auth.dto.result.AuthenticatedMemberResult;
 import com.todayyu.application.auth.error.BusinessAuthErrorType;
 import com.todayyu.application.auth.usecase.AuthenticationUsecase;
 import com.todayyu.common.error.CommonErrorType;

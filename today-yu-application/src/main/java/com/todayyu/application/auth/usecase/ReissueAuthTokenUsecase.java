@@ -1,6 +1,6 @@
 package com.todayyu.application.auth.usecase;
 
-import com.todayyu.application.auth.dto.AuthTokenResult;
+import com.todayyu.application.auth.dto.result.AuthTokenResult;
 import com.todayyu.application.auth.dto.IssuedAccessToken;
 import com.todayyu.application.auth.dto.IssuedRefreshToken;
 import com.todayyu.application.auth.dto.RefreshTokenClaims;

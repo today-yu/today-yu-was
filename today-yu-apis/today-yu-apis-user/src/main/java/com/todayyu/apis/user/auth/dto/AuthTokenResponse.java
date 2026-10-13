@@ -1,7 +1,7 @@
 package com.todayyu.apis.user.auth.dto;
 
 import com.todayyu.apis.common.auth.AuthScheme;
-import com.todayyu.application.auth.dto.AuthTokenResult;
+import com.todayyu.application.auth.dto.result.AuthTokenResult;
 
 import java.time.Instant;
 
