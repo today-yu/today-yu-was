@@ -37,8 +37,7 @@ public class AccountJpaEntity {
     private Long memberId;
     
     @Builder
-    public AccountJpaEntity(Long id, AuthProvider authProvider, String password, String authProviderUserId, Long memberId) {
-        this.id = id;
+    public AccountJpaEntity(AuthProvider authProvider, String password, String authProviderUserId, Long memberId) {
         this.authProvider = authProvider;
         this.password = password;
         this.authProviderUserId = authProviderUserId;

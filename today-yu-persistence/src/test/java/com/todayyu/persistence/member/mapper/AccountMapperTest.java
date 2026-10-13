@@ -11,6 +11,7 @@ import com.todayyu.domain.member.vo.SocialIdentity;
 import com.todayyu.persistence.member.entity.AccountJpaEntity;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.springframework.test.util.ReflectionTestUtils;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
@@ -86,11 +87,11 @@ class AccountMapperTest {
     void localJpaEntityToDomain() {
         // given
         AccountJpaEntity jpaEntity = AccountJpaEntity.builder()
-                .id(ACCOUNT_ID)
                 .memberId(MEMBER_ID)
                 .authProvider(AuthProvider.LOCAL)
                 .password(ENCODED_PASSWORD)
                 .build();
+        ReflectionTestUtils.setField(jpaEntity, "id", ACCOUNT_ID);
 
         // when
         Account account = accountMapper.toDomain(jpaEntity);
@@ -107,11 +108,11 @@ class AccountMapperTest {
     void socialJpaEntityToDomain() {
         // given
         AccountJpaEntity jpaEntity = AccountJpaEntity.builder()
-                .id(ACCOUNT_ID)
                 .memberId(MEMBER_ID)
                 .authProvider(AuthProvider.KAKAO)
                 .authProviderUserId(AUTH_PROVIDER_USER_ID)
                 .build();
+        ReflectionTestUtils.setField(jpaEntity, "id", ACCOUNT_ID);
 
         // when
         Account account = accountMapper.toDomain(jpaEntity);
