@@ -1,6 +1,6 @@
 package com.todayyu.apis.user.info.dto;
 
-import com.todayyu.application.info.dto.InfoSummaryResult;
+import com.todayyu.application.info.dto.result.InfoSummaryResult;
 
 import java.time.LocalDateTime;
 

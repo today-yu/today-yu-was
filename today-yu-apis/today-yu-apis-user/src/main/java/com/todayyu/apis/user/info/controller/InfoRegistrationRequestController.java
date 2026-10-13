@@ -4,7 +4,7 @@ import com.todayyu.apis.common.response.SuccessResponse;
 import com.todayyu.apis.common.security.principal.CustomUserDetails;
 import com.todayyu.apis.user.info.dto.SubmitInfoRegistrationRequestRequest;
 import com.todayyu.apis.user.info.dto.SubmitInfoRegistrationRequestResponse;
-import com.todayyu.application.info.dto.SubmitInfoRegistrationRequestResult;
+import com.todayyu.application.info.dto.result.SubmitInfoRegistrationRequestResult;
 import com.todayyu.application.info.usecase.SubmitInfoRegistrationRequestUsecase;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;

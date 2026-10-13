@@ -1,6 +1,6 @@
 package com.todayyu.persistence.info.dto;
 
-import com.todayyu.application.info.dto.InfoSummaryView;
+import com.todayyu.application.info.port.dto.InfoSummaryView;
 import com.todayyu.domain.info.vo.InfoCategory;
 import com.todayyu.domain.info.vo.InfoId;
 import com.todayyu.domain.info.vo.InfoTitle;

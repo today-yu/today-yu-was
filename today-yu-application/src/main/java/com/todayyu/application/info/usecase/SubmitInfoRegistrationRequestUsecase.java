@@ -1,8 +1,8 @@
 package com.todayyu.application.info.usecase;
 
 import com.todayyu.application.common.annotation.Usecase;
-import com.todayyu.application.info.dto.SubmitInfoRegistrationRequestCommand;
-import com.todayyu.application.info.dto.SubmitInfoRegistrationRequestResult;
+import com.todayyu.application.info.dto.command.SubmitInfoRegistrationRequestCommand;
+import com.todayyu.application.info.dto.result.SubmitInfoRegistrationRequestResult;
 import com.todayyu.application.info.port.save.SaveInfoRegistrationRequestPort;
 import com.todayyu.domain.info.entity.InfoRegistrationRequest;
 import lombok.RequiredArgsConstructor;

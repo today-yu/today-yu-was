@@ -1,5 +1,7 @@
-package com.todayyu.application.info.dto;
+package com.todayyu.application.info.dto.result;
 
+import com.todayyu.application.info.port.dto.InfoRegistrationRequestView;
+import com.todayyu.application.info.port.dto.InfoUpdateRequestView;
 import com.todayyu.domain.member.vo.MemberId;
 import com.todayyu.domain.member.vo.Nickname;
 import lombok.Builder;

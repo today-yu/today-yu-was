@@ -2,8 +2,8 @@ package com.todayyu.apis.user.info.controller;
 
 import com.todayyu.apis.common.exception.GlobalExceptionHandler;
 import com.todayyu.apis.common.security.principal.CustomUserDetails;
-import com.todayyu.application.info.dto.SubmitInfoUpdateRequestCommand;
-import com.todayyu.application.info.dto.SubmitInfoUpdateRequestResult;
+import com.todayyu.application.info.dto.command.SubmitInfoUpdateRequestCommand;
+import com.todayyu.application.info.dto.result.SubmitInfoUpdateRequestResult;
 import com.todayyu.application.info.error.BusinessInfoErrorType;
 import com.todayyu.application.info.usecase.SubmitInfoUpdateRequestUsecase;
 import com.todayyu.common.error.CommonErrorType;

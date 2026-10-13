@@ -1,6 +1,6 @@
 package com.todayyu.persistence.info.adapter;
 
-import com.todayyu.application.info.dto.InfoUpdateRequestView;
+import com.todayyu.application.info.port.dto.InfoUpdateRequestView;
 import com.todayyu.domain.common.vo.Email;
 import com.todayyu.domain.info.entity.InfoUpdateRequest;
 import com.todayyu.domain.info.vo.InfoId;

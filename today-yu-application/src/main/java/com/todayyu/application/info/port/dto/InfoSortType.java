@@ -1,4 +1,4 @@
-package com.todayyu.application.info.dto;
+package com.todayyu.application.info.port.dto;
 
 public enum InfoSortType {
     LATEST,

@@ -1,4 +1,4 @@
-package com.todayyu.application.info.dto;
+package com.todayyu.application.info.port.dto;
 
 import com.todayyu.domain.info.entity.InfoUpdateRequest;
 import com.todayyu.domain.member.vo.Nickname;

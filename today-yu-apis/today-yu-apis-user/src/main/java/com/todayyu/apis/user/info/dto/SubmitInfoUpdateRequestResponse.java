@@ -1,6 +1,6 @@
 package com.todayyu.apis.user.info.dto;
 
-import com.todayyu.application.info.dto.SubmitInfoUpdateRequestResult;
+import com.todayyu.application.info.dto.result.SubmitInfoUpdateRequestResult;
 
 public record SubmitInfoUpdateRequestResponse(
         Long infoUpdateRequestId

@@ -1,6 +1,6 @@
 package com.todayyu.apis.user.info.dto;
 
-import com.todayyu.application.info.dto.SubmitInfoRegistrationRequestCommand;
+import com.todayyu.application.info.dto.command.SubmitInfoRegistrationRequestCommand;
 import com.todayyu.domain.common.vo.Email;
 import com.todayyu.domain.info.vo.InfoRegistrationRequestContent;
 import com.todayyu.domain.member.vo.MemberId;

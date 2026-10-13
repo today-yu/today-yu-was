@@ -1,5 +1,6 @@
-package com.todayyu.application.info.dto;
+package com.todayyu.application.info.dto.result;
 
+import com.todayyu.application.info.port.dto.InfoSummaryView;
 import com.todayyu.domain.info.vo.InfoCategory;
 import com.todayyu.domain.info.vo.InfoId;
 import com.todayyu.domain.info.vo.InfoTitle;

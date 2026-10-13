@@ -4,7 +4,7 @@ import com.querydsl.core.types.OrderSpecifier;
 import com.querydsl.core.types.Projections;
 import com.querydsl.core.types.dsl.BooleanExpression;
 import com.querydsl.jpa.impl.JPAQueryFactory;
-import com.todayyu.application.info.dto.InfoSortType;
+import com.todayyu.application.info.port.dto.InfoSortType;
 import com.todayyu.domain.info.vo.InfoCategory;
 import com.todayyu.persistence.info.dto.InfoSummaryViewProjection;
 import com.todayyu.persistence.info.entity.QInfoJpaEntity;

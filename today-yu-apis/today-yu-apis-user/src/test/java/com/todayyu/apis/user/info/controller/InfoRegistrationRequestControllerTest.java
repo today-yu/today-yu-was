@@ -2,8 +2,8 @@ package com.todayyu.apis.user.info.controller;
 
 import com.todayyu.apis.common.exception.GlobalExceptionHandler;
 import com.todayyu.apis.common.security.principal.CustomUserDetails;
-import com.todayyu.application.info.dto.SubmitInfoRegistrationRequestCommand;
-import com.todayyu.application.info.dto.SubmitInfoRegistrationRequestResult;
+import com.todayyu.application.info.dto.command.SubmitInfoRegistrationRequestCommand;
+import com.todayyu.application.info.dto.result.SubmitInfoRegistrationRequestResult;
 import com.todayyu.application.info.usecase.SubmitInfoRegistrationRequestUsecase;
 import com.todayyu.common.error.CommonErrorType;
 import com.todayyu.domain.common.vo.Email;

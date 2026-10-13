@@ -1,4 +1,4 @@
-package com.todayyu.application.info.dto;
+package com.todayyu.application.info.dto.command;
 
 import com.todayyu.domain.common.vo.Email;
 import com.todayyu.domain.info.vo.InfoCategory;

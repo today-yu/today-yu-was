@@ -1,8 +1,8 @@
 package com.todayyu.persistence.info.adapter;
 
-import com.todayyu.application.info.dto.InfoCursor;
-import com.todayyu.application.info.dto.InfoSortType;
-import com.todayyu.application.info.dto.InfoSummaryView;
+import com.todayyu.application.info.port.dto.InfoCursor;
+import com.todayyu.application.info.port.dto.InfoSortType;
+import com.todayyu.application.info.port.dto.InfoSummaryView;
 import com.todayyu.domain.info.entity.Info;
 import com.todayyu.domain.info.vo.InfoCategory;
 import com.todayyu.domain.info.vo.InfoContent;
