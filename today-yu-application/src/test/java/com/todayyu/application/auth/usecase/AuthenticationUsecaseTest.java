@@ -1,7 +1,7 @@
 package com.todayyu.application.auth.usecase;
 
 import com.todayyu.application.auth.dto.AccessTokenClaims;
-import com.todayyu.application.auth.dto.AuthenticatedMember;
+import com.todayyu.application.auth.dto.AuthenticatedMemberResult;
 import com.todayyu.application.auth.error.BusinessAuthErrorType;
 import com.todayyu.application.auth.port.TokenPort;
 import com.todayyu.application.auth.port.read.ReadBlacklistTokenPort;
@@ -65,7 +65,7 @@ class AuthenticationUsecaseTest {
         given(readMemberPort.readByMemberId(MEMBER_ID)).willReturn(Optional.of(member()));
 
         // when
-        AuthenticatedMember result = authenticationUsecase.authenticate(ACCESS_TOKEN);
+        AuthenticatedMemberResult result = authenticationUsecase.authenticate(ACCESS_TOKEN);
 
         // then
         assertEquals(MEMBER_ID, result.memberId());

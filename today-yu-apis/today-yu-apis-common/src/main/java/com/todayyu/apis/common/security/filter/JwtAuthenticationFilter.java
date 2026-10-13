@@ -4,7 +4,7 @@ import com.todayyu.apis.common.auth.AuthScheme;
 import com.todayyu.apis.common.security.handler.CustomAuthenticationEntryPoint;
 import com.todayyu.apis.common.security.handler.SecurityErrorResponseWriter;
 import com.todayyu.apis.common.security.principal.CustomUserDetails;
-import com.todayyu.application.auth.dto.AuthenticatedMember;
+import com.todayyu.application.auth.dto.AuthenticatedMemberResult;
 import com.todayyu.application.auth.error.BusinessAuthErrorType;
 import com.todayyu.application.auth.usecase.AuthenticationUsecase;
 import com.todayyu.common.exception.CustomException;
@@ -72,7 +72,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         
         try {
             AccessToken accessToken = parseAccessToken(authorization);
-            AuthenticatedMember member = authenticationUsecase.authenticate(accessToken);
+            AuthenticatedMemberResult member = authenticationUsecase.authenticate(accessToken);
             UserDetails userDetails = new CustomUserDetails(member.memberId(), member.role());
             
             setAuthentication(userDetails);

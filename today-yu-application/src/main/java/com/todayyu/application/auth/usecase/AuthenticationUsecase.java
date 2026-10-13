@@ -1,7 +1,7 @@
 package com.todayyu.application.auth.usecase;
 
 import com.todayyu.application.auth.dto.AccessTokenClaims;
-import com.todayyu.application.auth.dto.AuthenticatedMember;
+import com.todayyu.application.auth.dto.AuthenticatedMemberResult;
 import com.todayyu.application.auth.error.BusinessAuthErrorType;
 import com.todayyu.application.auth.port.TokenPort;
 import com.todayyu.application.auth.port.read.ReadBlacklistTokenPort;
@@ -20,7 +20,7 @@ public class AuthenticationUsecase {
     private final ReadBlacklistTokenPort readBlacklistTokenPort;
     
     /**
-     * 인증을 위한 회원 정보({@link AuthenticatedMember})를 조회하는 메서드
+     * 인증을 위한 회원 정보({@link AuthenticatedMemberResult})를 조회하는 메서드
      *
      * <p> Access Token이 블랙리스트로 등록된 토큰이라면 예외를 발생한다. </p>
      * <p> Access Token 클레임의 회원 ID에 해당하는 회원이 존재하지 않을 경우 예외를 발생한다. </p>
@@ -29,7 +29,7 @@ public class AuthenticationUsecase {
      * @return 인증용 회원 정보
      * @throws CustomException {@link BusinessAuthErrorType#INVALID_TOKEN} - 블랙리스트로 등록된 토큰이거나, 회원이 존재하지 않는 경우
      */
-    public AuthenticatedMember authenticate(AccessToken accessToken) {
+    public AuthenticatedMemberResult authenticate(AccessToken accessToken) {
         AccessTokenClaims claims = tokenPort.parseAccessToken(accessToken);
         if (readBlacklistTokenPort.isBlacklistToken(claims.tokenId())) {
             throw new CustomException(BusinessAuthErrorType.INVALID_TOKEN, "블랙리스트로 등록된 토큰입니다.");
@@ -38,6 +38,6 @@ public class AuthenticationUsecase {
         Member member = readMemberPort.readByMemberId(claims.memberId())
                 .orElseThrow(() -> new CustomException(BusinessAuthErrorType.INVALID_TOKEN, "존재하지 않는 사용자입니다."));
         
-        return new AuthenticatedMember(member.getId(), member.getRole());
+        return new AuthenticatedMemberResult(member.getId(), member.getRole());
     }
 }
