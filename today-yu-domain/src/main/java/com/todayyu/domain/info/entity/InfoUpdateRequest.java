@@ -65,7 +65,7 @@ public class InfoUpdateRequest {
             LocalDateTime observedAt,
             LocalDateTime requestedAt
     ) {
-        validateRequiredFields(requesterId, infoId, content, contactEmail);
+        validateRequiredFields(requesterId, infoId, content, contactEmail, observedAt);
         
         return new InfoUpdateRequest(
                 null,
@@ -95,7 +95,7 @@ public class InfoUpdateRequest {
             throw new IllegalArgumentException("정보 수정 요청 ID는 비어있을 수 없습니다.");
         }
         
-        validateRequiredFields(requesterId, infoId, content, contactEmail);
+        validateRequiredFields(requesterId, infoId, content, contactEmail, observedAt);
         validateStatus(status, rejectionReason);
         
         return new InfoUpdateRequest(
@@ -118,19 +118,22 @@ public class InfoUpdateRequest {
      * @param infoId       정보 수정 요청 대상 정보 ID
      * @param content      정보 수정 요청 내용
      * @param contactEmail 정보 수정 요청자 연락 이메일
+     * @param observedAt   정보 수정 요청 내용 확인 시각
      * @throws IllegalArgumentException 필수 입력 필드가 누락된 경우
      * <ul>
      *     <li> {@code requesterId}가 비어있는 경우 </li>
      *     <li> {@code infoId}가 비어있는 경우 </li>
      *     <li> {@code content}가 비어있는 경우 </li>
      *     <li> {@code contactEmail}가 비어있는 경우 </li>
+     *     <li> {@code observedAt}가 비어있는 경우 </li>
      * </ul>
      */
     private static void validateRequiredFields(
             MemberId requesterId,
             InfoId infoId,
             InfoUpdateRequestContent content,
-            Email contactEmail
+            Email contactEmail,
+            LocalDateTime observedAt
     ) {
         if (requesterId == null) {
             throw new IllegalArgumentException("정보 수정 요청 회원 ID는 비어있을 수 없습니다.");
@@ -146,6 +149,10 @@ public class InfoUpdateRequest {
         
         if (contactEmail == null) {
             throw new IllegalArgumentException("연락용 이메일은 비어있을 수 없습니다.");
+        }
+        
+        if (observedAt == null) {
+            throw new IllegalArgumentException("정보 수정 요청 내용 확인 시각은 비어있을 수 없습니다.");
         }
     }
 
