@@ -3,15 +3,21 @@ package com.todayyu.apis.user.info.controller;
 import com.todayyu.apis.common.exception.GlobalExceptionHandler;
 import com.todayyu.apis.common.security.principal.CustomUserDetails;
 import com.todayyu.application.info.dto.command.SubmitInfoUpdateRequestCommand;
+import com.todayyu.application.info.dto.query.GetInfoUpdateRequestDetailQuery;
+import com.todayyu.application.info.dto.result.InfoUpdateRequestDetailResult;
 import com.todayyu.application.info.dto.result.SubmitInfoUpdateRequestResult;
 import com.todayyu.application.info.error.BusinessInfoErrorType;
+import com.todayyu.application.info.error.BusinessInfoUpdateRequestErrorType;
+import com.todayyu.application.info.usecase.GetInfoUpdateRequestDetailUsecase;
 import com.todayyu.application.info.usecase.SubmitInfoUpdateRequestUsecase;
 import com.todayyu.common.error.CommonErrorType;
 import com.todayyu.common.exception.CustomException;
 import com.todayyu.domain.common.vo.Email;
 import com.todayyu.domain.info.vo.InfoId;
+import com.todayyu.domain.info.vo.InfoRequestStatus;
 import com.todayyu.domain.info.vo.InfoUpdateRequestContent;
 import com.todayyu.domain.info.vo.InfoUpdateRequestId;
+import com.todayyu.domain.info.vo.RejectionReason;
 import com.todayyu.domain.member.vo.MemberId;
 import com.todayyu.domain.member.vo.Role;
 import org.junit.jupiter.api.AfterEach;
@@ -35,11 +41,13 @@ import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
 import java.time.LocalDateTime;
 
+import static org.hamcrest.Matchers.nullValue;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.then;
 import static org.mockito.Mockito.never;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -47,12 +55,19 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @ExtendWith(MockitoExtension.class)
 class InfoUpdateRequestControllerTest {
     private static final String SUBMIT_URL = "/api/v1/infos/{infoId}/update-requests";
+    private static final String DETAIL_URL = "/api/v1/infos/update-requests/{requestId}";
     private static final Long MEMBER_ID = 1L;
     private static final Long INFO_ID = 5L;
     private static final Long REQUEST_ID = 10L;
     private static final String CONTENT = "수강신청 일정이 10월 21일로 변경되었습니다.";
     private static final String CONTACT_EMAIL = "requester@example.com";
     private static final String OBSERVED_AT = "2026-10-01T09:00:00";
+    private static final LocalDateTime OBSERVED_AT_TIME = LocalDateTime.of(2026, 10, 1, 9, 0, 0);
+    private static final LocalDateTime REQUESTED_AT = LocalDateTime.of(2026, 10, 1, 9, 0, 30);
+    private static final String REJECTION_REASON = "사실 관계를 확인할 수 없습니다.";
+
+    @Mock
+    private GetInfoUpdateRequestDetailUsecase getInfoUpdateRequestDetailUsecase;
 
     @Mock
     private SubmitInfoUpdateRequestUsecase submitInfoUpdateRequestUsecase;
@@ -62,6 +77,9 @@ class InfoUpdateRequestControllerTest {
 
     @Captor
     private ArgumentCaptor<SubmitInfoUpdateRequestCommand> commandCaptor;
+
+    @Captor
+    private ArgumentCaptor<GetInfoUpdateRequestDetailQuery> detailQueryCaptor;
 
     private MockMvc mockMvc;
 
@@ -81,6 +99,92 @@ class InfoUpdateRequestControllerTest {
     @AfterEach
     void tearDown() {
         SecurityContextHolder.clearContext();
+    }
+
+    @Test
+    @DisplayName("정보 수정 요청 상세 조회 요청 시 요청 ID와 인증된 회원 ID로 조회를 요청하고, 상세 내용을 원시값으로 변환해 반환한다")
+    void getInfoUpdateRequestDetail() throws Exception {
+        // given
+        given(getInfoUpdateRequestDetailUsecase.getInfoUpdateRequestDetail(any()))
+                .willReturn(detailResult(InfoRequestStatus.PENDING, null));
+
+        // when
+        mockMvc.perform(get(DETAIL_URL, REQUEST_ID))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.message").value("정보 수정 요청 상세 조회에 성공하였습니다."))
+                .andExpect(jsonPath("$.data.id").value(REQUEST_ID))
+                .andExpect(jsonPath("$.data.requesterId").value(MEMBER_ID))
+                .andExpect(jsonPath("$.data.content").value(CONTENT))
+                .andExpect(jsonPath("$.data.contactEmail").value(CONTACT_EMAIL))
+                .andExpect(jsonPath("$.data.observedAt").value(OBSERVED_AT))
+                .andExpect(jsonPath("$.data.requestedAt").value(REQUESTED_AT.toString()))
+                .andExpect(jsonPath("$.data.status").value(InfoRequestStatus.PENDING.name()))
+                .andExpect(jsonPath("$.data.infoId").value(INFO_ID))
+                .andExpect(jsonPath("$.data.rejectionReason").value(nullValue()));
+
+        // then
+        then(getInfoUpdateRequestDetailUsecase).should()
+                .getInfoUpdateRequestDetail(detailQueryCaptor.capture());
+        assertEquals(new InfoUpdateRequestId(REQUEST_ID), detailQueryCaptor.getValue().id());
+        assertEquals(new MemberId(MEMBER_ID), detailQueryCaptor.getValue().memberId());
+    }
+
+    @Test
+    @DisplayName("반려(REJECTED)된 정보 수정 요청을 조회하면 반려 사유를 반환한다")
+    void getRejectedInfoUpdateRequestDetail() throws Exception {
+        // given
+        given(getInfoUpdateRequestDetailUsecase.getInfoUpdateRequestDetail(any()))
+                .willReturn(detailResult(InfoRequestStatus.REJECTED, new RejectionReason(REJECTION_REASON)));
+
+        // when & then
+        mockMvc.perform(get(DETAIL_URL, REQUEST_ID))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.status").value(InfoRequestStatus.REJECTED.name()))
+                .andExpect(jsonPath("$.data.infoId").value(INFO_ID))
+                .andExpect(jsonPath("$.data.rejectionReason").value(REJECTION_REASON));
+    }
+
+    @Test
+    @DisplayName("존재하지 않는 정보 수정 요청을 조회하면 정보 수정 요청 없음 에러를 응답한다")
+    void getInfoUpdateRequestDetailWithNotExistingRequest() throws Exception {
+        // given
+        given(getInfoUpdateRequestDetailUsecase.getInfoUpdateRequestDetail(any()))
+                .willThrow(new CustomException(BusinessInfoUpdateRequestErrorType.NOT_FOUND));
+
+        // when & then
+        mockMvc.perform(get(DETAIL_URL, REQUEST_ID))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.errorCode")
+                        .value(BusinessInfoUpdateRequestErrorType.NOT_FOUND.getErrorCode()))
+                .andExpect(jsonPath("$.message")
+                        .value(BusinessInfoUpdateRequestErrorType.NOT_FOUND.getMessage()));
+    }
+
+    @Test
+    @DisplayName("요청한 회원 본인이 아닌 회원이 조회하면 접근 권한 없음 에러를 응답한다")
+    void getInfoUpdateRequestDetailByOtherMember() throws Exception {
+        // given
+        given(getInfoUpdateRequestDetailUsecase.getInfoUpdateRequestDetail(any()))
+                .willThrow(new CustomException(BusinessInfoUpdateRequestErrorType.FORBIDDEN));
+
+        // when & then
+        mockMvc.perform(get(DETAIL_URL, REQUEST_ID))
+                .andExpect(status().isForbidden())
+                .andExpect(jsonPath("$.errorCode")
+                        .value(BusinessInfoUpdateRequestErrorType.FORBIDDEN.getErrorCode()))
+                .andExpect(jsonPath("$.message")
+                        .value(BusinessInfoUpdateRequestErrorType.FORBIDDEN.getMessage()));
+    }
+
+    @Test
+    @DisplayName("정보 수정 요청 ID가 숫자가 아니면 잘못된 요청 에러를 응답하고 조회를 하지 않는다")
+    void getInfoUpdateRequestDetailWithInvalidRequestId() throws Exception {
+        // given & when
+        mockMvc.perform(get(DETAIL_URL, "invalid-id"))
+                .andExpect(status().isBadRequest());
+
+        // then
+        then(getInfoUpdateRequestDetailUsecase).should(never()).getInfoUpdateRequestDetail(any());
     }
 
     @Test
@@ -218,6 +322,20 @@ class InfoUpdateRequestControllerTest {
 
         // then
         then(submitInfoUpdateRequestUsecase).should(never()).submit(any());
+    }
+
+    private InfoUpdateRequestDetailResult detailResult(InfoRequestStatus status, RejectionReason rejectionReason) {
+        return new InfoUpdateRequestDetailResult(
+                new InfoUpdateRequestId(REQUEST_ID),
+                new MemberId(MEMBER_ID),
+                new InfoUpdateRequestContent(CONTENT),
+                new Email(CONTACT_EMAIL),
+                OBSERVED_AT_TIME,
+                REQUESTED_AT,
+                status,
+                new InfoId(INFO_ID),
+                rejectionReason
+        );
     }
 
     private String body(String content, String contactEmail, String observedAt) {
