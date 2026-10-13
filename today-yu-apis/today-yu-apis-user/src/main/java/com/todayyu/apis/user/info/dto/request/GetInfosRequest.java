@@ -1,4 +1,4 @@
-package com.todayyu.apis.user.info.dto;
+package com.todayyu.apis.user.info.dto.request;
 
 import com.todayyu.application.info.dto.query.GetInfosQuery;
 import com.todayyu.application.info.port.dto.InfoCursor;

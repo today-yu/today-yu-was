@@ -2,8 +2,8 @@ package com.todayyu.apis.user.info.controller;
 
 import com.todayyu.apis.common.response.SuccessResponse;
 import com.todayyu.apis.common.security.principal.CustomUserDetails;
-import com.todayyu.apis.user.info.dto.SubmitInfoUpdateRequestRequest;
-import com.todayyu.apis.user.info.dto.SubmitInfoUpdateRequestResponse;
+import com.todayyu.apis.user.info.dto.request.SubmitInfoUpdateRequestRequest;
+import com.todayyu.apis.user.info.dto.response.SubmitInfoUpdateRequestResponse;
 import com.todayyu.application.info.dto.result.SubmitInfoUpdateRequestResult;
 import com.todayyu.application.info.usecase.SubmitInfoUpdateRequestUsecase;
 import jakarta.validation.Valid;

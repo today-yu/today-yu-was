@@ -1,4 +1,4 @@
-package com.todayyu.apis.user.info.dto;
+package com.todayyu.apis.user.info.dto.response;
 
 import com.todayyu.application.info.dto.result.InfoSummaryResult;
 
