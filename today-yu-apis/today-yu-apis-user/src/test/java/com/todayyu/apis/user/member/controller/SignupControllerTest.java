@@ -1,9 +1,9 @@
 package com.todayyu.apis.user.member.controller;
 
 import com.todayyu.apis.common.exception.GlobalExceptionHandler;
-import com.todayyu.application.member.dto.SignupCommand;
-import com.todayyu.application.member.dto.VerificationCodeIssueCommand;
-import com.todayyu.application.member.dto.VerificationCodeVerifyCommand;
+import com.todayyu.application.member.dto.command.SignupCommand;
+import com.todayyu.application.member.dto.command.VerificationCodeIssueCommand;
+import com.todayyu.application.member.dto.command.VerificationCodeVerifyCommand;
 import com.todayyu.application.member.usecase.EmailVerificationUsecase;
 import com.todayyu.application.member.usecase.SignupUsecase;
 import com.todayyu.common.error.BaseErrorType;

@@ -1,6 +1,6 @@
 package com.todayyu.apis.user.member.dto;
 
-import com.todayyu.application.member.dto.SignupCommand;
+import com.todayyu.application.member.dto.command.SignupCommand;
 import com.todayyu.domain.common.vo.Email;
 import com.todayyu.domain.member.vo.Password;
 import jakarta.validation.constraints.NotBlank;
