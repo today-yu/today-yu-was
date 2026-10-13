@@ -1,4 +1,4 @@
-package com.todayyu.apis.common.dto;
+package com.todayyu.apis.user.common.dto;
 
 import com.todayyu.application.common.dto.CursorResult;
 

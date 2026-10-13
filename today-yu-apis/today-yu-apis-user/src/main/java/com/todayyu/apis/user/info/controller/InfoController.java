@@ -1,6 +1,6 @@
 package com.todayyu.apis.user.info.controller;
 
-import com.todayyu.apis.common.dto.CursorResponse;
+import com.todayyu.apis.user.common.dto.CursorResponse;
 import com.todayyu.apis.common.response.SuccessResponse;
 import com.todayyu.apis.common.security.principal.CustomUserDetails;
 import com.todayyu.apis.user.info.dto.request.GetInfosRequest;
