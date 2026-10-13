@@ -1,9 +1,9 @@
 package com.todayyu.application.auth.port;
 
-import com.todayyu.application.auth.dto.AccessTokenClaims;
-import com.todayyu.application.auth.dto.IssuedAccessToken;
-import com.todayyu.application.auth.dto.IssuedRefreshToken;
-import com.todayyu.application.auth.dto.RefreshTokenClaims;
+import com.todayyu.application.auth.port.dto.AccessTokenClaims;
+import com.todayyu.application.auth.port.dto.IssuedAccessToken;
+import com.todayyu.application.auth.port.dto.IssuedRefreshToken;
+import com.todayyu.application.auth.port.dto.RefreshTokenClaims;
 import com.todayyu.domain.auth.vo.AccessToken;
 import com.todayyu.domain.auth.vo.RefreshToken;
 import com.todayyu.domain.auth.vo.SessionId;

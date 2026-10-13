@@ -1,6 +1,6 @@
 package com.todayyu.infrastructure.auth.adapter.redis;
 
-import com.todayyu.application.auth.dto.IssuedRefreshToken;
+import com.todayyu.application.auth.port.dto.IssuedRefreshToken;
 import com.todayyu.domain.auth.vo.RefreshToken;
 import com.todayyu.domain.auth.vo.SessionId;
 import com.todayyu.domain.member.vo.MemberId;
