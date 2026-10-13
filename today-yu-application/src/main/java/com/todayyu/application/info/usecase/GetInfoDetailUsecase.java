@@ -11,6 +11,7 @@ import com.todayyu.application.info.port.read.ReadInfoPort;
 import com.todayyu.application.info.port.read.ReadInfoRegistrationRequestPort;
 import com.todayyu.application.info.port.read.ReadInfoUpdateRequestPort;
 import com.todayyu.application.info.port.read.ReadInfoViewCountPort;
+import com.todayyu.application.info.port.save.SaveInfoViewCountPort;
 import com.todayyu.common.exception.CustomException;
 import com.todayyu.domain.info.entity.Info;
 import com.todayyu.domain.info.entity.InfoViewCount;
@@ -30,6 +31,7 @@ public class GetInfoDetailUsecase {
     private final ReadHelpfulMarkPort readHelpfulMarkPort;
     private final ReadInfoRegistrationRequestPort readInfoRegistrationRequestPort;
     private final ReadInfoUpdateRequestPort readInfoUpdateRequestPort;
+    private final SaveInfoViewCountPort saveInfoViewCountPort;
     
     /**
      * 정보의 상세 내용을 조회하는 메서드
@@ -50,8 +52,6 @@ public class GetInfoDetailUsecase {
         Info info = readInfoPort.readById(infoId)
                 .orElseThrow(() -> new CustomException(BusinessInfoErrorType.NOT_FOUND));
         
-        // TODO: 조회수 증가
-        
         InfoViewCount infoViewCount = readInfoViewCountPort.readByInfoId(infoId)
                 .orElseThrow(() -> new IllegalStateException("정보 조회수가 존재하지 않습니다. infoId = " + infoId.getValue()));
         
@@ -62,6 +62,8 @@ public class GetInfoDetailUsecase {
                 = readInfoRegistrationRequestPort.readByInfoIdAndStatus(infoId, InfoRequestStatus.ACCEPTED);
         List<InfoUpdateRequestView> infoUpdateRequestViews
                 = readInfoUpdateRequestPort.readByInfoIdAndStatus(infoId, InfoRequestStatus.ACCEPTED);
+        
+        saveInfoViewCountPort.increase(infoId);
         
         return InfoDetailResult.from(
                 info,
