@@ -1,6 +1,6 @@
 package com.todayyu.apis.user.auth.dto;
 
-import com.todayyu.application.auth.dto.ReissueAuthTokenCommand;
+import com.todayyu.application.auth.dto.command.ReissueAuthTokenCommand;
 import com.todayyu.domain.auth.vo.RefreshToken;
 import jakarta.validation.constraints.NotBlank;
 

@@ -2,7 +2,7 @@ package com.todayyu.application.auth.usecase;
 
 import com.todayyu.application.auth.dto.IssuedAccessToken;
 import com.todayyu.application.auth.dto.IssuedRefreshToken;
-import com.todayyu.application.auth.dto.SigninCommand;
+import com.todayyu.application.auth.dto.command.SigninCommand;
 import com.todayyu.application.auth.dto.AuthTokenResult;
 import com.todayyu.application.auth.error.BusinessAuthErrorType;
 import com.todayyu.application.auth.port.TokenPort;

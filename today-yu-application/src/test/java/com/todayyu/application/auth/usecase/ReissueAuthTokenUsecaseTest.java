@@ -4,7 +4,7 @@ import com.todayyu.application.auth.dto.AuthTokenResult;
 import com.todayyu.application.auth.dto.IssuedAccessToken;
 import com.todayyu.application.auth.dto.IssuedRefreshToken;
 import com.todayyu.application.auth.dto.RefreshTokenClaims;
-import com.todayyu.application.auth.dto.ReissueAuthTokenCommand;
+import com.todayyu.application.auth.dto.command.ReissueAuthTokenCommand;
 import com.todayyu.application.auth.error.BusinessAuthErrorType;
 import com.todayyu.application.auth.port.TokenPort;
 import com.todayyu.application.auth.port.read.ReadRefreshTokenPort;

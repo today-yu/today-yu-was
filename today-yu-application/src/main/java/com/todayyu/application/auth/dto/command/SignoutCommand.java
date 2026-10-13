@@ -1,4 +1,4 @@
-package com.todayyu.application.auth.dto;
+package com.todayyu.application.auth.dto.command;
 
 import com.todayyu.domain.auth.vo.AccessToken;
 
