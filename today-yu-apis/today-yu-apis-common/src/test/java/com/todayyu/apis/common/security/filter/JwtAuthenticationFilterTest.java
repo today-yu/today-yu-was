@@ -2,7 +2,7 @@ package com.todayyu.apis.common.security.filter;
 
 import com.todayyu.apis.common.security.handler.SecurityErrorResponseWriter;
 import com.todayyu.apis.common.security.principal.CustomUserDetails;
-import com.todayyu.application.auth.dto.AuthenticatedMember;
+import com.todayyu.application.auth.dto.result.AuthenticatedMemberResult;
 import com.todayyu.application.auth.error.BusinessAuthErrorType;
 import com.todayyu.application.auth.usecase.AuthenticationUsecase;
 import com.todayyu.common.exception.CustomException;
@@ -80,7 +80,7 @@ class JwtAuthenticationFilterTest {
         // given
         MockHttpServletRequest request = request(PROTECTED_URI, "Bearer access-token");
         given(authenticationUsecase.authenticate(any()))
-                .willReturn(new AuthenticatedMember(MEMBER_ID, Role.MEMBER));
+                .willReturn(new AuthenticatedMemberResult(MEMBER_ID, Role.MEMBER));
 
         // when
         filter.doFilter(request, response, filterChain);
@@ -102,7 +102,7 @@ class JwtAuthenticationFilterTest {
         // given
         MockHttpServletRequest request = request(PROTECTED_URI, "Bearer access-token");
         given(authenticationUsecase.authenticate(any()))
-                .willReturn(new AuthenticatedMember(MEMBER_ID, Role.MEMBER));
+                .willReturn(new AuthenticatedMemberResult(MEMBER_ID, Role.MEMBER));
 
         // when
         filter.doFilter(request, response, filterChain);

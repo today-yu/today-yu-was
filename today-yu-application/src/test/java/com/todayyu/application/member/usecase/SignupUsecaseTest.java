@@ -1,6 +1,6 @@
 package com.todayyu.application.member.usecase;
 
-import com.todayyu.application.member.dto.SignupCommand;
+import com.todayyu.application.member.dto.command.SignupCommand;
 import com.todayyu.application.member.error.BusinessMemberErrorType;
 import com.todayyu.application.member.port.NicknamePort;
 import com.todayyu.application.member.port.PasswordPort;

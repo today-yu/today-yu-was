@@ -1,7 +1,7 @@
 package com.todayyu.application.member.usecase;
 
-import com.todayyu.application.member.dto.VerificationCodeIssueCommand;
-import com.todayyu.application.member.dto.VerificationCodeVerifyCommand;
+import com.todayyu.application.member.dto.command.VerificationCodeIssueCommand;
+import com.todayyu.application.member.dto.command.VerificationCodeVerifyCommand;
 import com.todayyu.application.member.port.VerificationCodeSender;
 import com.todayyu.application.member.port.read.ReadEmailVerificationPort;
 import com.todayyu.application.member.port.save.SaveEmailVerificationPort;

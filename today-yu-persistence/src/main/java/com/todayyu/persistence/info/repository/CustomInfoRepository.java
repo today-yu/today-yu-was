@@ -1,6 +1,6 @@
 package com.todayyu.persistence.info.repository;
 
-import com.todayyu.application.info.dto.InfoSortType;
+import com.todayyu.application.info.port.dto.InfoSortType;
 import com.todayyu.domain.info.vo.InfoCategory;
 import com.todayyu.persistence.info.dto.InfoSummaryViewProjection;
 

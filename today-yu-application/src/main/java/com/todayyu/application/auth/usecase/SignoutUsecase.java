@@ -1,12 +1,11 @@
 package com.todayyu.application.auth.usecase;
 
-import com.todayyu.application.auth.dto.AccessTokenClaims;
-import com.todayyu.application.auth.dto.SignoutCommand;
+import com.todayyu.application.auth.port.dto.AccessTokenClaims;
+import com.todayyu.application.auth.dto.command.SignoutCommand;
 import com.todayyu.application.auth.port.TokenPort;
 import com.todayyu.application.auth.port.save.SaveBlacklistTokenPort;
 import com.todayyu.application.auth.port.save.SaveRefreshTokenPort;
 import com.todayyu.application.common.annotation.Usecase;
-import com.todayyu.domain.auth.vo.AccessToken;
 import com.todayyu.domain.auth.vo.SessionId;
 import com.todayyu.domain.auth.vo.TokenId;
 import com.todayyu.domain.member.vo.MemberId;

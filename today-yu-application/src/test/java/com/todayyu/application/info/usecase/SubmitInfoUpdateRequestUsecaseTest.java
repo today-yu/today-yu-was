@@ -1,7 +1,7 @@
 package com.todayyu.application.info.usecase;
 
-import com.todayyu.application.info.dto.SubmitInfoUpdateRequestCommand;
-import com.todayyu.application.info.dto.SubmitInfoUpdateRequestResult;
+import com.todayyu.application.info.dto.command.SubmitInfoUpdateRequestCommand;
+import com.todayyu.application.info.dto.result.SubmitInfoUpdateRequestResult;
 import com.todayyu.application.info.error.BusinessInfoErrorType;
 import com.todayyu.application.info.port.read.ReadInfoPort;
 import com.todayyu.application.info.port.save.SaveInfoUpdateRequestPort;

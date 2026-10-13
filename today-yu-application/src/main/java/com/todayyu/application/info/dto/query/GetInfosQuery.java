@@ -1,0 +1,28 @@
+package com.todayyu.application.info.dto.query;
+
+import com.todayyu.application.info.port.dto.InfoCursor;
+import com.todayyu.application.info.port.dto.InfoSortType;
+import com.todayyu.domain.info.vo.InfoCategory;
+import lombok.Builder;
+
+@Builder
+public record GetInfosQuery(
+        InfoCategory category,
+        InfoSortType sortType,
+        InfoCursor cursor,
+        int size
+) {
+    public static final int DEFAULT_SIZE = 10;
+    public static final int MAX_SIZE = 50;
+    public static final int MIN_SIZE = 1;
+    
+    public GetInfosQuery {
+        if (sortType == null) {
+            throw new IllegalArgumentException("정렬 기준은 비어있을 수 없습니다.");
+        }
+        
+        if (size < MIN_SIZE || size > MAX_SIZE) {
+            throw new IllegalArgumentException("조회 크기는 " + MIN_SIZE + " 이상 " + MAX_SIZE + " 이하여야 합니다.");
+        }
+    }
+}

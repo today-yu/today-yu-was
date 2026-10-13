@@ -2,11 +2,11 @@ package com.todayyu.apis.user.auth.controller;
 
 import com.todayyu.apis.common.auth.AuthScheme;
 import com.todayyu.apis.common.response.SuccessResponse;
-import com.todayyu.apis.user.auth.dto.ReissueAuthTokenRequest;
-import com.todayyu.apis.user.auth.dto.SigninRequest;
-import com.todayyu.apis.user.auth.dto.AuthTokenResponse;
-import com.todayyu.application.auth.dto.AuthTokenResult;
-import com.todayyu.application.auth.dto.SignoutCommand;
+import com.todayyu.apis.user.auth.dto.request.ReissueAuthTokenRequest;
+import com.todayyu.apis.user.auth.dto.request.SigninRequest;
+import com.todayyu.apis.user.auth.dto.response.AuthTokenResponse;
+import com.todayyu.application.auth.dto.result.AuthTokenResult;
+import com.todayyu.application.auth.dto.command.SignoutCommand;
 import com.todayyu.application.auth.error.BusinessAuthErrorType;
 import com.todayyu.application.auth.usecase.ReissueAuthTokenUsecase;
 import com.todayyu.application.auth.usecase.SigninUsecase;

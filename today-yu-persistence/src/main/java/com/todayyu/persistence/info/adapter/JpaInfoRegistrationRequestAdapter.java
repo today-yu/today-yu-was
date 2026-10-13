@@ -1,6 +1,6 @@
 package com.todayyu.persistence.info.adapter;
 
-import com.todayyu.application.info.dto.InfoRegistrationRequestView;
+import com.todayyu.application.info.port.dto.InfoRegistrationRequestView;
 import com.todayyu.application.info.port.read.ReadInfoRegistrationRequestPort;
 import com.todayyu.application.info.port.save.SaveInfoRegistrationRequestPort;
 import com.todayyu.domain.info.entity.InfoRegistrationRequest;

@@ -1,10 +1,10 @@
 package com.todayyu.application.info.usecase;
 
 import com.todayyu.application.common.annotation.Usecase;
-import com.todayyu.application.info.dto.GetInfoDetailQuery;
-import com.todayyu.application.info.dto.InfoDetailResult;
-import com.todayyu.application.info.dto.InfoRegistrationRequestView;
-import com.todayyu.application.info.dto.InfoUpdateRequestView;
+import com.todayyu.application.info.dto.query.GetInfoDetailQuery;
+import com.todayyu.application.info.dto.result.InfoDetailResult;
+import com.todayyu.application.info.port.dto.InfoRegistrationRequestView;
+import com.todayyu.application.info.port.dto.InfoUpdateRequestView;
 import com.todayyu.application.info.error.BusinessInfoErrorType;
 import com.todayyu.application.info.port.read.ReadHelpfulMarkPort;
 import com.todayyu.application.info.port.read.ReadInfoPort;

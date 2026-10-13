@@ -1,17 +1,17 @@
 package com.todayyu.apis.user.info.controller;
 
-import com.todayyu.apis.common.dto.CursorResponse;
+import com.todayyu.apis.user.common.dto.CursorResponse;
 import com.todayyu.apis.common.response.SuccessResponse;
 import com.todayyu.apis.common.security.principal.CustomUserDetails;
-import com.todayyu.apis.user.info.dto.GetInfosRequest;
-import com.todayyu.apis.user.info.dto.InfoCursorResponse;
-import com.todayyu.apis.user.info.dto.InfoDetailResponse;
-import com.todayyu.apis.user.info.dto.InfoSummaryResponse;
+import com.todayyu.apis.user.info.dto.request.GetInfosRequest;
+import com.todayyu.apis.user.info.dto.response.InfoCursorResponse;
+import com.todayyu.apis.user.info.dto.response.InfoDetailResponse;
+import com.todayyu.apis.user.info.dto.response.InfoSummaryResponse;
 import com.todayyu.application.common.dto.CursorResult;
-import com.todayyu.application.info.dto.GetInfoDetailQuery;
-import com.todayyu.application.info.dto.InfoCursor;
-import com.todayyu.application.info.dto.InfoDetailResult;
-import com.todayyu.application.info.dto.InfoSummaryResult;
+import com.todayyu.application.info.dto.query.GetInfoDetailQuery;
+import com.todayyu.application.info.port.dto.InfoCursor;
+import com.todayyu.application.info.dto.result.InfoDetailResult;
+import com.todayyu.application.info.dto.result.InfoSummaryResult;
 import com.todayyu.application.info.usecase.GetInfoDetailUsecase;
 import com.todayyu.application.info.usecase.GetInfosUsecase;
 import com.todayyu.domain.info.vo.InfoId;
