@@ -25,6 +25,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.then;
@@ -99,6 +100,63 @@ class JpaInfoUpdateRequestAdapterTest {
         // then
         assertTrue(result.isEmpty());
         then(infoUpdateRequestMapper).shouldHaveNoInteractions();
+    }
+
+    @Test
+    @DisplayName("정보 수정 요청을 JPA 엔티티로 변환해 저장하고, 저장된 JPA 엔티티를 도메인 엔티티로 변환해 반환한다")
+    void save() {
+        // given
+        InfoUpdateRequest newRequest = InfoUpdateRequest.withoutId(
+                new MemberId(FIRST_REQUESTER_ID),
+                new InfoId(INFO_ID),
+                new InfoUpdateRequestContent("수강신청 일정이 10월 21일로 변경되었습니다."),
+                new Email("requester@yu.ac.kr"),
+                OBSERVED_AT,
+                REQUESTED_AT
+        );
+        InfoUpdateRequestJpaEntity newJpaEntity = pendingJpaEntity(null);
+        InfoUpdateRequestJpaEntity savedJpaEntity = pendingJpaEntity(FIRST_REQUEST_ID);
+        InfoUpdateRequest savedRequest = pendingRequest(FIRST_REQUEST_ID);
+
+        given(infoUpdateRequestMapper.toJpaEntity(newRequest)).willReturn(newJpaEntity);
+        given(infoUpdateRequestRepository.save(newJpaEntity)).willReturn(savedJpaEntity);
+        given(infoUpdateRequestMapper.toDomain(savedJpaEntity)).willReturn(savedRequest);
+
+        // when
+        InfoUpdateRequest result = infoUpdateRequestAdapter.save(newRequest);
+
+        // then
+        assertSame(savedRequest, result);
+        assertEquals(new InfoUpdateRequestId(FIRST_REQUEST_ID), result.getId());
+        then(infoUpdateRequestRepository).should().save(newJpaEntity);
+    }
+
+    private InfoUpdateRequestJpaEntity pendingJpaEntity(Long requestId) {
+        InfoUpdateRequestJpaEntity jpaEntity = InfoUpdateRequestJpaEntity.builder()
+                .requesterId(FIRST_REQUESTER_ID)
+                .status(InfoRequestStatus.PENDING)
+                .infoId(INFO_ID)
+                .content("수강신청 일정이 10월 21일로 변경되었습니다.")
+                .contactEmail("requester@yu.ac.kr")
+                .observedAt(OBSERVED_AT)
+                .requestedAt(REQUESTED_AT)
+                .build();
+        ReflectionTestUtils.setField(jpaEntity, "id", requestId);
+        return jpaEntity;
+    }
+
+    private InfoUpdateRequest pendingRequest(Long requestId) {
+        return InfoUpdateRequest.withId(
+                new InfoUpdateRequestId(requestId),
+                new MemberId(FIRST_REQUESTER_ID),
+                InfoRequestStatus.PENDING,
+                new InfoId(INFO_ID),
+                new InfoUpdateRequestContent("수강신청 일정이 10월 21일로 변경되었습니다."),
+                new Email("requester@yu.ac.kr"),
+                null,
+                OBSERVED_AT,
+                REQUESTED_AT
+        );
     }
 
     private InfoUpdateRequestJpaEntity jpaEntity(Long requestId, Long requesterId) {

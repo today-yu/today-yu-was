@@ -18,7 +18,8 @@ public class SubmitInfoRegistrationRequestUsecase {
     /**
      * 정보 등록 요청을 저장하는 메서드
      *
-     * @param command 정보 등록 요청 DTO
+     * @param command 정보 등록 요청 저장 요청 DTO
+     * @return 정보 등록 요청 저장 결과 DTO
      */
     @Transactional
     public SubmitInfoRegistrationRequestResult submit(SubmitInfoRegistrationRequestCommand command) {

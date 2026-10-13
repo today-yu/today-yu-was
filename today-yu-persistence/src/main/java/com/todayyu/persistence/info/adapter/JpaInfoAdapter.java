@@ -63,4 +63,15 @@ public class JpaInfoAdapter implements ReadInfoPort {
                 .map(InfoSummaryViewProjection::toView)
                 .toList();
     }
+    
+    /**
+     * 정보 ID({@link InfoId})를 통해 정보의 존재 여부를 반환하는 메서드
+     *
+     * @param id 정보 ID 객체
+     * @return 정보 존재 여부
+     */
+    @Override
+    public boolean existsById(InfoId id) {
+        return infoRepository.existsById(id.getValue());
+    }
 }

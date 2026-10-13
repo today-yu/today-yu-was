@@ -13,4 +13,5 @@ import java.util.Optional;
 public interface ReadInfoPort {
     Optional<Info> readById(InfoId id);
     List<InfoSummaryView> readByCursor(InfoCategory category, InfoSortType sortType, InfoCursor cursor, int limit);
+    boolean existsById(InfoId id);
 }
