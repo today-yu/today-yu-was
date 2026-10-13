@@ -179,4 +179,14 @@ public class InfoRegistrationRequest {
             throw new IllegalArgumentException("정보 등록 요청 상태와 관련 정보, 반려 사유가 유효하지 않습니다.");
         }
     }
+    
+    /**
+     * 주어진 회원이 정보 등록 요청을 작성한 회원인지 확인하는 메서드
+     *
+     * @param memberId 확인할 회원 ID
+     * @return 정보 등록 요청 작성자 여부
+     */
+    public boolean isRequester(MemberId memberId) {
+        return requesterId.equals(memberId);
+    }
 }
