@@ -12,6 +12,7 @@ import com.todayyu.application.info.port.read.ReadInfoPort;
 import com.todayyu.application.info.port.read.ReadInfoRegistrationRequestPort;
 import com.todayyu.application.info.port.read.ReadInfoUpdateRequestPort;
 import com.todayyu.application.info.port.read.ReadInfoViewCountPort;
+import com.todayyu.application.info.port.save.SaveInfoViewCountPort;
 import com.todayyu.common.exception.CustomException;
 import com.todayyu.domain.common.vo.Email;
 import com.todayyu.domain.info.entity.Info;
@@ -76,6 +77,9 @@ class GetInfoDetailUsecaseTest {
 
     @Mock
     private ReadInfoUpdateRequestPort readInfoUpdateRequestPort;
+
+    @Mock
+    private SaveInfoViewCountPort saveInfoViewCountPort;
 
     @InjectMocks
     private GetInfoDetailUsecase getInfoDetailUsecase;
@@ -173,6 +177,19 @@ class GetInfoDetailUsecaseTest {
     }
 
     @Test
+    @DisplayName("정보 상세 조회에 성공하면 해당 정보의 조회수를 증가한다")
+    void getInfoDetailIncreasesViewCount() {
+        // given
+        givenInfoDetail(info(), 0L, false, List.of(), List.of());
+
+        // when
+        getInfoDetailUsecase.getInfoDetail(QUERY);
+
+        // then
+        then(saveInfoViewCountPort).should().increase(INFO_ID);
+    }
+
+    @Test
     @DisplayName("정보가 존재하지 않으면 NOT_FOUND 예외가 발생하고 이후 조회를 하지 않는다")
     void getInfoDetailWithNotExistingInfo() {
         // given
@@ -188,6 +205,7 @@ class GetInfoDetailUsecaseTest {
         then(readHelpfulMarkPort).shouldHaveNoInteractions();
         then(readInfoRegistrationRequestPort).shouldHaveNoInteractions();
         then(readInfoUpdateRequestPort).shouldHaveNoInteractions();
+        then(saveInfoViewCountPort).shouldHaveNoInteractions();
     }
 
     @Test
@@ -202,6 +220,7 @@ class GetInfoDetailUsecaseTest {
         then(readHelpfulMarkPort).shouldHaveNoInteractions();
         then(readInfoRegistrationRequestPort).shouldHaveNoInteractions();
         then(readInfoUpdateRequestPort).shouldHaveNoInteractions();
+        then(saveInfoViewCountPort).shouldHaveNoInteractions();
     }
 
     private void givenInfoDetail(
