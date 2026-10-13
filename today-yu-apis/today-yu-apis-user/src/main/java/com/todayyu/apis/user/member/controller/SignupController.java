@@ -1,9 +1,9 @@
 package com.todayyu.apis.user.member.controller;
 
 import com.todayyu.apis.common.response.SuccessResponse;
-import com.todayyu.apis.user.member.dto.SignupRequest;
-import com.todayyu.apis.user.member.dto.VerificationCodeIssueRequest;
-import com.todayyu.apis.user.member.dto.VerificationCodeVerifyRequest;
+import com.todayyu.apis.user.member.dto.request.SignupRequest;
+import com.todayyu.apis.user.member.dto.request.VerificationCodeIssueRequest;
+import com.todayyu.apis.user.member.dto.request.VerificationCodeVerifyRequest;
 import com.todayyu.application.member.usecase.EmailVerificationUsecase;
 import com.todayyu.application.member.usecase.SignupUsecase;
 import jakarta.validation.Valid;
