@@ -17,6 +17,7 @@ import com.todayyu.domain.info.vo.InfoCategory;
 import com.todayyu.domain.info.vo.InfoId;
 import com.todayyu.domain.info.vo.InfoRegistrationRequestContent;
 import com.todayyu.domain.info.vo.InfoRegistrationRequestId;
+import com.todayyu.domain.info.vo.InfoRegistrationRequestTitle;
 import com.todayyu.domain.info.vo.InfoRequestStatus;
 import com.todayyu.domain.info.vo.InfoTitle;
 import com.todayyu.domain.info.vo.RejectionReason;
@@ -61,6 +62,7 @@ class InfoRegistrationRequestControllerTest {
     private static final Long MEMBER_ID = 1L;
     private static final Long REQUEST_ID = 10L;
     private static final String CATEGORY = "ACADEMIC";
+    private static final String TITLE = "수강신청 일정 등록 요청";
     private static final String CONTENT = "수강신청 일정을 등록해주세요.";
     private static final String CONTACT_EMAIL = "requester@example.com";
     private static final LocalDateTime REQUESTED_AT = LocalDateTime.of(2026, 10, 1, 9, 0, 30);
@@ -118,6 +120,7 @@ class InfoRegistrationRequestControllerTest {
                 .andExpect(jsonPath("$.data.id").value(REQUEST_ID))
                 .andExpect(jsonPath("$.data.requesterId").value(MEMBER_ID))
                 .andExpect(jsonPath("$.data.category").value(CATEGORY))
+                .andExpect(jsonPath("$.data.title").value(TITLE))
                 .andExpect(jsonPath("$.data.content").value(CONTENT))
                 .andExpect(jsonPath("$.data.contactEmail").value(CONTACT_EMAIL))
                 .andExpect(jsonPath("$.data.requestedAt").value(REQUESTED_AT.toString()))
@@ -218,7 +221,7 @@ class InfoRegistrationRequestControllerTest {
         // when
         mockMvc.perform(post(SUBMIT_URL)
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(body(CATEGORY, CONTENT, CONTACT_EMAIL)))
+                        .content(body(CATEGORY, TITLE, CONTENT, CONTACT_EMAIL)))
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.message").value("정보 등록 요청 제출에 성공하였습니다."))
                 .andExpect(jsonPath("$.data.infoRegistrationRequestId").value(REQUEST_ID));
@@ -228,6 +231,7 @@ class InfoRegistrationRequestControllerTest {
         SubmitInfoRegistrationRequestCommand command = commandCaptor.getValue();
         assertEquals(new MemberId(MEMBER_ID), command.requesterId());
         assertEquals(InfoCategory.ACADEMIC, command.category());
+        assertEquals(new InfoRegistrationRequestTitle(TITLE), command.title());
         assertEquals(new InfoRegistrationRequestContent(CONTENT), command.content());
         assertEquals(new Email(CONTACT_EMAIL), command.contactEmail());
     }
@@ -243,8 +247,8 @@ class InfoRegistrationRequestControllerTest {
         mockMvc.perform(post(SUBMIT_URL)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
-                                {"requesterId": 999, "category": "%s", "content": "%s", "contactEmail": "%s"}
-                                """.formatted(CATEGORY, CONTENT, CONTACT_EMAIL)))
+                                {"requesterId": 999, "category": "%s", "title": "%s", "content": "%s", "contactEmail": "%s"}
+                                """.formatted(CATEGORY, TITLE, CONTENT, CONTACT_EMAIL)))
                 .andExpect(status().isCreated());
 
         // then
@@ -262,8 +266,24 @@ class InfoRegistrationRequestControllerTest {
                 .andExpect(status().isUnprocessableContent())
                 .andExpect(jsonPath("$.errorCode").value(CommonErrorType.VALIDATION_ERROR.getErrorCode()))
                 .andExpect(jsonPath("$.errors.category").value("정보 카테고리는 비어있을 수 없습니다."))
+                .andExpect(jsonPath("$.errors.title").value("정보 등록 요청 제목은 비어있을 수 없습니다."))
                 .andExpect(jsonPath("$.errors.content").value("정보 등록 요청 내용은 비어있을 수 없습니다."))
                 .andExpect(jsonPath("$.errors.contactEmail").exists());
+
+        // then
+        then(submitInfoRegistrationRequestUsecase).should(never()).submit(any());
+    }
+
+    @Test
+    @DisplayName("요청 제목이 공백이면 유효성 검증 에러를 응답하고 제출하지 않는다")
+    void submitWithBlankTitle() throws Exception {
+        // given & when
+        mockMvc.perform(post(SUBMIT_URL)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(body(CATEGORY, "   ", CONTENT, CONTACT_EMAIL)))
+                .andExpect(status().isUnprocessableContent())
+                .andExpect(jsonPath("$.errorCode").value(CommonErrorType.VALIDATION_ERROR.getErrorCode()))
+                .andExpect(jsonPath("$.errors.title").value("정보 등록 요청 제목은 비어있을 수 없습니다."));
 
         // then
         then(submitInfoRegistrationRequestUsecase).should(never()).submit(any());
@@ -275,7 +295,7 @@ class InfoRegistrationRequestControllerTest {
         // given & when
         mockMvc.perform(post(SUBMIT_URL)
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(body(CATEGORY, "   ", CONTACT_EMAIL)))
+                        .content(body(CATEGORY, TITLE, "   ", CONTACT_EMAIL)))
                 .andExpect(status().isUnprocessableContent())
                 .andExpect(jsonPath("$.errorCode").value(CommonErrorType.VALIDATION_ERROR.getErrorCode()))
                 .andExpect(jsonPath("$.errors.content").value("정보 등록 요청 내용은 비어있을 수 없습니다."));
@@ -291,7 +311,7 @@ class InfoRegistrationRequestControllerTest {
         // given & when
         mockMvc.perform(post(SUBMIT_URL)
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(body(CATEGORY, CONTENT, contactEmail)))
+                        .content(body(CATEGORY, TITLE, CONTENT, contactEmail)))
                 .andExpect(status().isUnprocessableContent())
                 .andExpect(jsonPath("$.errorCode").value(CommonErrorType.VALIDATION_ERROR.getErrorCode()))
                 .andExpect(jsonPath("$.errors.contactEmail").value("이메일 양식이 잘못되었습니다."));
@@ -306,7 +326,7 @@ class InfoRegistrationRequestControllerTest {
         // given & when
         mockMvc.perform(post(SUBMIT_URL)
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(body("INVALID", CONTENT, CONTACT_EMAIL)))
+                        .content(body("INVALID", TITLE, CONTENT, CONTACT_EMAIL)))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.errorCode").value(CommonErrorType.BAD_REQUEST.getErrorCode()));
 
@@ -323,6 +343,7 @@ class InfoRegistrationRequestControllerTest {
                 new InfoRegistrationRequestId(REQUEST_ID),
                 new MemberId(MEMBER_ID),
                 InfoCategory.valueOf(CATEGORY),
+                new InfoRegistrationRequestTitle(TITLE),
                 new InfoRegistrationRequestContent(CONTENT),
                 new Email(CONTACT_EMAIL),
                 REQUESTED_AT,
@@ -341,9 +362,9 @@ class InfoRegistrationRequestControllerTest {
         );
     }
 
-    private String body(String category, String content, String contactEmail) {
+    private String body(String category, String title, String content, String contactEmail) {
         return """
-                {"category": "%s", "content": "%s", "contactEmail": "%s"}
-                """.formatted(category, content, contactEmail);
+                {"category": "%s", "title": "%s", "content": "%s", "contactEmail": "%s"}
+                """.formatted(category, title, content, contactEmail);
     }
 }
