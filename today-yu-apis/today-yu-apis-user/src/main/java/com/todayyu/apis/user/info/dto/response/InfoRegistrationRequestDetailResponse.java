@@ -12,11 +12,11 @@ public record InfoRegistrationRequestDetailResponse(
         String contactEmail,
         LocalDateTime requestedAt,
         String status,
-        Long infoId,
+        LinkedInfoResponse info,
         String rejectionReason
 ) {
     public static InfoRegistrationRequestDetailResponse from(InfoRegistrationRequestDetailResult result) {
-        Long infoId = (result.infoId() == null) ? null : result.infoId().getValue();
+        LinkedInfoResponse linkedInfoResponse = (result.info() == null) ? null : LinkedInfoResponse.from(result.info());
         String rejectionReason = (result.rejectionReason() == null) ? null : result.rejectionReason().getValue();
         
         return new InfoRegistrationRequestDetailResponse(
@@ -27,7 +27,7 @@ public record InfoRegistrationRequestDetailResponse(
                 result.contactEmail().getValue(),
                 result.requestedAt(),
                 result.status().name(),
-                infoId,
+                linkedInfoResponse,
                 rejectionReason
         );
     }
