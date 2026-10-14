@@ -2,6 +2,10 @@ dependencies {
     implementation project(':today-yu-domain')
     implementation project(':today-yu-common')
 
+    /* Spring */
     implementation 'org.springframework:spring-context'
+    /* Spring Transaction */
     implementation 'org.springframework:spring-tx'
+    /* Logging: slf4j */
+    implementation 'org.slf4j:slf4j-api'
 }
