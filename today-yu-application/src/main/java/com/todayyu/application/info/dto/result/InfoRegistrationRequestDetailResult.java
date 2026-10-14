@@ -6,6 +6,7 @@ import com.todayyu.domain.info.entity.InfoRegistrationRequest;
 import com.todayyu.domain.info.vo.InfoCategory;
 import com.todayyu.domain.info.vo.InfoId;
 import com.todayyu.domain.info.vo.InfoRegistrationRequestContent;
+import com.todayyu.domain.info.vo.InfoRegistrationRequestTitle;
 import com.todayyu.domain.info.vo.InfoRegistrationRequestId;
 import com.todayyu.domain.info.vo.InfoRequestStatus;
 import com.todayyu.domain.info.vo.RejectionReason;
@@ -17,6 +18,7 @@ public record InfoRegistrationRequestDetailResult(
         InfoRegistrationRequestId id,
         MemberId requesterId,
         InfoCategory category,
+        InfoRegistrationRequestTitle title,
         InfoRegistrationRequestContent content,
         Email contactEmail,
         LocalDateTime requestedAt,
@@ -31,6 +33,7 @@ public record InfoRegistrationRequestDetailResult(
                 request.getId(),
                 request.getRequesterId(),
                 request.getCategory(),
+                request.getTitle(),
                 request.getContent(),
                 request.getContactEmail(),
                 request.getRequestedAt(),

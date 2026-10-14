@@ -5,6 +5,7 @@ import com.todayyu.domain.info.vo.InfoCategory;
 import com.todayyu.domain.info.vo.InfoId;
 import com.todayyu.domain.info.vo.InfoRegistrationRequestContent;
 import com.todayyu.domain.info.vo.InfoRegistrationRequestId;
+import com.todayyu.domain.info.vo.InfoRegistrationRequestTitle;
 import com.todayyu.domain.info.vo.InfoRequestStatus;
 import com.todayyu.domain.info.vo.RejectionReason;
 import com.todayyu.domain.member.vo.MemberId;
@@ -18,6 +19,7 @@ public class InfoRegistrationRequest {
     private InfoRegistrationRequestId id;
     private MemberId requesterId;
     private InfoCategory category;
+    private InfoRegistrationRequestTitle title;
     private InfoRegistrationRequestContent content;
     private InfoRequestStatus status;
     private InfoId infoId;
@@ -29,6 +31,7 @@ public class InfoRegistrationRequest {
             InfoRegistrationRequestId id,
             MemberId requesterId,
             InfoCategory category,
+            InfoRegistrationRequestTitle title,
             InfoRegistrationRequestContent content,
             InfoRequestStatus status,
             InfoId infoId,
@@ -39,6 +42,7 @@ public class InfoRegistrationRequest {
         this.id = id;
         this.requesterId = requesterId;
         this.category = category;
+        this.title = title;
         this.content = content;
         this.status = status;
         this.infoId = infoId;
@@ -61,16 +65,18 @@ public class InfoRegistrationRequest {
     public static InfoRegistrationRequest withoutId(
             MemberId requesterId,
             InfoCategory category,
+            InfoRegistrationRequestTitle title,
             InfoRegistrationRequestContent content,
             Email contactEmail,
             LocalDateTime requestedAt
     ) {
-        validateRequiredFields(requesterId, category, content, contactEmail);
+        validateRequiredFields(requesterId, category, title, content, contactEmail);
         
         return new InfoRegistrationRequest(
                 null,
                 requesterId,
                 category,
+                title,
                 content,
                 InfoRequestStatus.PENDING,
                 null,
@@ -84,6 +90,7 @@ public class InfoRegistrationRequest {
             InfoRegistrationRequestId id,
             MemberId requesterId,
             InfoCategory category,
+            InfoRegistrationRequestTitle title,
             InfoRegistrationRequestContent content,
             InfoRequestStatus status,
             InfoId infoId,
@@ -95,13 +102,14 @@ public class InfoRegistrationRequest {
             throw new IllegalArgumentException("정보 등록 요청 ID는 비어있을 수 없습니다.");
         }
         
-        validateRequiredFields(requesterId, category, content, contactEmail);
+        validateRequiredFields(requesterId, category, title, content, contactEmail);
         validateStatus(status, infoId, rejectionReason);
         
         return new InfoRegistrationRequest(
                 id,
                 requesterId,
                 category,
+                title,
                 content,
                 status,
                 infoId,
@@ -116,12 +124,14 @@ public class InfoRegistrationRequest {
      *
      * @param requesterId  정보 등록 요청 회원 ID
      * @param category     정보 카테고리
+     * @param title        정보 등록 요청 제목
      * @param content      정보 등록 요청 내용
      * @param contactEmail 정보 등록 요청자 연락 이메일
      * @throws IllegalArgumentException 필수 입력 필드가 누락된 경우
      * <ul>
      *     <li> {@code requesterId}가 비어있는 경우 </li>
      *     <li> {@code category}가 비어있는 경우 </li>
+     *     <li> {@code title}가 비어있는 경우 </li>
      *     <li> {@code content}가 비어있는 경우 </li>
      *     <li> {@code contactEmail}가 비어있는 경우 </li>
      * </ul>
@@ -129,6 +139,7 @@ public class InfoRegistrationRequest {
     private static void validateRequiredFields(
             MemberId requesterId,
             InfoCategory category,
+            InfoRegistrationRequestTitle title,
             InfoRegistrationRequestContent content,
             Email contactEmail
     ) {
@@ -138,6 +149,10 @@ public class InfoRegistrationRequest {
         
         if (category == null) {
             throw new IllegalArgumentException("정보 카테고리는 비어있을 수 없습니다.");
+        }
+        
+        if (title == null) {
+            throw new IllegalArgumentException("정보 등록 요청 제목은 비어있을 수 없습니다.");
         }
         
         if (content == null) {

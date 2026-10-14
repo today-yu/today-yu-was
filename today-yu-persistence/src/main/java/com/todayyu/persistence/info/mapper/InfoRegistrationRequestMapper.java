@@ -5,6 +5,7 @@ import com.todayyu.domain.info.entity.InfoRegistrationRequest;
 import com.todayyu.domain.info.vo.InfoId;
 import com.todayyu.domain.info.vo.InfoRegistrationRequestContent;
 import com.todayyu.domain.info.vo.InfoRegistrationRequestId;
+import com.todayyu.domain.info.vo.InfoRegistrationRequestTitle;
 import com.todayyu.domain.info.vo.RejectionReason;
 import com.todayyu.domain.member.vo.MemberId;
 import com.todayyu.persistence.common.Mapper;
@@ -22,6 +23,7 @@ public class InfoRegistrationRequestMapper {
         return InfoRegistrationRequestJpaEntity.builder()
                 .requesterId(domainEntity.getRequesterId().getValue())
                 .category(domainEntity.getCategory())
+                .title(domainEntity.getTitle().getValue())
                 .content(domainEntity.getContent().getValue())
                 .status(domainEntity.getStatus())
                 .infoId(domainEntity.getInfoId() == null ? null : domainEntity.getInfoId().getValue())
@@ -42,6 +44,7 @@ public class InfoRegistrationRequestMapper {
                 new InfoRegistrationRequestId(jpaEntity.getId()),
                 new MemberId(jpaEntity.getRequesterId()),
                 jpaEntity.getCategory(),
+                new InfoRegistrationRequestTitle(jpaEntity.getTitle()),
                 new InfoRegistrationRequestContent(jpaEntity.getContent()),
                 jpaEntity.getStatus(),
                 jpaEntity.getInfoId() == null ? null : new InfoId(jpaEntity.getInfoId()),

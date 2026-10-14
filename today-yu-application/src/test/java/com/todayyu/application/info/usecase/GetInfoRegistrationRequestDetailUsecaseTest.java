@@ -14,6 +14,7 @@ import com.todayyu.domain.info.vo.InfoContent;
 import com.todayyu.domain.info.vo.InfoId;
 import com.todayyu.domain.info.vo.InfoRegistrationRequestContent;
 import com.todayyu.domain.info.vo.InfoRegistrationRequestId;
+import com.todayyu.domain.info.vo.InfoRegistrationRequestTitle;
 import com.todayyu.domain.info.vo.InfoRequestStatus;
 import com.todayyu.domain.info.vo.InfoTitle;
 import com.todayyu.domain.info.vo.RejectionReason;
@@ -43,6 +44,7 @@ class GetInfoRegistrationRequestDetailUsecaseTest {
     private static final MemberId REQUESTER_ID = new MemberId(1L);
     private static final MemberId OTHER_MEMBER_ID = new MemberId(2L);
     private static final InfoCategory CATEGORY = InfoCategory.ACADEMIC;
+    private static final InfoRegistrationRequestTitle TITLE = new InfoRegistrationRequestTitle("정보 등록 요청 제목");
     private static final InfoRegistrationRequestContent CONTENT = new InfoRegistrationRequestContent("정보 등록 요청 내용");
     private static final Email CONTACT_EMAIL = new Email("user@example.com");
     private static final LocalDateTime REQUESTED_AT = LocalDateTime.of(2026, 10, 1, 9, 0);
@@ -75,6 +77,7 @@ class GetInfoRegistrationRequestDetailUsecaseTest {
         assertEquals(REQUEST_ID, result.id());
         assertEquals(REQUESTER_ID, result.requesterId());
         assertEquals(CATEGORY, result.category());
+        assertEquals(TITLE, result.title());
         assertEquals(CONTENT, result.content());
         assertEquals(CONTACT_EMAIL, result.contactEmail());
         assertEquals(REQUESTED_AT, result.requestedAt());
@@ -189,6 +192,7 @@ class GetInfoRegistrationRequestDetailUsecaseTest {
                 REQUEST_ID,
                 REQUESTER_ID,
                 CATEGORY,
+                TITLE,
                 CONTENT,
                 status,
                 infoId,

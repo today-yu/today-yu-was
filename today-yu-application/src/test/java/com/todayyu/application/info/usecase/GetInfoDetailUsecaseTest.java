@@ -24,6 +24,7 @@ import com.todayyu.domain.info.vo.InfoContent;
 import com.todayyu.domain.info.vo.InfoId;
 import com.todayyu.domain.info.vo.InfoRegistrationRequestContent;
 import com.todayyu.domain.info.vo.InfoRegistrationRequestId;
+import com.todayyu.domain.info.vo.InfoRegistrationRequestTitle;
 import com.todayyu.domain.info.vo.InfoRequestStatus;
 import com.todayyu.domain.info.vo.InfoTitle;
 import com.todayyu.domain.info.vo.InfoUpdateRequestContent;
@@ -261,6 +262,7 @@ class GetInfoDetailUsecaseTest {
                 new InfoRegistrationRequestId(requestId),
                 requesterId,
                 InfoCategory.ACADEMIC,
+                new InfoRegistrationRequestTitle("수강신청 일정 문의"),
                 new InfoRegistrationRequestContent("수강신청 일정을 알려주세요."),
                 InfoRequestStatus.ACCEPTED,
                 INFO_ID,

@@ -34,6 +34,9 @@ public class InfoRegistrationRequestJpaEntity {
     @Enumerated(value = EnumType.STRING)
     private InfoCategory category;
     
+    @Column(name = "title", nullable = false)
+    private String title;
+    
     @Column(name = "content", nullable = false, columnDefinition = "TEXT")
     private String content;
     
@@ -57,6 +60,7 @@ public class InfoRegistrationRequestJpaEntity {
     public InfoRegistrationRequestJpaEntity(
             Long requesterId,
             InfoCategory category,
+            String title,
             String content,
             InfoRequestStatus status,
             Long infoId,
@@ -66,6 +70,7 @@ public class InfoRegistrationRequestJpaEntity {
     ) {
         this.requesterId = requesterId;
         this.category = category;
+        this.title = title;
         this.content = content;
         this.status = status;
         this.infoId = infoId;
