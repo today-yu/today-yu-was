@@ -12,10 +12,13 @@ public record InfoUpdateRequestDetailResponse(
         LocalDateTime observedAt,
         LocalDateTime requestedAt,
         String status,
-        Long infoId,
+        LinkedInfoResponse info,
         String rejectionReason
 ) {
     public static InfoUpdateRequestDetailResponse from(InfoUpdateRequestDetailResult result) {
+        LinkedInfoResponse linkedInfoResponse =
+                (result.info() == null) ? null : LinkedInfoResponse.from(result.info());
+        
         String rejectionReason
                 = (result.rejectionReason() == null) ? null : result.rejectionReason().getValue();
         
@@ -27,7 +30,7 @@ public record InfoUpdateRequestDetailResponse(
                 result.observedAt(),
                 result.requestedAt(),
                 result.status().name(),
-                result.infoId().getValue(),
+                linkedInfoResponse,
                 rejectionReason
         );
     }

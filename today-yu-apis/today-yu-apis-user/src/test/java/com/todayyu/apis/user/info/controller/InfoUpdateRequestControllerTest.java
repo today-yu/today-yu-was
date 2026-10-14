@@ -5,6 +5,7 @@ import com.todayyu.apis.common.security.principal.CustomUserDetails;
 import com.todayyu.application.info.dto.command.SubmitInfoUpdateRequestCommand;
 import com.todayyu.application.info.dto.query.GetInfoUpdateRequestDetailQuery;
 import com.todayyu.application.info.dto.result.InfoUpdateRequestDetailResult;
+import com.todayyu.application.info.dto.result.LinkedInfoResult;
 import com.todayyu.application.info.dto.result.SubmitInfoUpdateRequestResult;
 import com.todayyu.application.info.error.BusinessInfoErrorType;
 import com.todayyu.application.info.error.BusinessInfoUpdateRequestErrorType;
@@ -13,8 +14,10 @@ import com.todayyu.application.info.usecase.SubmitInfoUpdateRequestUsecase;
 import com.todayyu.common.error.CommonErrorType;
 import com.todayyu.common.exception.CustomException;
 import com.todayyu.domain.common.vo.Email;
+import com.todayyu.domain.info.vo.InfoCategory;
 import com.todayyu.domain.info.vo.InfoId;
 import com.todayyu.domain.info.vo.InfoRequestStatus;
+import com.todayyu.domain.info.vo.InfoTitle;
 import com.todayyu.domain.info.vo.InfoUpdateRequestContent;
 import com.todayyu.domain.info.vo.InfoUpdateRequestId;
 import com.todayyu.domain.info.vo.RejectionReason;
@@ -58,6 +61,9 @@ class InfoUpdateRequestControllerTest {
     private static final String DETAIL_URL = "/api/v1/infos/update-requests/{requestId}";
     private static final Long MEMBER_ID = 1L;
     private static final Long INFO_ID = 5L;
+    private static final String INFO_CATEGORY = "ACADEMIC";
+    private static final String INFO_TITLE = "수강신청 일정";
+    private static final LocalDateTime INFO_UPDATED_AT = LocalDateTime.of(2026, 9, 15, 12, 0, 30);
     private static final Long REQUEST_ID = 10L;
     private static final String CONTENT = "수강신청 일정이 10월 21일로 변경되었습니다.";
     private static final String CONTACT_EMAIL = "requester@example.com";
@@ -102,11 +108,11 @@ class InfoUpdateRequestControllerTest {
     }
 
     @Test
-    @DisplayName("정보 수정 요청 상세 조회 요청 시 요청 ID와 인증된 회원 ID로 조회를 요청하고, 상세 내용을 원시값으로 변환해 반환한다")
+    @DisplayName("정보 수정 요청 상세 조회 요청 시 요청 ID와 인증된 회원 ID로 조회를 요청하고, 연결된 정보를 포함한 상세 내용을 원시값으로 변환해 반환한다")
     void getInfoUpdateRequestDetail() throws Exception {
         // given
         given(getInfoUpdateRequestDetailUsecase.getInfoUpdateRequestDetail(any()))
-                .willReturn(detailResult(InfoRequestStatus.PENDING, null));
+                .willReturn(detailResult(InfoRequestStatus.PENDING, linkedInfoResult(), null));
 
         // when
         mockMvc.perform(get(DETAIL_URL, REQUEST_ID))
@@ -119,7 +125,10 @@ class InfoUpdateRequestControllerTest {
                 .andExpect(jsonPath("$.data.observedAt").value(OBSERVED_AT))
                 .andExpect(jsonPath("$.data.requestedAt").value(REQUESTED_AT.toString()))
                 .andExpect(jsonPath("$.data.status").value(InfoRequestStatus.PENDING.name()))
-                .andExpect(jsonPath("$.data.infoId").value(INFO_ID))
+                .andExpect(jsonPath("$.data.info.id").value(INFO_ID))
+                .andExpect(jsonPath("$.data.info.category").value(INFO_CATEGORY))
+                .andExpect(jsonPath("$.data.info.title").value(INFO_TITLE))
+                .andExpect(jsonPath("$.data.info.updatedAt").value(INFO_UPDATED_AT.toString()))
                 .andExpect(jsonPath("$.data.rejectionReason").value(nullValue()));
 
         // then
@@ -134,14 +143,32 @@ class InfoUpdateRequestControllerTest {
     void getRejectedInfoUpdateRequestDetail() throws Exception {
         // given
         given(getInfoUpdateRequestDetailUsecase.getInfoUpdateRequestDetail(any()))
-                .willReturn(detailResult(InfoRequestStatus.REJECTED, new RejectionReason(REJECTION_REASON)));
+                .willReturn(detailResult(
+                        InfoRequestStatus.REJECTED,
+                        linkedInfoResult(),
+                        new RejectionReason(REJECTION_REASON)
+                ));
 
         // when & then
         mockMvc.perform(get(DETAIL_URL, REQUEST_ID))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.data.status").value(InfoRequestStatus.REJECTED.name()))
-                .andExpect(jsonPath("$.data.infoId").value(INFO_ID))
+                .andExpect(jsonPath("$.data.info.id").value(INFO_ID))
                 .andExpect(jsonPath("$.data.rejectionReason").value(REJECTION_REASON));
+    }
+
+    @Test
+    @DisplayName("연결된 정보가 없는 정보 수정 요청을 조회하면 연결된 정보는 null로 반환한다")
+    void getInfoUpdateRequestDetailWithoutLinkedInfo() throws Exception {
+        // given
+        given(getInfoUpdateRequestDetailUsecase.getInfoUpdateRequestDetail(any()))
+                .willReturn(detailResult(InfoRequestStatus.PENDING, null, null));
+
+        // when & then
+        mockMvc.perform(get(DETAIL_URL, REQUEST_ID))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.id").value(REQUEST_ID))
+                .andExpect(jsonPath("$.data.info").value(nullValue()));
     }
 
     @Test
@@ -324,7 +351,11 @@ class InfoUpdateRequestControllerTest {
         then(submitInfoUpdateRequestUsecase).should(never()).submit(any());
     }
 
-    private InfoUpdateRequestDetailResult detailResult(InfoRequestStatus status, RejectionReason rejectionReason) {
+    private InfoUpdateRequestDetailResult detailResult(
+            InfoRequestStatus status,
+            LinkedInfoResult info,
+            RejectionReason rejectionReason
+    ) {
         return new InfoUpdateRequestDetailResult(
                 new InfoUpdateRequestId(REQUEST_ID),
                 new MemberId(MEMBER_ID),
@@ -333,8 +364,17 @@ class InfoUpdateRequestControllerTest {
                 OBSERVED_AT_TIME,
                 REQUESTED_AT,
                 status,
-                new InfoId(INFO_ID),
+                info,
                 rejectionReason
+        );
+    }
+
+    private LinkedInfoResult linkedInfoResult() {
+        return new LinkedInfoResult(
+                new InfoId(INFO_ID),
+                InfoCategory.valueOf(INFO_CATEGORY),
+                new InfoTitle(INFO_TITLE),
+                INFO_UPDATED_AT
         );
     }
 
