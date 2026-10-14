@@ -1,8 +1,8 @@
 package com.todayyu.application.info.dto.result;
 
 import com.todayyu.domain.common.vo.Email;
+import com.todayyu.domain.info.entity.Info;
 import com.todayyu.domain.info.entity.InfoUpdateRequest;
-import com.todayyu.domain.info.vo.InfoId;
 import com.todayyu.domain.info.vo.InfoRequestStatus;
 import com.todayyu.domain.info.vo.InfoUpdateRequestContent;
 import com.todayyu.domain.info.vo.InfoUpdateRequestId;
@@ -19,10 +19,12 @@ public record InfoUpdateRequestDetailResult(
         LocalDateTime observedAt,
         LocalDateTime requestedAt,
         InfoRequestStatus status,
-        InfoId infoId,
+        LinkedInfoResult info,
         RejectionReason rejectionReason
 ) {
-    public static InfoUpdateRequestDetailResult from(InfoUpdateRequest request) {
+    public static InfoUpdateRequestDetailResult from(InfoUpdateRequest request, Info info) {
+        LinkedInfoResult linkedInfoResult = (info == null) ? null : LinkedInfoResult.from(info);
+        
         return new InfoUpdateRequestDetailResult(
                 request.getId(),
                 request.getRequesterId(),
@@ -31,7 +33,7 @@ public record InfoUpdateRequestDetailResult(
                 request.getObservedAt(),
                 request.getRequestedAt(),
                 request.getStatus(),
-                request.getInfoId(),
+                linkedInfoResult,
                 request.getRejectionReason()
         );
     }
