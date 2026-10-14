@@ -8,6 +8,7 @@ import com.todayyu.domain.info.entity.InfoRegistrationRequest;
 import com.todayyu.domain.info.vo.InfoCategory;
 import com.todayyu.domain.info.vo.InfoRegistrationRequestContent;
 import com.todayyu.domain.info.vo.InfoRegistrationRequestId;
+import com.todayyu.domain.info.vo.InfoRegistrationRequestTitle;
 import com.todayyu.domain.info.vo.InfoRequestStatus;
 import com.todayyu.domain.member.vo.MemberId;
 import org.junit.jupiter.api.DisplayName;
@@ -32,10 +33,11 @@ import static org.mockito.BDDMockito.then;
 class SubmitInfoRegistrationRequestUsecaseTest {
     private static final MemberId REQUESTER_ID = new MemberId(1L);
     private static final InfoCategory CATEGORY = InfoCategory.ACADEMIC;
+    private static final InfoRegistrationRequestTitle TITLE = new InfoRegistrationRequestTitle("정보 등록 요청 제목");
     private static final InfoRegistrationRequestContent CONTENT = new InfoRegistrationRequestContent("정보 등록 요청 내용");
     private static final Email CONTACT_EMAIL = new Email("user@example.com");
     private static final SubmitInfoRegistrationRequestCommand COMMAND =
-            new SubmitInfoRegistrationRequestCommand(REQUESTER_ID, CATEGORY, CONTENT, CONTACT_EMAIL);
+            new SubmitInfoRegistrationRequestCommand(REQUESTER_ID, CATEGORY, TITLE, CONTENT, CONTACT_EMAIL);
 
     @Mock
     private SaveInfoRegistrationRequestPort saveInfoRegistrationRequestPort;
@@ -63,6 +65,7 @@ class SubmitInfoRegistrationRequestUsecaseTest {
         assertNull(saved.getId());
         assertEquals(REQUESTER_ID, saved.getRequesterId());
         assertEquals(CATEGORY, saved.getCategory());
+        assertEquals(TITLE, saved.getTitle());
         assertEquals(CONTENT, saved.getContent());
         assertEquals(CONTACT_EMAIL, saved.getContactEmail());
         assertEquals(InfoRequestStatus.PENDING, saved.getStatus());
@@ -90,6 +93,7 @@ class SubmitInfoRegistrationRequestUsecaseTest {
                 new InfoRegistrationRequestId(id),
                 REQUESTER_ID,
                 CATEGORY,
+                TITLE,
                 CONTENT,
                 InfoRequestStatus.PENDING,
                 null,
