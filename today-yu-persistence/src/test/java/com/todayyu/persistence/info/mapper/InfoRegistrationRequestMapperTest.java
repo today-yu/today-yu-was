@@ -6,6 +6,7 @@ import com.todayyu.domain.info.vo.InfoCategory;
 import com.todayyu.domain.info.vo.InfoId;
 import com.todayyu.domain.info.vo.InfoRegistrationRequestContent;
 import com.todayyu.domain.info.vo.InfoRegistrationRequestId;
+import com.todayyu.domain.info.vo.InfoRegistrationRequestTitle;
 import com.todayyu.domain.info.vo.InfoRequestStatus;
 import com.todayyu.domain.info.vo.RejectionReason;
 import com.todayyu.domain.member.vo.MemberId;
@@ -23,6 +24,7 @@ class InfoRegistrationRequestMapperTest {
     private static final Long REQUEST_ID = 1L;
     private static final Long REQUESTER_ID = 10L;
     private static final Long INFO_ID = 100L;
+    private static final String TITLE = "중앙도서관 주말 운영 시간";
     private static final String CONTENT = "중앙도서관 주말 운영 시간 정보를 등록해주세요.";
     private static final String CONTACT_EMAIL = "requester@example.com";
     private static final String REJECTION_REASON = "확인되지 않은 정보입니다.";
@@ -37,6 +39,7 @@ class InfoRegistrationRequestMapperTest {
         InfoRegistrationRequest request = InfoRegistrationRequest.withoutId(
                 new MemberId(REQUESTER_ID),
                 InfoCategory.FACILITY,
+                new InfoRegistrationRequestTitle(TITLE),
                 new InfoRegistrationRequestContent(CONTENT),
                 new Email(CONTACT_EMAIL),
                 REQUESTED_AT
@@ -49,6 +52,7 @@ class InfoRegistrationRequestMapperTest {
         assertNull(jpaEntity.getId());
         assertEquals(REQUESTER_ID, jpaEntity.getRequesterId());
         assertEquals(InfoCategory.FACILITY, jpaEntity.getCategory());
+        assertEquals(TITLE, jpaEntity.getTitle());
         assertEquals(CONTENT, jpaEntity.getContent());
         assertEquals(InfoRequestStatus.PENDING, jpaEntity.getStatus());
         assertNull(jpaEntity.getInfoId());
@@ -65,6 +69,7 @@ class InfoRegistrationRequestMapperTest {
                 new InfoRegistrationRequestId(REQUEST_ID),
                 new MemberId(REQUESTER_ID),
                 InfoCategory.FACILITY,
+                new InfoRegistrationRequestTitle(TITLE),
                 new InfoRegistrationRequestContent(CONTENT),
                 InfoRequestStatus.ACCEPTED,
                 new InfoId(INFO_ID),
@@ -90,6 +95,7 @@ class InfoRegistrationRequestMapperTest {
                 new InfoRegistrationRequestId(REQUEST_ID),
                 new MemberId(REQUESTER_ID),
                 InfoCategory.FACILITY,
+                new InfoRegistrationRequestTitle(TITLE),
                 new InfoRegistrationRequestContent(CONTENT),
                 InfoRequestStatus.REJECTED,
                 null,
@@ -120,6 +126,7 @@ class InfoRegistrationRequestMapperTest {
         assertEquals(new InfoRegistrationRequestId(REQUEST_ID), request.getId());
         assertEquals(new MemberId(REQUESTER_ID), request.getRequesterId());
         assertEquals(InfoCategory.FACILITY, request.getCategory());
+        assertEquals(new InfoRegistrationRequestTitle(TITLE), request.getTitle());
         assertEquals(new InfoRegistrationRequestContent(CONTENT), request.getContent());
         assertEquals(InfoRequestStatus.PENDING, request.getStatus());
         assertNull(request.getInfoId());
@@ -166,6 +173,7 @@ class InfoRegistrationRequestMapperTest {
         InfoRegistrationRequestJpaEntity jpaEntity = InfoRegistrationRequestJpaEntity.builder()
                 .requesterId(REQUESTER_ID)
                 .category(InfoCategory.FACILITY)
+                .title(TITLE)
                 .content(CONTENT)
                 .status(status)
                 .infoId(infoId)

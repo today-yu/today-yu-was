@@ -7,6 +7,7 @@ import com.todayyu.domain.info.vo.InfoCategory;
 import com.todayyu.domain.info.vo.InfoId;
 import com.todayyu.domain.info.vo.InfoRegistrationRequestContent;
 import com.todayyu.domain.info.vo.InfoRegistrationRequestId;
+import com.todayyu.domain.info.vo.InfoRegistrationRequestTitle;
 import com.todayyu.domain.info.vo.InfoRequestStatus;
 import com.todayyu.domain.member.vo.MemberId;
 import com.todayyu.domain.member.vo.Nickname;
@@ -109,6 +110,7 @@ class JpaInfoRegistrationRequestAdapterTest {
         InfoRegistrationRequest newRequest = InfoRegistrationRequest.withoutId(
                 new MemberId(FIRST_REQUESTER_ID),
                 InfoCategory.ACADEMIC,
+                new InfoRegistrationRequestTitle("수강신청 일정 등록 요청"),
                 new InfoRegistrationRequestContent("수강신청 일정을 등록해주세요."),
                 new Email("requester@yu.ac.kr"),
                 REQUESTED_AT
@@ -134,6 +136,7 @@ class JpaInfoRegistrationRequestAdapterTest {
         InfoRegistrationRequestJpaEntity jpaEntity = InfoRegistrationRequestJpaEntity.builder()
                 .requesterId(FIRST_REQUESTER_ID)
                 .category(InfoCategory.ACADEMIC)
+                .title("수강신청 일정 등록 요청")
                 .content("수강신청 일정을 등록해주세요.")
                 .status(InfoRequestStatus.PENDING)
                 .contactEmail("requester@yu.ac.kr")
@@ -148,6 +151,7 @@ class JpaInfoRegistrationRequestAdapterTest {
                 new InfoRegistrationRequestId(requestId),
                 new MemberId(FIRST_REQUESTER_ID),
                 InfoCategory.ACADEMIC,
+                new InfoRegistrationRequestTitle("수강신청 일정 등록 요청"),
                 new InfoRegistrationRequestContent("수강신청 일정을 등록해주세요."),
                 InfoRequestStatus.PENDING,
                 null,
@@ -161,6 +165,7 @@ class JpaInfoRegistrationRequestAdapterTest {
         InfoRegistrationRequestJpaEntity jpaEntity = InfoRegistrationRequestJpaEntity.builder()
                 .requesterId(requesterId)
                 .category(InfoCategory.ACADEMIC)
+                .title("수강신청 일정 등록 요청")
                 .content("수강신청 일정을 등록해주세요.")
                 .status(InfoRequestStatus.ACCEPTED)
                 .infoId(INFO_ID)
@@ -176,6 +181,7 @@ class JpaInfoRegistrationRequestAdapterTest {
                 new InfoRegistrationRequestId(requestId),
                 new MemberId(requesterId),
                 InfoCategory.ACADEMIC,
+                new InfoRegistrationRequestTitle("수강신청 일정 등록 요청"),
                 new InfoRegistrationRequestContent("수강신청 일정을 등록해주세요."),
                 InfoRequestStatus.ACCEPTED,
                 new InfoId(INFO_ID),
