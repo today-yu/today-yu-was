@@ -26,6 +26,7 @@ public class SubmitInfoRegistrationRequestUsecase {
         InfoRegistrationRequest infoRegistrationRequest = InfoRegistrationRequest.withoutId(
                 command.requesterId(),
                 command.category(),
+                command.title(),
                 command.content(),
                 command.contactEmail(),
                 LocalDateTime.now()
