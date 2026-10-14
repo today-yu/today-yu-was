@@ -5,6 +5,7 @@ import com.todayyu.apis.common.security.principal.CustomUserDetails;
 import com.todayyu.application.info.dto.command.SubmitInfoRegistrationRequestCommand;
 import com.todayyu.application.info.dto.query.GetInfoRegistrationRequestDetailQuery;
 import com.todayyu.application.info.dto.result.InfoRegistrationRequestDetailResult;
+import com.todayyu.application.info.dto.result.LinkedInfoResult;
 import com.todayyu.application.info.dto.result.SubmitInfoRegistrationRequestResult;
 import com.todayyu.application.info.error.BusinessInfoRegistrationRequestErrorType;
 import com.todayyu.application.info.usecase.GetInfoRegistrationRequestDetailUsecase;
@@ -17,6 +18,7 @@ import com.todayyu.domain.info.vo.InfoId;
 import com.todayyu.domain.info.vo.InfoRegistrationRequestContent;
 import com.todayyu.domain.info.vo.InfoRegistrationRequestId;
 import com.todayyu.domain.info.vo.InfoRequestStatus;
+import com.todayyu.domain.info.vo.InfoTitle;
 import com.todayyu.domain.info.vo.RejectionReason;
 import com.todayyu.domain.member.vo.MemberId;
 import com.todayyu.domain.member.vo.Role;
@@ -63,6 +65,8 @@ class InfoRegistrationRequestControllerTest {
     private static final String CONTACT_EMAIL = "requester@example.com";
     private static final LocalDateTime REQUESTED_AT = LocalDateTime.of(2026, 10, 1, 9, 0, 30);
     private static final Long INFO_ID = 100L;
+    private static final String INFO_TITLE = "수강신청 일정";
+    private static final LocalDateTime INFO_UPDATED_AT = LocalDateTime.of(2026, 10, 5, 12, 0, 30);
     private static final String REJECTION_REASON = "사실 관계를 확인할 수 없습니다.";
 
     @Mock
@@ -118,7 +122,7 @@ class InfoRegistrationRequestControllerTest {
                 .andExpect(jsonPath("$.data.contactEmail").value(CONTACT_EMAIL))
                 .andExpect(jsonPath("$.data.requestedAt").value(REQUESTED_AT.toString()))
                 .andExpect(jsonPath("$.data.status").value(InfoRequestStatus.PENDING.name()))
-                .andExpect(jsonPath("$.data.infoId").value(nullValue()))
+                .andExpect(jsonPath("$.data.info").value(nullValue()))
                 .andExpect(jsonPath("$.data.rejectionReason").value(nullValue()));
 
         // then
@@ -129,22 +133,25 @@ class InfoRegistrationRequestControllerTest {
     }
 
     @Test
-    @DisplayName("반영(ACCEPTED)된 정보 등록 요청을 조회하면 반영된 정보 ID를 반환하고 반려 사유는 null이다")
+    @DisplayName("반영(ACCEPTED)된 정보 등록 요청을 조회하면 연결된 정보의 ID, 카테고리, 제목, 최근 갱신 일시를 반환하고 반려 사유는 null이다")
     void getAcceptedInfoRegistrationRequestDetail() throws Exception {
         // given
         given(getInfoRegistrationRequestDetailUsecase.getInfoRegistrationRequestDetail(any()))
-                .willReturn(detailResult(InfoRequestStatus.ACCEPTED, new InfoId(INFO_ID), null));
+                .willReturn(detailResult(InfoRequestStatus.ACCEPTED, linkedInfoResult(), null));
 
         // when & then
         mockMvc.perform(get(DETAIL_URL, REQUEST_ID))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.data.status").value(InfoRequestStatus.ACCEPTED.name()))
-                .andExpect(jsonPath("$.data.infoId").value(INFO_ID))
+                .andExpect(jsonPath("$.data.info.id").value(INFO_ID))
+                .andExpect(jsonPath("$.data.info.category").value(CATEGORY))
+                .andExpect(jsonPath("$.data.info.title").value(INFO_TITLE))
+                .andExpect(jsonPath("$.data.info.updatedAt").value(INFO_UPDATED_AT.toString()))
                 .andExpect(jsonPath("$.data.rejectionReason").value(nullValue()));
     }
 
     @Test
-    @DisplayName("반려(REJECTED)된 정보 등록 요청을 조회하면 반려 사유를 반환하고 정보 ID는 null이다")
+    @DisplayName("반려(REJECTED)된 정보 등록 요청을 조회하면 반려 사유를 반환하고 연결된 정보는 null이다")
     void getRejectedInfoRegistrationRequestDetail() throws Exception {
         // given
         given(getInfoRegistrationRequestDetailUsecase.getInfoRegistrationRequestDetail(any()))
@@ -154,7 +161,7 @@ class InfoRegistrationRequestControllerTest {
         mockMvc.perform(get(DETAIL_URL, REQUEST_ID))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.data.status").value(InfoRequestStatus.REJECTED.name()))
-                .andExpect(jsonPath("$.data.infoId").value(nullValue()))
+                .andExpect(jsonPath("$.data.info").value(nullValue()))
                 .andExpect(jsonPath("$.data.rejectionReason").value(REJECTION_REASON));
     }
 
@@ -309,7 +316,7 @@ class InfoRegistrationRequestControllerTest {
 
     private InfoRegistrationRequestDetailResult detailResult(
             InfoRequestStatus status,
-            InfoId infoId,
+            LinkedInfoResult info,
             RejectionReason rejectionReason
     ) {
         return new InfoRegistrationRequestDetailResult(
@@ -320,8 +327,17 @@ class InfoRegistrationRequestControllerTest {
                 new Email(CONTACT_EMAIL),
                 REQUESTED_AT,
                 status,
-                infoId,
+                info,
                 rejectionReason
+        );
+    }
+
+    private LinkedInfoResult linkedInfoResult() {
+        return new LinkedInfoResult(
+                new InfoId(INFO_ID),
+                InfoCategory.valueOf(CATEGORY),
+                new InfoTitle(INFO_TITLE),
+                INFO_UPDATED_AT
         );
     }
 
