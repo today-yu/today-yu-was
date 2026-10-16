@@ -2,13 +2,21 @@ package com.todayyu.apis.user.info.controller;
 
 import com.todayyu.apis.common.response.SuccessResponse;
 import com.todayyu.apis.common.security.principal.CustomUserDetails;
+import com.todayyu.apis.user.common.dto.CursorResponse;
+import com.todayyu.apis.user.info.dto.request.GetInfoUpdateRequestsRequest;
 import com.todayyu.apis.user.info.dto.request.SubmitInfoUpdateRequestRequest;
+import com.todayyu.apis.user.info.dto.response.InfoUpdateRequestCursorResponse;
 import com.todayyu.apis.user.info.dto.response.InfoUpdateRequestDetailResponse;
+import com.todayyu.apis.user.info.dto.response.InfoUpdateRequestSummaryResponse;
 import com.todayyu.apis.user.info.dto.response.SubmitInfoUpdateRequestResponse;
+import com.todayyu.application.common.dto.CursorResult;
 import com.todayyu.application.info.dto.query.GetInfoUpdateRequestDetailQuery;
 import com.todayyu.application.info.dto.result.InfoUpdateRequestDetailResult;
+import com.todayyu.application.info.dto.result.InfoUpdateRequestSummaryResult;
 import com.todayyu.application.info.dto.result.SubmitInfoUpdateRequestResult;
+import com.todayyu.application.info.port.dto.InfoUpdateRequestCursor;
 import com.todayyu.application.info.usecase.GetInfoUpdateRequestDetailUsecase;
+import com.todayyu.application.info.usecase.GetInfoUpdateRequestsUsecase;
 import com.todayyu.application.info.usecase.SubmitInfoUpdateRequestUsecase;
 import com.todayyu.domain.info.vo.InfoUpdateRequestId;
 import jakarta.validation.Valid;
@@ -27,8 +35,29 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping("/api/v1/infos")
 @RequiredArgsConstructor
 public class InfoUpdateRequestController {
+    private final GetInfoUpdateRequestsUsecase getInfoUpdateRequestsUsecase;
     private final GetInfoUpdateRequestDetailUsecase getInfoUpdateRequestDetailUsecase;
     private final SubmitInfoUpdateRequestUsecase submitInfoUpdateRequestUsecase;
+    
+    @GetMapping("/update-requests")
+    public ResponseEntity<?> getInfoUpdateRequests(
+            @Valid GetInfoUpdateRequestsRequest request,
+            @AuthenticationPrincipal CustomUserDetails userDetails
+    ) {
+        CursorResult<InfoUpdateRequestSummaryResult, InfoUpdateRequestCursor> result
+                = getInfoUpdateRequestsUsecase.getInfoUpdateRequests(request.toQuery(userDetails.getMemberId()));
+        
+        return ResponseEntity.ok(
+                SuccessResponse.from(
+                        "정보 수정 요청 조회에 성공하였습니다.",
+                        CursorResponse.of(
+                                result,
+                                InfoUpdateRequestSummaryResponse::from,
+                                InfoUpdateRequestCursorResponse::from
+                        )
+                )
+        );
+    }
     
     @GetMapping("/update-requests/{requestId}")
     public ResponseEntity<?> getInfoUpdateRequestDetail(
