@@ -4,9 +4,11 @@ import com.todayyu.domain.info.vo.InfoCategory;
 import com.todayyu.domain.info.vo.InfoRequestStatus;
 import com.todayyu.domain.info.vo.InfoTitle;
 import com.todayyu.domain.info.vo.InfoUpdateRequestId;
+import lombok.Builder;
 
 import java.time.LocalDateTime;
 
+@Builder
 public record InfoUpdateRequestSummaryView(
         InfoUpdateRequestId id,
         InfoCategory category,
