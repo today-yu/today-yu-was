@@ -4,7 +4,9 @@ import com.todayyu.application.info.port.dto.InfoRegistrationRequestCursor;
 import com.todayyu.application.info.port.dto.InfoRegistrationRequestSortType;
 import com.todayyu.domain.info.vo.InfoCategory;
 import com.todayyu.domain.member.vo.MemberId;
+import lombok.Builder;
 
+@Builder
 public record GetInfoRegistrationRequestsQuery(
         MemberId requesterId,
         InfoCategory category,
