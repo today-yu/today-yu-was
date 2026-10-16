@@ -1,5 +1,8 @@
 package com.todayyu.persistence.info.adapter;
 
+import com.todayyu.application.info.port.dto.InfoRegistrationRequestCursor;
+import com.todayyu.application.info.port.dto.InfoRegistrationRequestSortType;
+import com.todayyu.application.info.port.dto.InfoRegistrationRequestSummaryView;
 import com.todayyu.application.info.port.dto.InfoRegistrationRequestView;
 import com.todayyu.domain.common.vo.Email;
 import com.todayyu.domain.info.entity.InfoRegistrationRequest;
@@ -12,6 +15,7 @@ import com.todayyu.domain.info.vo.InfoRequestStatus;
 import com.todayyu.domain.member.vo.MemberId;
 import com.todayyu.domain.member.vo.Nickname;
 import com.todayyu.persistence.info.dto.InfoRegistrationRequestProjection;
+import com.todayyu.persistence.info.dto.InfoRegistrationRequestSummaryViewProjection;
 import com.todayyu.persistence.info.entity.InfoRegistrationRequestJpaEntity;
 import com.todayyu.persistence.info.mapper.InfoRegistrationRequestMapper;
 import com.todayyu.persistence.info.repository.InfoRegistrationRequestJpaRepository;
@@ -101,6 +105,74 @@ class JpaInfoRegistrationRequestAdapterTest {
         // then
         assertTrue(result.isEmpty());
         then(infoRegistrationRequestMapper).shouldHaveNoInteractions();
+    }
+
+    @Test
+    @DisplayName("커서가 있으면 요청자 ID, 커서의 요청 일시와 정보 등록 요청 ID로 조회하고, 조회 결과를 정보 등록 요청 요약 목록으로 변환해 반환한다")
+    void readByCursor() {
+        // given
+        LocalDateTime cursorRequestedAt = LocalDateTime.of(2026, 10, 10, 9, 0);
+        InfoRegistrationRequestCursor cursor = new InfoRegistrationRequestCursor(
+                cursorRequestedAt,
+                new InfoRegistrationRequestId(SECOND_REQUEST_ID)
+        );
+        given(infoRegistrationRequestRepository.findByCursor(
+                FIRST_REQUESTER_ID,
+                InfoCategory.ACADEMIC,
+                InfoRegistrationRequestSortType.LATEST,
+                cursorRequestedAt,
+                SECOND_REQUEST_ID,
+                3
+        )).willReturn(List.of(new InfoRegistrationRequestSummaryViewProjection(
+                FIRST_REQUEST_ID,
+                InfoCategory.ACADEMIC,
+                "수강신청 일정 등록 요청",
+                REQUESTED_AT,
+                InfoRequestStatus.PENDING
+        )));
+
+        // when
+        List<InfoRegistrationRequestSummaryView> result = infoRegistrationRequestAdapter.readByCursor(
+                new MemberId(FIRST_REQUESTER_ID),
+                InfoCategory.ACADEMIC,
+                InfoRegistrationRequestSortType.LATEST,
+                cursor,
+                3
+        );
+
+        // then
+        InfoRegistrationRequestSummaryView expected = InfoRegistrationRequestSummaryView.builder()
+                .id(new InfoRegistrationRequestId(FIRST_REQUEST_ID))
+                .category(InfoCategory.ACADEMIC)
+                .title(new InfoRegistrationRequestTitle("수강신청 일정 등록 요청"))
+                .status(InfoRequestStatus.PENDING)
+                .requestedAt(REQUESTED_AT)
+                .build();
+        assertEquals(List.of(expected), result);
+    }
+
+    @Test
+    @DisplayName("커서가 없으면 커서 조건 없이 처음부터 조회한다")
+    void readByCursorWithoutCursor() {
+        // given
+        given(infoRegistrationRequestRepository.findByCursor(
+                FIRST_REQUESTER_ID, null, InfoRegistrationRequestSortType.OLDEST, null, null, 3
+        )).willReturn(List.of());
+
+        // when
+        List<InfoRegistrationRequestSummaryView> result = infoRegistrationRequestAdapter.readByCursor(
+                new MemberId(FIRST_REQUESTER_ID),
+                null,
+                InfoRegistrationRequestSortType.OLDEST,
+                null,
+                3
+        );
+
+        // then
+        assertTrue(result.isEmpty());
+        then(infoRegistrationRequestRepository).should().findByCursor(
+                FIRST_REQUESTER_ID, null, InfoRegistrationRequestSortType.OLDEST, null, null, 3
+        );
     }
 
     @Test
