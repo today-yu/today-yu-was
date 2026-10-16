@@ -2,14 +2,20 @@ package com.todayyu.apis.user.info.controller;
 
 import com.todayyu.apis.common.exception.GlobalExceptionHandler;
 import com.todayyu.apis.common.security.principal.CustomUserDetails;
+import com.todayyu.application.common.dto.CursorResult;
 import com.todayyu.application.info.dto.command.SubmitInfoUpdateRequestCommand;
 import com.todayyu.application.info.dto.query.GetInfoUpdateRequestDetailQuery;
+import com.todayyu.application.info.dto.query.GetInfoUpdateRequestsQuery;
 import com.todayyu.application.info.dto.result.InfoUpdateRequestDetailResult;
+import com.todayyu.application.info.dto.result.InfoUpdateRequestSummaryResult;
 import com.todayyu.application.info.dto.result.LinkedInfoResult;
 import com.todayyu.application.info.dto.result.SubmitInfoUpdateRequestResult;
 import com.todayyu.application.info.error.BusinessInfoErrorType;
 import com.todayyu.application.info.error.BusinessInfoUpdateRequestErrorType;
+import com.todayyu.application.info.port.dto.InfoUpdateRequestCursor;
+import com.todayyu.application.info.port.dto.InfoUpdateRequestSortType;
 import com.todayyu.application.info.usecase.GetInfoUpdateRequestDetailUsecase;
+import com.todayyu.application.info.usecase.GetInfoUpdateRequestsUsecase;
 import com.todayyu.application.info.usecase.SubmitInfoUpdateRequestUsecase;
 import com.todayyu.common.error.CommonErrorType;
 import com.todayyu.common.exception.CustomException;
@@ -43,9 +49,11 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 import static org.hamcrest.Matchers.nullValue;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.then;
@@ -59,6 +67,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 class InfoUpdateRequestControllerTest {
     private static final String SUBMIT_URL = "/api/v1/infos/{infoId}/update-requests";
     private static final String DETAIL_URL = "/api/v1/infos/update-requests/{requestId}";
+    private static final String LIST_URL = "/api/v1/infos/update-requests";
     private static final Long MEMBER_ID = 1L;
     private static final Long INFO_ID = 5L;
     private static final String INFO_CATEGORY = "ACADEMIC";
@@ -71,6 +80,15 @@ class InfoUpdateRequestControllerTest {
     private static final LocalDateTime OBSERVED_AT_TIME = LocalDateTime.of(2026, 10, 1, 9, 0, 0);
     private static final LocalDateTime REQUESTED_AT = LocalDateTime.of(2026, 10, 1, 9, 0, 30);
     private static final String REJECTION_REASON = "사실 관계를 확인할 수 없습니다.";
+    private static final Long FIRST_REQUEST_ID = 9L;
+    private static final Long SECOND_REQUEST_ID = 8L;
+    private static final LocalDateTime FIRST_REQUESTED_AT = LocalDateTime.of(2026, 10, 9, 9, 0, 30);
+    private static final LocalDateTime SECOND_REQUESTED_AT = LocalDateTime.of(2026, 10, 8, 9, 0, 30);
+    private static final LocalDateTime CURSOR_REQUESTED_AT = LocalDateTime.of(2026, 10, 10, 9, 0, 30);
+    private static final Long CURSOR_REQUEST_ID = 10L;
+
+    @Mock
+    private GetInfoUpdateRequestsUsecase getInfoUpdateRequestsUsecase;
 
     @Mock
     private GetInfoUpdateRequestDetailUsecase getInfoUpdateRequestDetailUsecase;
@@ -86,6 +104,9 @@ class InfoUpdateRequestControllerTest {
 
     @Captor
     private ArgumentCaptor<GetInfoUpdateRequestDetailQuery> detailQueryCaptor;
+
+    @Captor
+    private ArgumentCaptor<GetInfoUpdateRequestsQuery> listQueryCaptor;
 
     private MockMvc mockMvc;
 
@@ -105,6 +126,143 @@ class InfoUpdateRequestControllerTest {
     @AfterEach
     void tearDown() {
         SecurityContextHolder.clearContext();
+    }
+
+    @Test
+    @DisplayName("정보 수정 요청 목록 조회 요청 시 인증된 회원 ID·카테고리·정렬 기준·커서·조회 크기로 조회를 요청하고, 목록과 다음 커서를 원시값으로 변환해 반환한다")
+    void getInfoUpdateRequests() throws Exception {
+        // given
+        InfoUpdateRequestCursor nextCursor = new InfoUpdateRequestCursor(
+                SECOND_REQUESTED_AT,
+                new InfoUpdateRequestId(SECOND_REQUEST_ID)
+        );
+        given(getInfoUpdateRequestsUsecase.getInfoUpdateRequests(any())).willReturn(new CursorResult<>(
+                List.of(
+                        summaryResult(FIRST_REQUEST_ID, INFO_TITLE, InfoRequestStatus.PENDING, FIRST_REQUESTED_AT),
+                        summaryResult(SECOND_REQUEST_ID, "2학기 학사 일정", InfoRequestStatus.REJECTED, SECOND_REQUESTED_AT)
+                ),
+                true,
+                nextCursor
+        ));
+
+        // when
+        mockMvc.perform(get(LIST_URL)
+                        .param("category", INFO_CATEGORY)
+                        .param("sortType", "LATEST")
+                        .param("cursorRequestedAt", CURSOR_REQUESTED_AT.toString())
+                        .param("cursorId", String.valueOf(CURSOR_REQUEST_ID))
+                        .param("size", "2"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.message").value("정보 수정 요청 조회에 성공하였습니다."))
+                .andExpect(jsonPath("$.data.contents.length()").value(2))
+                .andExpect(jsonPath("$.data.contents[0].id").value(FIRST_REQUEST_ID))
+                .andExpect(jsonPath("$.data.contents[0].category").value(INFO_CATEGORY))
+                .andExpect(jsonPath("$.data.contents[0].title").value(INFO_TITLE))
+                .andExpect(jsonPath("$.data.contents[0].status").value(InfoRequestStatus.PENDING.name()))
+                .andExpect(jsonPath("$.data.contents[0].requestedAt").value(FIRST_REQUESTED_AT.toString()))
+                .andExpect(jsonPath("$.data.contents[1].id").value(SECOND_REQUEST_ID))
+                .andExpect(jsonPath("$.data.contents[1].title").value("2학기 학사 일정"))
+                .andExpect(jsonPath("$.data.contents[1].status").value(InfoRequestStatus.REJECTED.name()))
+                .andExpect(jsonPath("$.data.hasNext").value(true))
+                .andExpect(jsonPath("$.data.nextCursor.requestedAt").value(SECOND_REQUESTED_AT.toString()))
+                .andExpect(jsonPath("$.data.nextCursor.id").value(SECOND_REQUEST_ID));
+
+        // then
+        then(getInfoUpdateRequestsUsecase).should().getInfoUpdateRequests(listQueryCaptor.capture());
+        GetInfoUpdateRequestsQuery query = listQueryCaptor.getValue();
+        assertEquals(new MemberId(MEMBER_ID), query.requesterId());
+        assertEquals(InfoCategory.valueOf(INFO_CATEGORY), query.category());
+        assertEquals(InfoUpdateRequestSortType.LATEST, query.sortType());
+        assertEquals(
+                new InfoUpdateRequestCursor(CURSOR_REQUESTED_AT, new InfoUpdateRequestId(CURSOR_REQUEST_ID)),
+                query.cursor()
+        );
+        assertEquals(2, query.size());
+    }
+
+    @Test
+    @DisplayName("첫 요청(카테고리·커서·조회 크기 없음)이면 카테고리와 커서 없이 기본 조회 크기로 조회를 요청하고, 다음 데이터가 없으면 다음 커서는 null이다")
+    void getInfoUpdateRequestsWithFirstRequest() throws Exception {
+        // given
+        given(getInfoUpdateRequestsUsecase.getInfoUpdateRequests(any()))
+                .willReturn(new CursorResult<>(List.of(), false, null));
+
+        // when
+        mockMvc.perform(get(LIST_URL)
+                        .param("sortType", "OLDEST"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.contents").isArray())
+                .andExpect(jsonPath("$.data.contents.length()").value(0))
+                .andExpect(jsonPath("$.data.hasNext").value(false))
+                .andExpect(jsonPath("$.data.nextCursor").value(nullValue()));
+
+        // then
+        then(getInfoUpdateRequestsUsecase).should().getInfoUpdateRequests(listQueryCaptor.capture());
+        GetInfoUpdateRequestsQuery query = listQueryCaptor.getValue();
+        assertEquals(new MemberId(MEMBER_ID), query.requesterId());
+        assertNull(query.category());
+        assertEquals(InfoUpdateRequestSortType.OLDEST, query.sortType());
+        assertNull(query.cursor());
+        assertEquals(GetInfoUpdateRequestsQuery.DEFAULT_SIZE, query.size());
+    }
+
+    @Test
+    @DisplayName("정렬 기준이 없으면 유효성 검증 에러를 응답하고 조회를 하지 않는다")
+    void getInfoUpdateRequestsWithoutSortType() throws Exception {
+        // given & when
+        mockMvc.perform(get(LIST_URL))
+                .andExpect(status().isUnprocessableContent())
+                .andExpect(jsonPath("$.errorCode").value(CommonErrorType.VALIDATION_ERROR.getErrorCode()))
+                .andExpect(jsonPath("$.errors.sortType").value("정렬 기준은 비어있을 수 없습니다."));
+
+        // then
+        then(getInfoUpdateRequestsUsecase).should(never()).getInfoUpdateRequests(any());
+    }
+
+    @Test
+    @DisplayName("커서 값이 하나만 존재하면 유효성 검증 에러를 응답하고 조회를 하지 않는다")
+    void getInfoUpdateRequestsWithPartialCursor() throws Exception {
+        // given & when
+        mockMvc.perform(get(LIST_URL)
+                        .param("sortType", "LATEST")
+                        .param("cursorId", String.valueOf(CURSOR_REQUEST_ID)))
+                .andExpect(status().isUnprocessableContent())
+                .andExpect(jsonPath("$.errorCode").value(CommonErrorType.VALIDATION_ERROR.getErrorCode()))
+                .andExpect(jsonPath("$.errors.cursorValid").value("커서 값은 모두 존재하거나 모두 비어있어야 합니다."));
+
+        // then
+        then(getInfoUpdateRequestsUsecase).should(never()).getInfoUpdateRequests(any());
+    }
+
+    @ParameterizedTest
+    @ValueSource(ints = {GetInfoUpdateRequestsQuery.MIN_SIZE - 1, GetInfoUpdateRequestsQuery.MAX_SIZE + 1})
+    @DisplayName("조회 크기가 허용 범위를 벗어나면 유효성 검증 에러를 응답하고 조회를 하지 않는다")
+    void getInfoUpdateRequestsWithOutOfRangeSize(int size) throws Exception {
+        // given & when
+        mockMvc.perform(get(LIST_URL)
+                        .param("sortType", "LATEST")
+                        .param("size", String.valueOf(size)))
+                .andExpect(status().isUnprocessableContent())
+                .andExpect(jsonPath("$.errorCode").value(CommonErrorType.VALIDATION_ERROR.getErrorCode()))
+                .andExpect(jsonPath("$.errors.size").exists());
+
+        // then
+        then(getInfoUpdateRequestsUsecase).should(never()).getInfoUpdateRequests(any());
+    }
+
+    @Test
+    @DisplayName("존재하지 않는 카테고리로 요청하면 유효성 검증 에러를 응답하고 조회를 하지 않는다")
+    void getInfoUpdateRequestsWithInvalidCategory() throws Exception {
+        // given & when
+        mockMvc.perform(get(LIST_URL)
+                        .param("category", "INVALID")
+                        .param("sortType", "LATEST"))
+                .andExpect(status().isUnprocessableContent())
+                .andExpect(jsonPath("$.errorCode").value(CommonErrorType.VALIDATION_ERROR.getErrorCode()))
+                .andExpect(jsonPath("$.errors.category").exists());
+
+        // then
+        then(getInfoUpdateRequestsUsecase).should(never()).getInfoUpdateRequests(any());
     }
 
     @Test
@@ -349,6 +507,21 @@ class InfoUpdateRequestControllerTest {
 
         // then
         then(submitInfoUpdateRequestUsecase).should(never()).submit(any());
+    }
+
+    private InfoUpdateRequestSummaryResult summaryResult(
+            Long requestId,
+            String title,
+            InfoRequestStatus status,
+            LocalDateTime requestedAt
+    ) {
+        return new InfoUpdateRequestSummaryResult(
+                new InfoUpdateRequestId(requestId),
+                InfoCategory.valueOf(INFO_CATEGORY),
+                new InfoTitle(title),
+                status,
+                requestedAt
+        );
     }
 
     private InfoUpdateRequestDetailResult detailResult(

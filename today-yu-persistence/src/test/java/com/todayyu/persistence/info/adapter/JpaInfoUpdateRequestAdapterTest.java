@@ -1,15 +1,21 @@
 package com.todayyu.persistence.info.adapter;
 
+import com.todayyu.application.info.port.dto.InfoUpdateRequestCursor;
+import com.todayyu.application.info.port.dto.InfoUpdateRequestSortType;
+import com.todayyu.application.info.port.dto.InfoUpdateRequestSummaryView;
 import com.todayyu.application.info.port.dto.InfoUpdateRequestView;
 import com.todayyu.domain.common.vo.Email;
 import com.todayyu.domain.info.entity.InfoUpdateRequest;
+import com.todayyu.domain.info.vo.InfoCategory;
 import com.todayyu.domain.info.vo.InfoId;
 import com.todayyu.domain.info.vo.InfoRequestStatus;
+import com.todayyu.domain.info.vo.InfoTitle;
 import com.todayyu.domain.info.vo.InfoUpdateRequestContent;
 import com.todayyu.domain.info.vo.InfoUpdateRequestId;
 import com.todayyu.domain.member.vo.MemberId;
 import com.todayyu.domain.member.vo.Nickname;
 import com.todayyu.persistence.info.dto.InfoUpdateRequestProjection;
+import com.todayyu.persistence.info.dto.InfoUpdateRequestSummaryViewProjection;
 import com.todayyu.persistence.info.entity.InfoUpdateRequestJpaEntity;
 import com.todayyu.persistence.info.mapper.InfoUpdateRequestMapper;
 import com.todayyu.persistence.info.repository.InfoUpdateRequestJpaRepository;
@@ -100,6 +106,74 @@ class JpaInfoUpdateRequestAdapterTest {
         // then
         assertTrue(result.isEmpty());
         then(infoUpdateRequestMapper).shouldHaveNoInteractions();
+    }
+
+    @Test
+    @DisplayName("커서가 있으면 요청자 ID, 커서의 요청 일시와 정보 수정 요청 ID로 조회하고, 조회 결과를 정보 수정 요청 요약 목록으로 변환해 반환한다")
+    void readByCursor() {
+        // given
+        LocalDateTime cursorRequestedAt = LocalDateTime.of(2026, 10, 10, 9, 0);
+        InfoUpdateRequestCursor cursor = new InfoUpdateRequestCursor(
+                cursorRequestedAt,
+                new InfoUpdateRequestId(SECOND_REQUEST_ID)
+        );
+        given(infoUpdateRequestRepository.findByCursor(
+                FIRST_REQUESTER_ID,
+                InfoCategory.ACADEMIC,
+                InfoUpdateRequestSortType.LATEST,
+                cursorRequestedAt,
+                SECOND_REQUEST_ID,
+                3
+        )).willReturn(List.of(new InfoUpdateRequestSummaryViewProjection(
+                FIRST_REQUEST_ID,
+                InfoCategory.ACADEMIC,
+                "2학기 수강신청 일정",
+                InfoRequestStatus.PENDING,
+                REQUESTED_AT
+        )));
+
+        // when
+        List<InfoUpdateRequestSummaryView> result = infoUpdateRequestAdapter.readByCursor(
+                new MemberId(FIRST_REQUESTER_ID),
+                InfoCategory.ACADEMIC,
+                InfoUpdateRequestSortType.LATEST,
+                cursor,
+                3
+        );
+
+        // then
+        InfoUpdateRequestSummaryView expected = InfoUpdateRequestSummaryView.builder()
+                .id(new InfoUpdateRequestId(FIRST_REQUEST_ID))
+                .category(InfoCategory.ACADEMIC)
+                .title(new InfoTitle("2학기 수강신청 일정"))
+                .status(InfoRequestStatus.PENDING)
+                .requestedAt(REQUESTED_AT)
+                .build();
+        assertEquals(List.of(expected), result);
+    }
+
+    @Test
+    @DisplayName("커서가 없으면 커서 조건 없이 처음부터 조회한다")
+    void readByCursorWithoutCursor() {
+        // given
+        given(infoUpdateRequestRepository.findByCursor(
+                FIRST_REQUESTER_ID, null, InfoUpdateRequestSortType.OLDEST, null, null, 3
+        )).willReturn(List.of());
+
+        // when
+        List<InfoUpdateRequestSummaryView> result = infoUpdateRequestAdapter.readByCursor(
+                new MemberId(FIRST_REQUESTER_ID),
+                null,
+                InfoUpdateRequestSortType.OLDEST,
+                null,
+                3
+        );
+
+        // then
+        assertTrue(result.isEmpty());
+        then(infoUpdateRequestRepository).should().findByCursor(
+                FIRST_REQUESTER_ID, null, InfoUpdateRequestSortType.OLDEST, null, null, 3
+        );
     }
 
     @Test
