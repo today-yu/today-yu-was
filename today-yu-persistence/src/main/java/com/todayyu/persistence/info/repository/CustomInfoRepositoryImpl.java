@@ -71,7 +71,7 @@ public class CustomInfoRepositoryImpl implements CustomInfoRepository {
      * @return 카테고리 조건, 카테고리가 {@code null}이면 조건을 적용하지 않도록 {@code null}
      */
     private BooleanExpression categoryEq(InfoCategory category) {
-        return category == null ? null : info.category.eq(category);
+        return (category == null) ? null : info.category.eq(category);
     }
 
     /**
