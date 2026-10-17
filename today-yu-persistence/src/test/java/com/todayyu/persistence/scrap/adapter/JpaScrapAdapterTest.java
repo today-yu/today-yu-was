@@ -88,6 +88,16 @@ class JpaScrapAdapterTest {
         then(scrapRepository).should().save(newJpaEntity);
     }
 
+    @Test
+    @DisplayName("정보 ID와 회원 ID를 원시값으로 변환해 스크랩 삭제를 요청한다")
+    void deleteByInfoIdAndMemberId() {
+        // when
+        scrapAdapter.deleteByInfoIdAndMemberId(new InfoId(INFO_ID), new MemberId(MEMBER_ID));
+
+        // then
+        then(scrapRepository).should().deleteByInfoIdAndMemberId(INFO_ID, MEMBER_ID);
+    }
+
     private ScrapJpaEntity jpaEntity(Long scrapId) {
         ScrapJpaEntity jpaEntity = ScrapJpaEntity.builder()
                 .infoId(INFO_ID)

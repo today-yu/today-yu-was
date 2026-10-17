@@ -42,4 +42,17 @@ public class JpaScrapAdapter implements ReadScrapPort, SaveScrapPort {
 
         return scrapMapper.toDomain(savedJpaEntity);
     }
+
+    /**
+     * 정보 ID({@link InfoId})와 회원 ID({@link MemberId})에 해당하는 스크랩을 삭제하는 메서드
+     *
+     * <p> 해당하는 스크랩이 없으면 아무것도 삭제하지 않는다. </p>
+     *
+     * @param infoId   정보 ID 객체
+     * @param memberId 회원 ID 객체
+     */
+    @Override
+    public void deleteByInfoIdAndMemberId(InfoId infoId, MemberId memberId) {
+        scrapRepository.deleteByInfoIdAndMemberId(infoId.getValue(), memberId.getValue());
+    }
 }
