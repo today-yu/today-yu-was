@@ -1,0 +1,31 @@
+package com.todayyu.apis.user.scrap.controller;
+
+import com.todayyu.apis.common.response.SuccessResponse;
+import com.todayyu.apis.common.security.principal.CustomUserDetails;
+import com.todayyu.application.scrap.dto.command.ScrapCommand;
+import com.todayyu.application.scrap.usecase.ScrapUsecase;
+import com.todayyu.domain.info.vo.InfoId;
+import lombok.RequiredArgsConstructor;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+
+@RestController
+@RequestMapping("/api/v1/infos")
+@RequiredArgsConstructor
+public class ScrapController {
+    private final ScrapUsecase scrapUsecase;
+    
+    @PutMapping("/{infoId}/scrap")
+    public ResponseEntity<?> scrap(
+            @PathVariable(name = "infoId") Long infoId,
+            @AuthenticationPrincipal CustomUserDetails userDetails
+    ) {
+        scrapUsecase.scrap(new ScrapCommand(new InfoId(infoId), userDetails.getMemberId()));
+        
+        return ResponseEntity.ok(SuccessResponse.from("스크랩에 성공하였습니다."));
+    }
+}
