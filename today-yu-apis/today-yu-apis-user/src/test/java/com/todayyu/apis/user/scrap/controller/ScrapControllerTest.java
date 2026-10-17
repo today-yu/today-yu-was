@@ -3,7 +3,9 @@ package com.todayyu.apis.user.scrap.controller;
 import com.todayyu.apis.common.exception.GlobalExceptionHandler;
 import com.todayyu.apis.common.security.principal.CustomUserDetails;
 import com.todayyu.application.info.error.BusinessInfoErrorType;
+import com.todayyu.application.scrap.dto.command.CancelScrapCommand;
 import com.todayyu.application.scrap.dto.command.ScrapCommand;
+import com.todayyu.application.scrap.usecase.CancelScrapUsecase;
 import com.todayyu.application.scrap.usecase.ScrapUsecase;
 import com.todayyu.common.exception.CustomException;
 import com.todayyu.domain.info.vo.InfoId;
@@ -31,6 +33,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.then;
 import static org.mockito.BDDMockito.willThrow;
 import static org.mockito.Mockito.never;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -44,11 +47,17 @@ class ScrapControllerTest {
     @Mock
     private ScrapUsecase scrapUsecase;
 
+    @Mock
+    private CancelScrapUsecase cancelScrapUsecase;
+
     @InjectMocks
     private ScrapController scrapController;
 
     @Captor
     private ArgumentCaptor<ScrapCommand> commandCaptor;
+
+    @Captor
+    private ArgumentCaptor<CancelScrapCommand> cancelCommandCaptor;
 
     private MockMvc mockMvc;
 
@@ -109,5 +118,46 @@ class ScrapControllerTest {
 
         // then
         then(scrapUsecase).should(never()).scrap(any());
+    }
+
+    @Test
+    @DisplayName("스크랩 해제 요청 시 경로의 정보 ID와 인증된 회원 ID로 스크랩 해제를 요청하고, 성공 메시지를 반환한다")
+    void cancelScrap() throws Exception {
+        // when
+        mockMvc.perform(delete(SCRAP_URL, INFO_ID))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.message").value("스크랩 해제에 성공하였습니다."))
+                .andExpect(jsonPath("$.data").value(nullValue()));
+
+        // then
+        then(cancelScrapUsecase).should().cancelScrap(cancelCommandCaptor.capture());
+        CancelScrapCommand command = cancelCommandCaptor.getValue();
+        assertEquals(new InfoId(INFO_ID), command.infoId());
+        assertEquals(new MemberId(MEMBER_ID), command.memberId());
+    }
+
+    @Test
+    @DisplayName("스크랩을 해제할 정보가 존재하지 않으면 정보 없음 에러를 응답한다")
+    void cancelScrapWithNonExistentInfo() throws Exception {
+        // given
+        willThrow(new CustomException(BusinessInfoErrorType.NOT_FOUND))
+                .given(cancelScrapUsecase).cancelScrap(any());
+
+        // when & then
+        mockMvc.perform(delete(SCRAP_URL, INFO_ID))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.errorCode").value(BusinessInfoErrorType.NOT_FOUND.getErrorCode()))
+                .andExpect(jsonPath("$.message").value(BusinessInfoErrorType.NOT_FOUND.getMessage()));
+    }
+
+    @Test
+    @DisplayName("정보 ID가 숫자가 아니면 잘못된 요청 에러를 응답하고 스크랩을 해제하지 않는다")
+    void cancelScrapWithInvalidInfoId() throws Exception {
+        // given & when
+        mockMvc.perform(delete(SCRAP_URL, "invalid-id"))
+                .andExpect(status().isBadRequest());
+
+        // then
+        then(cancelScrapUsecase).should(never()).cancelScrap(any());
     }
 }
