@@ -53,8 +53,8 @@ public class JpaInfoAdapter implements ReadInfoPort {
             InfoCursor cursor,
             int limit
     ) {
-        LocalDateTime cursorUpdatedAt = cursor == null ? null : cursor.updatedAt();
-        Long cursorId = cursor == null ? null : cursor.infoId().getValue();
+        LocalDateTime cursorUpdatedAt = (cursor == null) ? null : cursor.updatedAt();
+        Long cursorId = (cursor == null) ? null : cursor.infoId().getValue();
         
         List<InfoSummaryViewProjection> projections = infoRepository
                 .findByCursor(category, sortType, cursorUpdatedAt, cursorId, limit);
