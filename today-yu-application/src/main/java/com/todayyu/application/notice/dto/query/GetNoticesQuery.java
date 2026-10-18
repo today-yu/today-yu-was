@@ -1,7 +1,9 @@
 package com.todayyu.application.notice.dto.query;
 
 import com.todayyu.application.notice.port.dto.NoticeCursor;
+import lombok.Builder;
 
+@Builder
 public record GetNoticesQuery(
         NoticeCursor cursor,
         int size
