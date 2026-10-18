@@ -13,6 +13,7 @@ import com.todayyu.application.info.port.read.ReadInfoRegistrationRequestPort;
 import com.todayyu.application.info.port.read.ReadInfoUpdateRequestPort;
 import com.todayyu.application.info.port.read.ReadInfoViewCountPort;
 import com.todayyu.application.info.port.save.SaveInfoViewCountPort;
+import com.todayyu.application.scrap.port.read.ReadScrapPort;
 import com.todayyu.common.exception.CustomException;
 import com.todayyu.domain.common.vo.Email;
 import com.todayyu.domain.info.entity.Info;
@@ -80,17 +81,20 @@ class GetInfoDetailUsecaseTest {
     private ReadInfoUpdateRequestPort readInfoUpdateRequestPort;
 
     @Mock
+    private ReadScrapPort readScrapPort;
+
+    @Mock
     private SaveInfoViewCountPort saveInfoViewCountPort;
 
     @InjectMocks
     private GetInfoDetailUsecase getInfoDetailUsecase;
 
     @Test
-    @DisplayName("정보가 존재하면 정보 내용, 조회수, '도움이 되는 정보에요' 수와 요청 회원의 클릭 여부를 반환한다")
+    @DisplayName("정보가 존재하면 정보 내용, 조회수, '도움이 되는 정보에요' 수와 요청 회원의 클릭 여부, 스크랩 여부를 반환한다")
     void getInfoDetail() {
         // given
         Info info = info();
-        givenInfoDetail(info, 5L, true, List.of(), List.of());
+        givenInfoDetail(info, 5L, true, true, List.of(), List.of());
 
         // when
         InfoDetailResult result = getInfoDetailUsecase.getInfoDetail(QUERY);
@@ -105,13 +109,14 @@ class GetInfoDetailUsecaseTest {
         assertEquals(VIEW_COUNT, result.viewCount());
         assertEquals(5L, result.helpfulMarkCount());
         assertTrue(result.helpfulMarked());
+        assertTrue(result.scrapped());
     }
 
     @Test
     @DisplayName("요청 회원이 '도움이 되는 정보에요'를 누르지 않았으면 클릭 여부를 false로 반환한다")
     void getInfoDetailWithoutHelpfulMark() {
         // given
-        givenInfoDetail(info(), 0L, false, List.of(), List.of());
+        givenInfoDetail(info(), 0L, false, false, List.of(), List.of());
 
         // when
         InfoDetailResult result = getInfoDetailUsecase.getInfoDetail(QUERY);
@@ -119,6 +124,19 @@ class GetInfoDetailUsecaseTest {
         // then
         assertEquals(0L, result.helpfulMarkCount());
         assertFalse(result.helpfulMarked());
+    }
+
+    @Test
+    @DisplayName("요청 회원이 정보를 스크랩하지 않았으면 스크랩 여부를 false로 반환한다")
+    void getInfoDetailWithoutScrap() {
+        // given
+        givenInfoDetail(info(), 0L, false, false, List.of(), List.of());
+
+        // when
+        InfoDetailResult result = getInfoDetailUsecase.getInfoDetail(QUERY);
+
+        // then
+        assertFalse(result.scrapped());
     }
 
     @Test
@@ -136,7 +154,7 @@ class GetInfoDetailUsecaseTest {
                 updateRequestView(20L, UPDATER_ID, UPDATER_NICKNAME, firstUpdatedAt),
                 updateRequestView(21L, REGISTRANT_ID, REGISTRANT_NICKNAME, secondUpdatedAt)
         );
-        givenInfoDetail(info(), 0L, false, registrationRequestViews, updateRequestViews);
+        givenInfoDetail(info(), 0L, false, false, registrationRequestViews, updateRequestViews);
 
         // when
         InfoDetailResult result = getInfoDetailUsecase.getInfoDetail(QUERY);
@@ -154,7 +172,7 @@ class GetInfoDetailUsecaseTest {
     @DisplayName("반영된 요청이 없으면 기여 내역을 빈 목록으로 반환한다")
     void getInfoDetailWithoutContributions() {
         // given
-        givenInfoDetail(info(), 0L, false, List.of(), List.of());
+        givenInfoDetail(info(), 0L, false, false, List.of(), List.of());
 
         // when
         InfoDetailResult result = getInfoDetailUsecase.getInfoDetail(QUERY);
@@ -167,7 +185,7 @@ class GetInfoDetailUsecaseTest {
     @DisplayName("기여 내역은 반영(ACCEPTED) 상태의 정보 등록·수정 요청만 조회한다")
     void getInfoDetailReadsOnlyAcceptedRequests() {
         // given
-        givenInfoDetail(info(), 0L, false, List.of(), List.of());
+        givenInfoDetail(info(), 0L, false, false, List.of(), List.of());
 
         // when
         getInfoDetailUsecase.getInfoDetail(QUERY);
@@ -181,7 +199,7 @@ class GetInfoDetailUsecaseTest {
     @DisplayName("정보 상세 조회에 성공하면 해당 정보의 조회수를 증가한다")
     void getInfoDetailIncreasesViewCount() {
         // given
-        givenInfoDetail(info(), 0L, false, List.of(), List.of());
+        givenInfoDetail(info(), 0L, false, false, List.of(), List.of());
 
         // when
         getInfoDetailUsecase.getInfoDetail(QUERY);
@@ -206,6 +224,7 @@ class GetInfoDetailUsecaseTest {
         then(readHelpfulMarkPort).shouldHaveNoInteractions();
         then(readInfoRegistrationRequestPort).shouldHaveNoInteractions();
         then(readInfoUpdateRequestPort).shouldHaveNoInteractions();
+        then(readScrapPort).shouldHaveNoInteractions();
         then(saveInfoViewCountPort).shouldHaveNoInteractions();
     }
 
@@ -221,6 +240,7 @@ class GetInfoDetailUsecaseTest {
         then(readHelpfulMarkPort).shouldHaveNoInteractions();
         then(readInfoRegistrationRequestPort).shouldHaveNoInteractions();
         then(readInfoUpdateRequestPort).shouldHaveNoInteractions();
+        then(readScrapPort).shouldHaveNoInteractions();
         then(saveInfoViewCountPort).shouldHaveNoInteractions();
     }
 
@@ -228,6 +248,7 @@ class GetInfoDetailUsecaseTest {
             Info info,
             long helpfulMarkCount,
             boolean helpfulMarked,
+            boolean scrapped,
             List<InfoRegistrationRequestView> registrationRequestViews,
             List<InfoUpdateRequestView> updateRequestViews
     ) {
@@ -235,6 +256,7 @@ class GetInfoDetailUsecaseTest {
         given(readInfoViewCountPort.readByInfoId(INFO_ID)).willReturn(Optional.of(InfoViewCount.of(INFO_ID, VIEW_COUNT)));
         given(readHelpfulMarkPort.countByInfoId(INFO_ID)).willReturn(helpfulMarkCount);
         given(readHelpfulMarkPort.existsByInfoIdAndMemberId(INFO_ID, MEMBER_ID)).willReturn(helpfulMarked);
+        given(readScrapPort.existsByInfoIdAndMemberId(INFO_ID, MEMBER_ID)).willReturn(scrapped);
         given(readInfoRegistrationRequestPort.readByInfoIdAndStatus(INFO_ID, InfoRequestStatus.ACCEPTED))
                 .willReturn(registrationRequestViews);
         given(readInfoUpdateRequestPort.readByInfoIdAndStatus(INFO_ID, InfoRequestStatus.ACCEPTED))
