@@ -15,6 +15,7 @@ public record InfoDetailResponse(
         long viewCount,
         long helpfulMarkCount,
         boolean helpfulMarked,
+        boolean scrapped,
         List<ContributionResponse> contributions
 ) {
     public static InfoDetailResponse from(InfoDetailResult result) {
@@ -28,6 +29,7 @@ public record InfoDetailResponse(
                 result.viewCount().getValue(),
                 result.helpfulMarkCount(),
                 result.helpfulMarked(),
+                result.scrapped(),
                 result.contributions().stream().map(ContributionResponse::from).toList()
         );
     }

@@ -12,6 +12,7 @@ import com.todayyu.application.info.port.read.ReadInfoRegistrationRequestPort;
 import com.todayyu.application.info.port.read.ReadInfoUpdateRequestPort;
 import com.todayyu.application.info.port.read.ReadInfoViewCountPort;
 import com.todayyu.application.info.port.save.SaveInfoViewCountPort;
+import com.todayyu.application.scrap.port.read.ReadScrapPort;
 import com.todayyu.common.exception.CustomException;
 import com.todayyu.domain.info.entity.Info;
 import com.todayyu.domain.info.entity.InfoViewCount;
@@ -31,6 +32,7 @@ public class GetInfoDetailUsecase {
     private final ReadHelpfulMarkPort readHelpfulMarkPort;
     private final ReadInfoRegistrationRequestPort readInfoRegistrationRequestPort;
     private final ReadInfoUpdateRequestPort readInfoUpdateRequestPort;
+    private final ReadScrapPort readScrapPort;
     private final SaveInfoViewCountPort saveInfoViewCountPort;
     
     /**
@@ -57,6 +59,7 @@ public class GetInfoDetailUsecase {
         
         long helpfulMarkCount = readHelpfulMarkPort.countByInfoId(infoId);
         boolean helpfulMarked = readHelpfulMarkPort.existsByInfoIdAndMemberId(infoId, memberId);
+        boolean scrapped = readScrapPort.existsByInfoIdAndMemberId(infoId, memberId);
         
         List<InfoRegistrationRequestView> infoRegistrationRequestViews
                 = readInfoRegistrationRequestPort.readByInfoIdAndStatus(infoId, InfoRequestStatus.ACCEPTED);
@@ -70,6 +73,7 @@ public class GetInfoDetailUsecase {
                 infoViewCount,
                 helpfulMarkCount,
                 helpfulMarked,
+                scrapped,
                 infoRegistrationRequestViews,
                 infoUpdateRequestViews
         );

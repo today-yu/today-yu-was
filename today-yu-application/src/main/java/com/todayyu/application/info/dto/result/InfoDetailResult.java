@@ -27,6 +27,7 @@ public record InfoDetailResult(
         ViewCount viewCount,
         long helpfulMarkCount,
         boolean helpfulMarked,
+        boolean scrapped,
         List<ContributionResult> contributions
 ) {
     public static InfoDetailResult from(
@@ -34,6 +35,7 @@ public record InfoDetailResult(
             InfoViewCount infoViewCount,
             long helpfulMarkCount,
             boolean helpfulMarked,
+            boolean scrapped,
             List<InfoRegistrationRequestView> infoRegistrationRequestViews,
             List<InfoUpdateRequestView> infoUpdateRequestViews
     ) {
@@ -55,6 +57,7 @@ public record InfoDetailResult(
                 .viewCount(infoViewCount.getViewCount())
                 .helpfulMarkCount(helpfulMarkCount)
                 .helpfulMarked(helpfulMarked)
+                .scrapped(scrapped)
                 .contributions(contributionResults)
                 .build();
     }
