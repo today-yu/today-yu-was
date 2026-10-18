@@ -9,7 +9,8 @@ public record InfoSummaryResponse(
         String category,
         String title,
         long helpfulMarkCount,
-        LocalDateTime updatedAt
+        LocalDateTime updatedAt,
+        boolean scrapped
 ) {
     public static InfoSummaryResponse from(InfoSummaryResult info) {
         return new InfoSummaryResponse(
@@ -17,7 +18,8 @@ public record InfoSummaryResponse(
                 info.category().name(),
                 info.title().getValue(),
                 info.helpfulMarkCount(),
-                info.updatedAt()
+                info.updatedAt(),
+                info.scrapped()
         );
     }
 }

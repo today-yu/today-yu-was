@@ -32,8 +32,12 @@ public class InfoController {
     private final GetInfoDetailUsecase getInfoDetailUsecase;
     
     @GetMapping
-    public ResponseEntity<?> getInfos(@Valid GetInfosRequest request) {
-        CursorResult<InfoSummaryResult, InfoCursor> result = getInfosUsecase.getInfos(request.toQuery());
+    public ResponseEntity<?> getInfos(
+            @Valid GetInfosRequest request,
+            @AuthenticationPrincipal CustomUserDetails userDetails
+    ) {
+        CursorResult<InfoSummaryResult, InfoCursor> result
+                = getInfosUsecase.getInfos(request.toQuery(userDetails.getMemberId()));
         
         return ResponseEntity.ok(
                 SuccessResponse.from(
