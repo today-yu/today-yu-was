@@ -3,10 +3,12 @@ package com.todayyu.application.info.dto.query;
 import com.todayyu.application.info.port.dto.InfoCursor;
 import com.todayyu.application.info.port.dto.InfoSortType;
 import com.todayyu.domain.info.vo.InfoCategory;
+import com.todayyu.domain.member.vo.MemberId;
 import lombok.Builder;
 
 @Builder
 public record GetInfosQuery(
+        MemberId memberId,
         InfoCategory category,
         InfoSortType sortType,
         InfoCursor cursor,
@@ -17,6 +19,10 @@ public record GetInfosQuery(
     public static final int MIN_SIZE = 1;
     
     public GetInfosQuery {
+        if (memberId == null) {
+            throw new IllegalArgumentException("회원 ID는 비어있을 수 없습니다.");
+        }
+        
         if (sortType == null) {
             throw new IllegalArgumentException("정렬 기준은 비어있을 수 없습니다.");
         }

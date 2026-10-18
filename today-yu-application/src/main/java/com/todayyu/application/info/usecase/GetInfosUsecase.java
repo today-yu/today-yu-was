@@ -8,18 +8,21 @@ import com.todayyu.application.info.dto.result.InfoSummaryResult;
 import com.todayyu.application.info.port.dto.InfoSummaryView;
 import com.todayyu.application.info.port.read.ReadHelpfulMarkPort;
 import com.todayyu.application.info.port.read.ReadInfoPort;
+import com.todayyu.application.scrap.port.read.ReadScrapPort;
 import com.todayyu.domain.info.vo.InfoId;
 import lombok.RequiredArgsConstructor;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 @Usecase
 @RequiredArgsConstructor
 public class GetInfosUsecase {
     private final ReadInfoPort readInfoPort;
     private final ReadHelpfulMarkPort readHelpfulMarkPort;
+    private final ReadScrapPort readScrapPort;
     
     /**
      * 정보 목록 조회 메서드
@@ -34,7 +37,9 @@ public class GetInfosUsecase {
      *
      * <p> 각 정보의 '도움이 되는 정보에요' 수를 조회한다. </p>
      *
-     * <p> 다음 정보가 존재할 경우 {@code nextCursor}를 생성해 생성한다. </p>
+     * <p> 회원의 각 정보에 대한 스크랩 여부도 조회하여 반환한다. </p>
+     *
+     * <p> 다음 정보가 존재할 경우 {@code nextCursor}를 생성해 반환한다. </p>
      *
      * @param query 정보 목록 조회 요청 DTO
      * @return 정보 목록
@@ -51,17 +56,23 @@ public class GetInfosUsecase {
         
         boolean hasNext = views.size() > size;
         List<InfoSummaryView> contents = hasNext ? views.subList(0, size) : views;
+        List<InfoId> infoIds = contents.stream().map(InfoSummaryView::infoId).toList();
         
-        Map<InfoId, Long> helpfulMarkCounts = contents.isEmpty()
+        Map<InfoId, Long> helpfulMarkCounts = infoIds.isEmpty()
                 ? Map.of()
-                : readHelpfulMarkPort.countByInfoIds(contents.stream().map(InfoSummaryView::infoId).toList());
+                : readHelpfulMarkPort.countByInfoIds(infoIds);
+        
+        Set<InfoId> scrappedInfoIds = infoIds.isEmpty()
+                ? Set.of()
+                : readScrapPort.readScrappedInfoIds(query.memberId(), infoIds);
         
         List<InfoSummaryResult> results = contents.stream()
-                .map(view
-                        -> InfoSummaryResult.of(view, helpfulMarkCounts.getOrDefault(view.infoId(), 0L)))
+                .map(view -> InfoSummaryResult.of(
+                        view,
+                        helpfulMarkCounts.getOrDefault(view.infoId(), 0L),
+                        scrappedInfoIds.contains(view.infoId())
+                ))
                 .toList();
-        
-        // TODO: 스크랩 여부 추가
         
         InfoCursor nextCursor = hasNext
                 ? InfoCursor.from(contents.get(contents.size() - 1))

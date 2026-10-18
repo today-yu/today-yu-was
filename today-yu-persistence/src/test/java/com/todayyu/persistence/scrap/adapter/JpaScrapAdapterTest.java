@@ -16,6 +16,8 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.test.util.ReflectionTestUtils;
 
 import java.time.LocalDateTime;
+import java.util.List;
+import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -64,6 +66,57 @@ class JpaScrapAdapterTest {
 
         // then
         assertFalse(exists);
+    }
+
+    @Test
+    @DisplayName("회원 ID와 정보 ID 목록을 원시값으로 변환해 조회하고, 회원이 스크랩한 정보 ID 집합을 반환한다")
+    void readScrappedInfoIds() {
+        // given
+        given(scrapRepository.findInfoIdsByMemberIdAndInfoIds(MEMBER_ID, List.of(1L, 2L, 3L)))
+                .willReturn(List.of(1L, 3L));
+
+        // when
+        Set<InfoId> scrappedInfoIds = scrapAdapter.readScrappedInfoIds(
+                new MemberId(MEMBER_ID),
+                List.of(new InfoId(1L), new InfoId(2L), new InfoId(3L))
+        );
+
+        // then
+        assertEquals(Set.of(new InfoId(1L), new InfoId(3L)), scrappedInfoIds);
+    }
+
+    @Test
+    @DisplayName("회원이 스크랩한 정보가 없으면 빈 집합을 반환한다")
+    void readScrappedInfoIdsWithoutScrap() {
+        // given
+        given(scrapRepository.findInfoIdsByMemberIdAndInfoIds(MEMBER_ID, List.of(1L, 2L)))
+                .willReturn(List.of());
+
+        // when
+        Set<InfoId> scrappedInfoIds = scrapAdapter.readScrappedInfoIds(
+                new MemberId(MEMBER_ID),
+                List.of(new InfoId(1L), new InfoId(2L))
+        );
+
+        // then
+        assertTrue(scrappedInfoIds.isEmpty());
+    }
+
+    @Test
+    @DisplayName("조회 결과에 중복된 정보 ID가 있으면 하나로 반환한다")
+    void readScrappedInfoIdsWithDuplicate() {
+        // given
+        given(scrapRepository.findInfoIdsByMemberIdAndInfoIds(MEMBER_ID, List.of(1L)))
+                .willReturn(List.of(1L, 1L));
+
+        // when
+        Set<InfoId> scrappedInfoIds = scrapAdapter.readScrappedInfoIds(
+                new MemberId(MEMBER_ID),
+                List.of(new InfoId(1L))
+        );
+
+        // then
+        assertEquals(Set.of(new InfoId(1L)), scrappedInfoIds);
     }
 
     @Test

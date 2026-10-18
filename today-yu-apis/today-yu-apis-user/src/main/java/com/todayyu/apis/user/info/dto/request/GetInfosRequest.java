@@ -3,6 +3,7 @@ package com.todayyu.apis.user.info.dto.request;
 import com.todayyu.application.info.dto.query.GetInfosQuery;
 import com.todayyu.application.info.port.dto.InfoCursor;
 import com.todayyu.domain.info.vo.InfoId;
+import com.todayyu.domain.member.vo.MemberId;
 import jakarta.validation.constraints.AssertTrue;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
@@ -22,12 +23,13 @@ public record GetInfosRequest(
         @Max(value = GetInfosQuery.MAX_SIZE, message = "조회 크기는 " + GetInfosQuery.MAX_SIZE + " 이하이어야 합니다.")
         Integer size
 ) {
-    public GetInfosQuery toQuery() {
+    public GetInfosQuery toQuery(MemberId memberId) {
         InfoCursor cursor = cursorUpdatedAt == null || cursorInfoId == null
                 ? null
                 : new InfoCursor(cursorUpdatedAt, new InfoId(cursorInfoId));
         
         return GetInfosQuery.builder()
+                .memberId(memberId)
                 .category(category == null ? null : category.toDomain())
                 .sortType(sortType.toDomain())
                 .cursor(cursor)
