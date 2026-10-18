@@ -113,14 +113,14 @@ class InfoControllerTest {
     }
 
     @Test
-    @DisplayName("정보 목록 조회 요청 시 카테고리·정렬 기준·커서·조회 크기로 조회를 요청하고, 정보 목록과 다음 커서를 원시값으로 변환해 반환한다")
+    @DisplayName("정보 목록 조회 요청 시 회원 ID·카테고리·정렬 기준·커서·조회 크기로 조회를 요청하고, 정보 목록(스크랩 여부 포함)과 다음 커서를 원시값으로 변환해 반환한다")
     void getInfos() throws Exception {
         // given
         InfoCursor nextCursor = new InfoCursor(SECOND_UPDATED_AT, new InfoId(SECOND_INFO_ID));
         given(getInfosUsecase.getInfos(any())).willReturn(new CursorResult<>(
                 List.of(
-                        infoSummaryResult(FIRST_INFO_ID, "수강신청 일정", 3L, FIRST_UPDATED_AT),
-                        infoSummaryResult(SECOND_INFO_ID, "장학금 신청 안내", 0L, SECOND_UPDATED_AT)
+                        infoSummaryResult(FIRST_INFO_ID, "수강신청 일정", 3L, FIRST_UPDATED_AT, true),
+                        infoSummaryResult(SECOND_INFO_ID, "장학금 신청 안내", 0L, SECOND_UPDATED_AT, false)
                 ),
                 true,
                 nextCursor
@@ -141,8 +141,10 @@ class InfoControllerTest {
                 .andExpect(jsonPath("$.data.contents[0].title").value("수강신청 일정"))
                 .andExpect(jsonPath("$.data.contents[0].helpfulMarkCount").value(3))
                 .andExpect(jsonPath("$.data.contents[0].updatedAt").value(FIRST_UPDATED_AT.toString()))
+                .andExpect(jsonPath("$.data.contents[0].scrapped").value(true))
                 .andExpect(jsonPath("$.data.contents[1].infoId").value(SECOND_INFO_ID))
                 .andExpect(jsonPath("$.data.contents[1].helpfulMarkCount").value(0))
+                .andExpect(jsonPath("$.data.contents[1].scrapped").value(false))
                 .andExpect(jsonPath("$.data.hasNext").value(true))
                 .andExpect(jsonPath("$.data.nextCursor.updatedAt").value(SECOND_UPDATED_AT.toString()))
                 .andExpect(jsonPath("$.data.nextCursor.infoId").value(SECOND_INFO_ID));
@@ -150,6 +152,7 @@ class InfoControllerTest {
         // then
         then(getInfosUsecase).should().getInfos(getInfosQueryCaptor.capture());
         GetInfosQuery query = getInfosQueryCaptor.getValue();
+        assertEquals(new MemberId(MEMBER_ID), query.memberId());
         assertEquals(InfoCategory.ACADEMIC, query.category());
         assertEquals(InfoSortType.LATEST, query.sortType());
         assertEquals(new InfoCursor(CURSOR_UPDATED_AT, new InfoId(CURSOR_INFO_ID)), query.cursor());
@@ -319,13 +322,20 @@ class InfoControllerTest {
         then(getInfoDetailUsecase).should(never()).getInfoDetail(any());
     }
 
-    private InfoSummaryResult infoSummaryResult(Long infoId, String title, long helpfulMarkCount, LocalDateTime updatedAt) {
+    private InfoSummaryResult infoSummaryResult(
+            Long infoId,
+            String title,
+            long helpfulMarkCount,
+            LocalDateTime updatedAt,
+            boolean scrapped
+    ) {
         return InfoSummaryResult.builder()
                 .infoId(new InfoId(infoId))
                 .category(InfoCategory.ACADEMIC)
                 .title(new InfoTitle(title))
                 .helpfulMarkCount(helpfulMarkCount)
                 .updatedAt(updatedAt)
+                .scrapped(scrapped)
                 .build();
     }
 
