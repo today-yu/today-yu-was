@@ -248,6 +248,7 @@ class InfoControllerTest {
         // given
         given(getInfoDetailUsecase.getInfoDetail(any())).willReturn(infoDetailResult(
                 true,
+                true,
                 List.of(
                         contribution(ContributionType.UPDATE, UPDATE_REQUEST_ID, UPDATE_REQUESTED_AT),
                         contribution(ContributionType.REGISTRATION, REGISTRATION_REQUEST_ID, REGISTRATION_REQUESTED_AT)
@@ -267,6 +268,7 @@ class InfoControllerTest {
                 .andExpect(jsonPath("$.data.viewCount").value(10))
                 .andExpect(jsonPath("$.data.helpfulMarkCount").value(5))
                 .andExpect(jsonPath("$.data.helpfulMarked").value(true))
+                .andExpect(jsonPath("$.data.scrapped").value(true))
                 .andExpect(jsonPath("$.data.contributions.length()").value(2))
                 .andExpect(jsonPath("$.data.contributions[0].memberId").value(CONTRIBUTOR_ID))
                 .andExpect(jsonPath("$.data.contributions[0].nickname").value(CONTRIBUTOR_NICKNAME))
@@ -284,15 +286,16 @@ class InfoControllerTest {
     }
 
     @Test
-    @DisplayName("기여 내역이 없고 '도움이 되는 정보에요'를 누르지 않은 정보는 빈 기여자 목록과 false를 반환한다")
-    void getInfoDetailWithoutContributionsAndHelpfulMark() throws Exception {
+    @DisplayName("기여 내역이 없고 '도움이 되는 정보에요'를 누르지 않았으며 스크랩하지 않은 정보는 빈 기여자 목록과 false를 반환한다")
+    void getInfoDetailWithoutContributionsAndHelpfulMarkAndScrap() throws Exception {
         // given
-        given(getInfoDetailUsecase.getInfoDetail(any())).willReturn(infoDetailResult(false, List.of()));
+        given(getInfoDetailUsecase.getInfoDetail(any())).willReturn(infoDetailResult(false, false, List.of()));
 
         // when & then
         mockMvc.perform(get(INFO_DETAIL_URL, INFO_ID))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.data.helpfulMarked").value(false))
+                .andExpect(jsonPath("$.data.scrapped").value(false))
                 .andExpect(jsonPath("$.data.contributions").isArray())
                 .andExpect(jsonPath("$.data.contributions.length()").value(0));
     }
@@ -339,7 +342,11 @@ class InfoControllerTest {
                 .build();
     }
 
-    private InfoDetailResult infoDetailResult(boolean helpfulMarked, List<ContributionResult> contributions) {
+    private InfoDetailResult infoDetailResult(
+            boolean helpfulMarked,
+            boolean scrapped,
+            List<ContributionResult> contributions
+    ) {
         return InfoDetailResult.builder()
                 .id(new InfoId(INFO_ID))
                 .category(InfoCategory.ACADEMIC)
@@ -350,6 +357,7 @@ class InfoControllerTest {
                 .viewCount(new ViewCount(10L))
                 .helpfulMarkCount(5L)
                 .helpfulMarked(helpfulMarked)
+                .scrapped(scrapped)
                 .contributions(contributions)
                 .build();
     }
