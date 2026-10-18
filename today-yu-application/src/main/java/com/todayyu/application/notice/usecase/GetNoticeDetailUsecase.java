@@ -4,7 +4,7 @@ import com.todayyu.application.common.annotation.Usecase;
 import com.todayyu.application.notice.dto.query.GetNoticeDetailQuery;
 import com.todayyu.application.notice.dto.result.NoticeDetailResult;
 import com.todayyu.application.notice.error.BusinessNoticeErrorType;
-import com.todayyu.application.notice.port.ReadNoticePort;
+import com.todayyu.application.notice.port.read.ReadNoticePort;
 import com.todayyu.common.exception.CustomException;
 import com.todayyu.domain.notice.entity.Notice;
 import lombok.RequiredArgsConstructor;

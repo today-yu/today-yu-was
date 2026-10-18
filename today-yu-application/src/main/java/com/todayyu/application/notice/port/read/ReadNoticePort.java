@@ -1,4 +1,4 @@
-package com.todayyu.application.notice.port;
+package com.todayyu.application.notice.port.read;
 
 import com.todayyu.domain.notice.entity.Notice;
 import com.todayyu.domain.notice.vo.NoticeId;

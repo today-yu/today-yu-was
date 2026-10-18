@@ -1,6 +1,6 @@
 package com.todayyu.persistence.notice.adapter;
 
-import com.todayyu.application.notice.port.ReadNoticePort;
+import com.todayyu.application.notice.port.read.ReadNoticePort;
 import com.todayyu.domain.notice.entity.Notice;
 import com.todayyu.domain.notice.vo.NoticeId;
 import com.todayyu.persistence.common.PersistenceAdapter;
