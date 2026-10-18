@@ -14,15 +14,17 @@ public record InfoSummaryResult(
         InfoCategory category,
         InfoTitle title,
         long helpfulMarkCount,
-        LocalDateTime updatedAt
+        LocalDateTime updatedAt,
+        boolean scrapped
 ) {
-    public static InfoSummaryResult of(InfoSummaryView view, long helpfulMarkCount) {
+    public static InfoSummaryResult of(InfoSummaryView view, long helpfulMarkCount, boolean scrapped) {
         return new InfoSummaryResult(
                 view.infoId(),
                 view.category(),
                 view.title(),
                 helpfulMarkCount,
-                view.updatedAt()
+                view.updatedAt(),
+                scrapped
         );
     }
 }
