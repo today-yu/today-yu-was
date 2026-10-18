@@ -1,9 +1,12 @@
 package com.todayyu.persistence.notice.adapter;
 
+import com.todayyu.application.notice.port.dto.NoticeCursor;
+import com.todayyu.application.notice.port.dto.NoticeSummaryView;
 import com.todayyu.domain.notice.entity.Notice;
 import com.todayyu.domain.notice.vo.NoticeContent;
 import com.todayyu.domain.notice.vo.NoticeId;
 import com.todayyu.domain.notice.vo.NoticeTitle;
+import com.todayyu.persistence.notice.dto.NoticeSummaryViewProjection;
 import com.todayyu.persistence.notice.entity.NoticeJpaEntity;
 import com.todayyu.persistence.notice.mapper.NoticeMapper;
 import com.todayyu.persistence.notice.repository.NoticeJpaRepository;
@@ -16,6 +19,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.test.util.ReflectionTestUtils;
 
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -65,6 +69,41 @@ class JpaNoticeAdapterTest {
         // then
         assertTrue(result.isEmpty());
         then(noticeMapper).shouldHaveNoInteractions();
+    }
+
+    @Test
+    @DisplayName("커서가 있으면 커서의 공지 ID로 조회하고, 조회 결과를 공지 요약 목록으로 변환해 반환한다")
+    void readByCursor() {
+        // given
+        Long cursorId = 10L;
+        given(noticeRepository.findByCursor(cursorId, 3)).willReturn(List.of(
+                new NoticeSummaryViewProjection(NOTICE_ID, "서비스 점검 안내", PUBLISHED_AT)
+        ));
+
+        // when
+        List<NoticeSummaryView> result = noticeAdapter.readByCursor(new NoticeCursor(new NoticeId(cursorId)), 3);
+
+        // then
+        NoticeSummaryView expected = NoticeSummaryView.builder()
+                .id(new NoticeId(NOTICE_ID))
+                .title(new NoticeTitle("서비스 점검 안내"))
+                .publishedAt(PUBLISHED_AT)
+                .build();
+        assertEquals(List.of(expected), result);
+    }
+
+    @Test
+    @DisplayName("커서가 없으면 커서 조건 없이 처음부터 조회한다")
+    void readByCursorWithoutCursor() {
+        // given
+        given(noticeRepository.findByCursor(null, 3)).willReturn(List.of());
+
+        // when
+        List<NoticeSummaryView> result = noticeAdapter.readByCursor(null, 3);
+
+        // then
+        assertTrue(result.isEmpty());
+        then(noticeRepository).should().findByCursor(null, 3);
     }
 
     private NoticeJpaEntity noticeJpaEntity() {
