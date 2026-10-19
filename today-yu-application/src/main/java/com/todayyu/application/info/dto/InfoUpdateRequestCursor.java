@@ -1,5 +1,6 @@
-package com.todayyu.application.info.port.dto;
+package com.todayyu.application.info.dto;
 
+import com.todayyu.application.info.port.dto.InfoUpdateRequestSummaryView;
 import com.todayyu.domain.info.vo.InfoUpdateRequestId;
 
 import java.time.LocalDateTime;

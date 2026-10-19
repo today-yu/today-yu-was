@@ -1,6 +1,6 @@
 package com.todayyu.application.info.port.read;
 
-import com.todayyu.application.info.port.dto.InfoUpdateRequestCursor;
+import com.todayyu.application.info.dto.InfoUpdateRequestCursor;
 import com.todayyu.application.info.port.dto.InfoUpdateRequestSortType;
 import com.todayyu.application.info.port.dto.InfoUpdateRequestSummaryView;
 import com.todayyu.application.info.port.dto.InfoUpdateRequestView;

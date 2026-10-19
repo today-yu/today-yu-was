@@ -12,7 +12,7 @@ import com.todayyu.application.info.dto.result.LinkedInfoResult;
 import com.todayyu.application.info.dto.result.SubmitInfoUpdateRequestResult;
 import com.todayyu.application.info.error.BusinessInfoErrorType;
 import com.todayyu.application.info.error.BusinessInfoUpdateRequestErrorType;
-import com.todayyu.application.info.port.dto.InfoUpdateRequestCursor;
+import com.todayyu.application.info.dto.InfoUpdateRequestCursor;
 import com.todayyu.application.info.port.dto.InfoUpdateRequestSortType;
 import com.todayyu.application.info.usecase.GetInfoUpdateRequestDetailUsecase;
 import com.todayyu.application.info.usecase.GetInfoUpdateRequestsUsecase;
