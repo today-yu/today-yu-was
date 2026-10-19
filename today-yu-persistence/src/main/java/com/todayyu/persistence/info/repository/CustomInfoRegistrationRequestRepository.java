@@ -1,6 +1,6 @@
 package com.todayyu.persistence.info.repository;
 
-import com.todayyu.application.info.port.dto.InfoRegistrationRequestSortType;
+import com.todayyu.application.info.dto.InfoRegistrationRequestSortType;
 import com.todayyu.domain.info.vo.InfoCategory;
 import com.todayyu.domain.info.vo.InfoRequestStatus;
 import com.todayyu.persistence.info.dto.InfoRegistrationRequestProjection;

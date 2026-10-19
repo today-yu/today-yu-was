@@ -1,7 +1,7 @@
 package com.todayyu.persistence.info.adapter;
 
 import com.todayyu.application.info.dto.InfoRegistrationRequestCursor;
-import com.todayyu.application.info.port.dto.InfoRegistrationRequestSortType;
+import com.todayyu.application.info.dto.InfoRegistrationRequestSortType;
 import com.todayyu.application.info.port.dto.InfoRegistrationRequestSummaryView;
 import com.todayyu.application.info.port.dto.InfoRegistrationRequestView;
 import com.todayyu.domain.common.vo.Email;
