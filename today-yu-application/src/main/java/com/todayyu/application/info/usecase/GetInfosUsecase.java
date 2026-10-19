@@ -75,10 +75,13 @@ public class GetInfosUsecase {
                 .toList();
         
         InfoCursor nextCursor = hasNext
-                ? InfoCursor.from(contents.get(contents.size() - 1))
+                ? nextCursor(contents.get(contents.size() - 1))
                 : null;
         
         return new CursorResult<>(results, hasNext, nextCursor);
     }
 
+    private InfoCursor nextCursor(InfoSummaryView lastView) {
+        return new InfoCursor(lastView.updatedAt(), lastView.infoId());
+    }
 }
