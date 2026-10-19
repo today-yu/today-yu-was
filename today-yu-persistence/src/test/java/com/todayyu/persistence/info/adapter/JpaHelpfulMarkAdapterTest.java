@@ -160,6 +160,16 @@ class JpaHelpfulMarkAdapterTest {
         then(helpfulMarkRepository).should().save(newJpaEntity);
     }
 
+    @Test
+    @DisplayName("정보 ID와 회원 ID를 원시값으로 변환해 '도움이 되는 정보에요' 삭제를 요청한다")
+    void deleteByInfoIdAndMemberId() {
+        // when
+        helpfulMarkAdapter.deleteByInfoIdAndMemberId(new InfoId(INFO_ID), new MemberId(MEMBER_ID));
+
+        // then
+        then(helpfulMarkRepository).should().deleteByInfoIdAndMemberId(INFO_ID, MEMBER_ID);
+    }
+
     private HelpfulMarkJpaEntity jpaEntity(Long helpfulMarkId) {
         HelpfulMarkJpaEntity jpaEntity = HelpfulMarkJpaEntity.builder()
                 .infoId(INFO_ID)
