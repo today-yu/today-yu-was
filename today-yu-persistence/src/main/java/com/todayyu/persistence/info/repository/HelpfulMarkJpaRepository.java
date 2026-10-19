@@ -6,4 +6,5 @@ import org.springframework.data.jpa.repository.JpaRepository;
 public interface HelpfulMarkJpaRepository extends JpaRepository<HelpfulMarkJpaEntity, Long>, CustomHelpfulMarkRepository {
     long countByInfoId(Long infoId);
     boolean existsByInfoIdAndMemberId(Long infoId, Long memberId);
+    void deleteByInfoIdAndMemberId(Long infoId, Long memberId);
 }
