@@ -1,7 +1,7 @@
 package com.todayyu.apis.user.notice.dto.request;
 
 import com.todayyu.application.notice.dto.query.GetNoticesQuery;
-import com.todayyu.application.notice.port.dto.NoticeCursor;
+import com.todayyu.application.notice.dto.NoticeCursor;
 import com.todayyu.domain.notice.vo.NoticeId;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;

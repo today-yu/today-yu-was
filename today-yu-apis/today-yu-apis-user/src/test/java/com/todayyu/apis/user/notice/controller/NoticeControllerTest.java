@@ -7,7 +7,7 @@ import com.todayyu.application.notice.dto.query.GetNoticesQuery;
 import com.todayyu.application.notice.dto.result.NoticeDetailResult;
 import com.todayyu.application.notice.dto.result.NoticeSummaryResult;
 import com.todayyu.application.notice.error.BusinessNoticeErrorType;
-import com.todayyu.application.notice.port.dto.NoticeCursor;
+import com.todayyu.application.notice.dto.NoticeCursor;
 import com.todayyu.application.notice.usecase.GetNoticeDetailUsecase;
 import com.todayyu.application.notice.usecase.GetNoticesUsecase;
 import com.todayyu.common.error.CommonErrorType;

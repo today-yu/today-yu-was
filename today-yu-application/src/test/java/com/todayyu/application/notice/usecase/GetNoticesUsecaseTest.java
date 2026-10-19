@@ -3,7 +3,7 @@ package com.todayyu.application.notice.usecase;
 import com.todayyu.application.common.dto.CursorResult;
 import com.todayyu.application.notice.dto.query.GetNoticesQuery;
 import com.todayyu.application.notice.dto.result.NoticeSummaryResult;
-import com.todayyu.application.notice.port.dto.NoticeCursor;
+import com.todayyu.application.notice.dto.NoticeCursor;
 import com.todayyu.application.notice.port.dto.NoticeSummaryView;
 import com.todayyu.application.notice.port.read.ReadNoticePort;
 import com.todayyu.domain.notice.vo.NoticeId;

@@ -1,5 +1,6 @@
-package com.todayyu.application.notice.port.dto;
+package com.todayyu.application.notice.dto;
 
+import com.todayyu.application.notice.port.dto.NoticeSummaryView;
 import com.todayyu.domain.notice.vo.NoticeId;
 
 public record NoticeCursor(

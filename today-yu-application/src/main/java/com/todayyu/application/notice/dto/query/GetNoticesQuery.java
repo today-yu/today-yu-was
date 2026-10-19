@@ -1,6 +1,6 @@
 package com.todayyu.application.notice.dto.query;
 
-import com.todayyu.application.notice.port.dto.NoticeCursor;
+import com.todayyu.application.notice.dto.NoticeCursor;
 import lombok.Builder;
 
 @Builder
