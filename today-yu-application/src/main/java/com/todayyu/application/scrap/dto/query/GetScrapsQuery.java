@@ -4,7 +4,9 @@ import com.todayyu.application.scrap.dto.ScrapCursor;
 import com.todayyu.application.scrap.dto.ScrapSortType;
 import com.todayyu.domain.info.vo.InfoCategory;
 import com.todayyu.domain.member.vo.MemberId;
+import lombok.Builder;
 
+@Builder
 public record GetScrapsQuery(
         MemberId memberId,
         InfoCategory category,
