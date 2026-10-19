@@ -1,9 +1,15 @@
 package com.todayyu.persistence.scrap.adapter;
 
+import com.todayyu.application.scrap.dto.ScrapCursor;
+import com.todayyu.application.scrap.dto.ScrapSortType;
+import com.todayyu.application.scrap.port.dto.ScrapView;
+import com.todayyu.domain.info.vo.InfoCategory;
 import com.todayyu.domain.info.vo.InfoId;
+import com.todayyu.domain.info.vo.InfoTitle;
 import com.todayyu.domain.member.vo.MemberId;
 import com.todayyu.domain.scrap.entity.Scrap;
 import com.todayyu.domain.scrap.vo.ScrapId;
+import com.todayyu.persistence.scrap.dto.ScrapViewProjection;
 import com.todayyu.persistence.scrap.entity.ScrapJpaEntity;
 import com.todayyu.persistence.scrap.mapper.ScrapMapper;
 import com.todayyu.persistence.scrap.repository.ScrapJpaRepository;
@@ -117,6 +123,46 @@ class JpaScrapAdapterTest {
 
         // then
         assertEquals(Set.of(new InfoId(1L)), scrappedInfoIds);
+    }
+
+    @Test
+    @DisplayName("커서가 있으면 회원 ID와 커서의 수정 일시, 정보 ID를 원시값으로 변환해 조회하고, 조회 결과를 스크랩한 정보 요약 목록으로 변환해 반환한다")
+    void readByCursor() {
+        // given
+        LocalDateTime cursorUpdatedAt = LocalDateTime.of(2026, 10, 10, 9, 0);
+        ScrapCursor cursor = new ScrapCursor(cursorUpdatedAt, new InfoId(10L));
+        LocalDateTime updatedAt = LocalDateTime.of(2026, 10, 9, 9, 0);
+        given(scrapRepository.findByCursor(MEMBER_ID, InfoCategory.ACADEMIC, ScrapSortType.LATEST, cursorUpdatedAt, 10L, 3))
+                .willReturn(List.of(new ScrapViewProjection(INFO_ID, InfoCategory.ACADEMIC, "수강신청 일정", 5L, updatedAt)));
+
+        // when
+        List<ScrapView> result = scrapAdapter.readByCursor(
+                new MemberId(MEMBER_ID), InfoCategory.ACADEMIC, ScrapSortType.LATEST, cursor, 3
+        );
+
+        // then
+        ScrapView expected = ScrapView.builder()
+                .infoId(new InfoId(INFO_ID))
+                .category(InfoCategory.ACADEMIC)
+                .title(new InfoTitle("수강신청 일정"))
+                .helpfulMarkCount(5L)
+                .updatedAt(updatedAt)
+                .build();
+        assertEquals(List.of(expected), result);
+    }
+
+    @Test
+    @DisplayName("커서가 없으면 커서 조건 없이 처음부터 조회한다")
+    void readByCursorWithoutCursor() {
+        // given
+        given(scrapRepository.findByCursor(MEMBER_ID, null, ScrapSortType.OLDEST, null, null, 3)).willReturn(List.of());
+
+        // when
+        List<ScrapView> result = scrapAdapter.readByCursor(new MemberId(MEMBER_ID), null, ScrapSortType.OLDEST, null, 3);
+
+        // then
+        assertTrue(result.isEmpty());
+        then(scrapRepository).should().findByCursor(MEMBER_ID, null, ScrapSortType.OLDEST, null, null, 3);
     }
 
     @Test
