@@ -3,7 +3,7 @@ package com.todayyu.application.info.usecase;
 import com.todayyu.application.common.dto.CursorResult;
 import com.todayyu.application.info.dto.query.GetInfoRegistrationRequestsQuery;
 import com.todayyu.application.info.dto.result.InfoRegistrationRequestSummaryResult;
-import com.todayyu.application.info.port.dto.InfoRegistrationRequestCursor;
+import com.todayyu.application.info.dto.InfoRegistrationRequestCursor;
 import com.todayyu.application.info.port.dto.InfoRegistrationRequestSortType;
 import com.todayyu.application.info.port.dto.InfoRegistrationRequestSummaryView;
 import com.todayyu.application.info.port.read.ReadInfoRegistrationRequestPort;

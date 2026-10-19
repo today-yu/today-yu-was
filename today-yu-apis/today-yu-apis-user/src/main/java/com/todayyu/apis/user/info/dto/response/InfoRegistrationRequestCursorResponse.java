@@ -1,6 +1,6 @@
 package com.todayyu.apis.user.info.dto.response;
 
-import com.todayyu.application.info.port.dto.InfoRegistrationRequestCursor;
+import com.todayyu.application.info.dto.InfoRegistrationRequestCursor;
 
 import java.time.LocalDateTime;
 
