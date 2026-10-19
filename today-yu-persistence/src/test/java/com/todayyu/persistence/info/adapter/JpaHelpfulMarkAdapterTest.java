@@ -1,8 +1,12 @@
 package com.todayyu.persistence.info.adapter;
 
+import com.todayyu.domain.info.entity.HelpfulMark;
+import com.todayyu.domain.info.vo.HelpfulMarkId;
 import com.todayyu.domain.info.vo.InfoId;
 import com.todayyu.domain.member.vo.MemberId;
 import com.todayyu.persistence.info.dto.HelpfulMarkCountProjection;
+import com.todayyu.persistence.info.entity.HelpfulMarkJpaEntity;
+import com.todayyu.persistence.info.mapper.HelpfulMarkMapper;
 import com.todayyu.persistence.info.repository.HelpfulMarkJpaRepository;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -10,12 +14,14 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.test.util.ReflectionTestUtils;
 
 import java.util.List;
 import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.BDDMockito.given;
@@ -23,11 +29,15 @@ import static org.mockito.BDDMockito.then;
 
 @ExtendWith(MockitoExtension.class)
 class JpaHelpfulMarkAdapterTest {
+    private static final Long HELPFUL_MARK_ID = 100L;
     private static final Long INFO_ID = 1L;
     private static final Long MEMBER_ID = 2L;
 
     @Mock
     private HelpfulMarkJpaRepository helpfulMarkRepository;
+
+    @Mock
+    private HelpfulMarkMapper helpfulMarkMapper;
 
     @InjectMocks
     private JpaHelpfulMarkAdapter helpfulMarkAdapter;
@@ -125,5 +135,37 @@ class JpaHelpfulMarkAdapterTest {
         // then
         assertTrue(counts.isEmpty());
         then(helpfulMarkRepository).shouldHaveNoInteractions();
+    }
+
+    @Test
+    @DisplayName("'도움이 되는 정보에요'를 JPA 엔티티로 변환해 저장하고, ID가 부여된 '도움이 되는 정보에요'를 반환한다")
+    void save() {
+        // given
+        HelpfulMark newHelpfulMark = HelpfulMark.withoutId(new InfoId(INFO_ID), new MemberId(MEMBER_ID));
+        HelpfulMarkJpaEntity newJpaEntity = jpaEntity(null);
+        HelpfulMarkJpaEntity savedJpaEntity = jpaEntity(HELPFUL_MARK_ID);
+        HelpfulMark savedHelpfulMark = HelpfulMark.withId(
+                new HelpfulMarkId(HELPFUL_MARK_ID), new InfoId(INFO_ID), new MemberId(MEMBER_ID));
+
+        given(helpfulMarkMapper.toJpaEntity(newHelpfulMark)).willReturn(newJpaEntity);
+        given(helpfulMarkRepository.save(newJpaEntity)).willReturn(savedJpaEntity);
+        given(helpfulMarkMapper.toDomain(savedJpaEntity)).willReturn(savedHelpfulMark);
+
+        // when
+        HelpfulMark result = helpfulMarkAdapter.save(newHelpfulMark);
+
+        // then
+        assertSame(savedHelpfulMark, result);
+        assertEquals(new HelpfulMarkId(HELPFUL_MARK_ID), result.getId());
+        then(helpfulMarkRepository).should().save(newJpaEntity);
+    }
+
+    private HelpfulMarkJpaEntity jpaEntity(Long helpfulMarkId) {
+        HelpfulMarkJpaEntity jpaEntity = HelpfulMarkJpaEntity.builder()
+                .infoId(INFO_ID)
+                .memberId(MEMBER_ID)
+                .build();
+        ReflectionTestUtils.setField(jpaEntity, "id", helpfulMarkId);
+        return jpaEntity;
     }
 }

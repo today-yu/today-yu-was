@@ -1,9 +1,14 @@
 package com.todayyu.persistence.info.adapter;
 
 import com.todayyu.application.info.port.read.ReadHelpfulMarkPort;
+import com.todayyu.application.info.port.save.SaveHelpfulMarkPort;
+import com.todayyu.domain.info.entity.HelpfulMark;
+import com.todayyu.domain.info.vo.HelpfulMarkId;
 import com.todayyu.domain.info.vo.InfoId;
 import com.todayyu.domain.member.vo.MemberId;
 import com.todayyu.persistence.common.PersistenceAdapter;
+import com.todayyu.persistence.info.entity.HelpfulMarkJpaEntity;
+import com.todayyu.persistence.info.mapper.HelpfulMarkMapper;
 import com.todayyu.persistence.info.repository.HelpfulMarkJpaRepository;
 import lombok.RequiredArgsConstructor;
 
@@ -13,8 +18,9 @@ import java.util.stream.Collectors;
 
 @PersistenceAdapter
 @RequiredArgsConstructor
-public class JpaHelpfulMarkAdapter implements ReadHelpfulMarkPort {
+public class JpaHelpfulMarkAdapter implements ReadHelpfulMarkPort, SaveHelpfulMarkPort {
     private final HelpfulMarkJpaRepository helpfulMarkRepository;
+    private final HelpfulMarkMapper helpfulMarkMapper;
     
     /**
      * 정보 ID({@link InfoId})를 통해 해당 정보의 '도움이 되는 정보에요' 수를 조회해 반환하는 메서드
@@ -58,5 +64,18 @@ public class JpaHelpfulMarkAdapter implements ReadHelpfulMarkPort {
                         projection -> new InfoId(projection.infoId()),
                         projection -> projection.count()
                 ));
+    }
+    
+    /**
+     * '도움이 되는 정보에요' 엔티티를 저장하는 메서드
+     *
+     * @param helpfulMark '도움이 되는 정보에요' 객체
+     * @return 저장 후 {@link HelpfulMarkId}가 부여된 '도움이 되는 정보에요' 객체
+     */
+    @Override
+    public HelpfulMark save(HelpfulMark helpfulMark) {
+        HelpfulMarkJpaEntity savedJpaEntity = helpfulMarkRepository.save(helpfulMarkMapper.toJpaEntity(helpfulMark));
+        
+        return helpfulMarkMapper.toDomain(savedJpaEntity);
     }
 }
