@@ -51,9 +51,13 @@ public class GetInfoUpdateRequestsUsecase {
                 .toList();
 
         InfoUpdateRequestCursor nextCursor = hasNext
-                ? InfoUpdateRequestCursor.from(contents.get(contents.size() - 1))
+                ? nextCursor(contents.get(contents.size() - 1))
                 : null;
 
         return new CursorResult<>(results, hasNext, nextCursor);
+    }
+    
+    private InfoUpdateRequestCursor nextCursor(InfoUpdateRequestSummaryView lastView) {
+        return new InfoUpdateRequestCursor(lastView.requestedAt(), lastView.id());
     }
 }
