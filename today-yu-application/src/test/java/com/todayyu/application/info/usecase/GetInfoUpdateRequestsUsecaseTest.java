@@ -4,7 +4,7 @@ import com.todayyu.application.common.dto.CursorResult;
 import com.todayyu.application.info.dto.query.GetInfoUpdateRequestsQuery;
 import com.todayyu.application.info.dto.result.InfoUpdateRequestSummaryResult;
 import com.todayyu.application.info.dto.InfoUpdateRequestCursor;
-import com.todayyu.application.info.port.dto.InfoUpdateRequestSortType;
+import com.todayyu.application.info.dto.InfoUpdateRequestSortType;
 import com.todayyu.application.info.port.dto.InfoUpdateRequestSummaryView;
 import com.todayyu.application.info.port.read.ReadInfoUpdateRequestPort;
 import com.todayyu.domain.info.vo.InfoCategory;
