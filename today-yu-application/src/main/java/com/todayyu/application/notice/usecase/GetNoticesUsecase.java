@@ -46,9 +46,13 @@ public class GetNoticesUsecase {
                 .toList();
         
         NoticeCursor nextCursor = hasNext
-                ? NoticeCursor.from(contents.get(contents.size() - 1))
+                ? nextCursor(contents.get(contents.size() - 1))
                 : null;
         
         return new CursorResult<>(results, hasNext, nextCursor);
+    }
+    
+    private NoticeCursor nextCursor(NoticeSummaryView lastView) {
+        return new NoticeCursor(lastView.id());
     }
 }
