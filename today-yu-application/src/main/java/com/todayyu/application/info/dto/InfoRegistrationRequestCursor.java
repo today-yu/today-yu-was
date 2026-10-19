@@ -1,6 +1,5 @@
 package com.todayyu.application.info.dto;
 
-import com.todayyu.application.info.port.dto.InfoRegistrationRequestSummaryView;
 import com.todayyu.domain.info.vo.InfoRegistrationRequestId;
 
 import java.time.LocalDateTime;
@@ -13,9 +12,5 @@ public record InfoRegistrationRequestCursor(
         if (requestedAt == null || id == null) {
             throw new IllegalArgumentException("커서 값은 비어있을 수 없습니다.");
         }
-    }
-    
-    public static InfoRegistrationRequestCursor from(InfoRegistrationRequestSummaryView view) {
-        return new InfoRegistrationRequestCursor(view.requestedAt(), view.id());
     }
 }

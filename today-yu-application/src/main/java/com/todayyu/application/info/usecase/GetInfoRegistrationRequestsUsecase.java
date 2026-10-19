@@ -51,9 +51,13 @@ public class GetInfoRegistrationRequestsUsecase {
                 .toList();
         
         InfoRegistrationRequestCursor nextCursor = hasNext
-                ? InfoRegistrationRequestCursor.from(contents.get(contents.size() - 1))
+                ? nextCursor(contents.get(contents.size() - 1))
                 : null;
         
         return new CursorResult<>(results, hasNext, nextCursor);
+    }
+    
+    private InfoRegistrationRequestCursor nextCursor(InfoRegistrationRequestSummaryView lastView) {
+        return new InfoRegistrationRequestCursor(lastView.requestedAt(), lastView.id());
     }
 }
