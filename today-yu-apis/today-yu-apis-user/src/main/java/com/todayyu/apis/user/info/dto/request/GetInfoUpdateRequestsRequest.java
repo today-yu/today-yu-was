@@ -1,7 +1,7 @@
 package com.todayyu.apis.user.info.dto.request;
 
 import com.todayyu.application.info.dto.query.GetInfoUpdateRequestsQuery;
-import com.todayyu.application.info.port.dto.InfoUpdateRequestCursor;
+import com.todayyu.application.info.dto.InfoUpdateRequestCursor;
 import com.todayyu.domain.info.vo.InfoUpdateRequestId;
 import com.todayyu.domain.member.vo.MemberId;
 import jakarta.validation.constraints.AssertTrue;

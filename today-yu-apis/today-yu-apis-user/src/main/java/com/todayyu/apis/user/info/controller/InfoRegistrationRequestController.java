@@ -14,7 +14,7 @@ import com.todayyu.application.info.dto.query.GetInfoRegistrationRequestDetailQu
 import com.todayyu.application.info.dto.result.InfoRegistrationRequestDetailResult;
 import com.todayyu.application.info.dto.result.InfoRegistrationRequestSummaryResult;
 import com.todayyu.application.info.dto.result.SubmitInfoRegistrationRequestResult;
-import com.todayyu.application.info.port.dto.InfoRegistrationRequestCursor;
+import com.todayyu.application.info.dto.InfoRegistrationRequestCursor;
 import com.todayyu.application.info.usecase.GetInfoRegistrationRequestDetailUsecase;
 import com.todayyu.application.info.usecase.GetInfoRegistrationRequestsUsecase;
 import com.todayyu.application.info.usecase.SubmitInfoRegistrationRequestUsecase;

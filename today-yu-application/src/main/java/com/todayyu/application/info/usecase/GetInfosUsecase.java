@@ -3,7 +3,7 @@ package com.todayyu.application.info.usecase;
 import com.todayyu.application.common.annotation.Usecase;
 import com.todayyu.application.common.dto.CursorResult;
 import com.todayyu.application.info.dto.query.GetInfosQuery;
-import com.todayyu.application.info.port.dto.InfoCursor;
+import com.todayyu.application.info.dto.InfoCursor;
 import com.todayyu.application.info.dto.result.InfoSummaryResult;
 import com.todayyu.application.info.port.dto.InfoSummaryView;
 import com.todayyu.application.info.port.read.ReadHelpfulMarkPort;
@@ -75,10 +75,13 @@ public class GetInfosUsecase {
                 .toList();
         
         InfoCursor nextCursor = hasNext
-                ? InfoCursor.from(contents.get(contents.size() - 1))
+                ? nextCursor(contents.get(contents.size() - 1))
                 : null;
         
         return new CursorResult<>(results, hasNext, nextCursor);
     }
 
+    private InfoCursor nextCursor(InfoSummaryView lastView) {
+        return new InfoCursor(lastView.updatedAt(), lastView.infoId());
+    }
 }

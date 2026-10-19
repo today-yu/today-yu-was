@@ -4,7 +4,7 @@ import com.todayyu.application.common.annotation.Usecase;
 import com.todayyu.application.common.dto.CursorResult;
 import com.todayyu.application.info.dto.query.GetInfoRegistrationRequestsQuery;
 import com.todayyu.application.info.dto.result.InfoRegistrationRequestSummaryResult;
-import com.todayyu.application.info.port.dto.InfoRegistrationRequestCursor;
+import com.todayyu.application.info.dto.InfoRegistrationRequestCursor;
 import com.todayyu.application.info.port.dto.InfoRegistrationRequestSummaryView;
 import com.todayyu.application.info.port.read.ReadInfoRegistrationRequestPort;
 import lombok.RequiredArgsConstructor;
@@ -51,9 +51,13 @@ public class GetInfoRegistrationRequestsUsecase {
                 .toList();
         
         InfoRegistrationRequestCursor nextCursor = hasNext
-                ? InfoRegistrationRequestCursor.from(contents.get(contents.size() - 1))
+                ? nextCursor(contents.get(contents.size() - 1))
                 : null;
         
         return new CursorResult<>(results, hasNext, nextCursor);
+    }
+    
+    private InfoRegistrationRequestCursor nextCursor(InfoRegistrationRequestSummaryView lastView) {
+        return new InfoRegistrationRequestCursor(lastView.requestedAt(), lastView.id());
     }
 }

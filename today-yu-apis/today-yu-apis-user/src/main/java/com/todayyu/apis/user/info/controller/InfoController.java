@@ -9,7 +9,7 @@ import com.todayyu.apis.user.info.dto.response.InfoDetailResponse;
 import com.todayyu.apis.user.info.dto.response.InfoSummaryResponse;
 import com.todayyu.application.common.dto.CursorResult;
 import com.todayyu.application.info.dto.query.GetInfoDetailQuery;
-import com.todayyu.application.info.port.dto.InfoCursor;
+import com.todayyu.application.info.dto.InfoCursor;
 import com.todayyu.application.info.dto.result.InfoDetailResult;
 import com.todayyu.application.info.dto.result.InfoSummaryResult;
 import com.todayyu.application.info.usecase.GetInfoDetailUsecase;

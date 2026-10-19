@@ -1,6 +1,6 @@
 package com.todayyu.apis.user.notice.dto.response;
 
-import com.todayyu.application.notice.port.dto.NoticeCursor;
+import com.todayyu.application.notice.dto.NoticeCursor;
 
 public record NoticeCursorResponse(
         Long id

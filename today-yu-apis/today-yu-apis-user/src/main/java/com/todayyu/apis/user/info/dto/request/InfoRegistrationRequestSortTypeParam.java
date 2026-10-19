@@ -1,6 +1,6 @@
 package com.todayyu.apis.user.info.dto.request;
 
-import com.todayyu.application.info.port.dto.InfoRegistrationRequestSortType;
+import com.todayyu.application.info.dto.InfoRegistrationRequestSortType;
 
 public enum InfoRegistrationRequestSortTypeParam {
     LATEST,

@@ -14,7 +14,7 @@ import com.todayyu.application.info.dto.query.GetInfoUpdateRequestDetailQuery;
 import com.todayyu.application.info.dto.result.InfoUpdateRequestDetailResult;
 import com.todayyu.application.info.dto.result.InfoUpdateRequestSummaryResult;
 import com.todayyu.application.info.dto.result.SubmitInfoUpdateRequestResult;
-import com.todayyu.application.info.port.dto.InfoUpdateRequestCursor;
+import com.todayyu.application.info.dto.InfoUpdateRequestCursor;
 import com.todayyu.application.info.usecase.GetInfoUpdateRequestDetailUsecase;
 import com.todayyu.application.info.usecase.GetInfoUpdateRequestsUsecase;
 import com.todayyu.application.info.usecase.SubmitInfoUpdateRequestUsecase;

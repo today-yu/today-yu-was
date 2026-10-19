@@ -1,7 +1,7 @@
 package com.todayyu.application.info.dto.query;
 
-import com.todayyu.application.info.port.dto.InfoRegistrationRequestCursor;
-import com.todayyu.application.info.port.dto.InfoRegistrationRequestSortType;
+import com.todayyu.application.info.dto.InfoRegistrationRequestCursor;
+import com.todayyu.application.info.dto.InfoRegistrationRequestSortType;
 import com.todayyu.domain.info.vo.InfoCategory;
 import com.todayyu.domain.member.vo.MemberId;
 import lombok.Builder;

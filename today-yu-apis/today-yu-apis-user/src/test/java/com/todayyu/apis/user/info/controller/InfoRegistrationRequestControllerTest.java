@@ -11,8 +11,8 @@ import com.todayyu.application.info.dto.result.InfoRegistrationRequestSummaryRes
 import com.todayyu.application.info.dto.result.LinkedInfoResult;
 import com.todayyu.application.info.dto.result.SubmitInfoRegistrationRequestResult;
 import com.todayyu.application.info.error.BusinessInfoRegistrationRequestErrorType;
-import com.todayyu.application.info.port.dto.InfoRegistrationRequestCursor;
-import com.todayyu.application.info.port.dto.InfoRegistrationRequestSortType;
+import com.todayyu.application.info.dto.InfoRegistrationRequestCursor;
+import com.todayyu.application.info.dto.InfoRegistrationRequestSortType;
 import com.todayyu.application.info.usecase.GetInfoRegistrationRequestDetailUsecase;
 import com.todayyu.application.info.usecase.GetInfoRegistrationRequestsUsecase;
 import com.todayyu.application.info.usecase.SubmitInfoRegistrationRequestUsecase;

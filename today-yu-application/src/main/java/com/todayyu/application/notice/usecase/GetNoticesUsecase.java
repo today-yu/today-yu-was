@@ -4,7 +4,7 @@ import com.todayyu.application.common.annotation.Usecase;
 import com.todayyu.application.common.dto.CursorResult;
 import com.todayyu.application.notice.dto.query.GetNoticesQuery;
 import com.todayyu.application.notice.dto.result.NoticeSummaryResult;
-import com.todayyu.application.notice.port.dto.NoticeCursor;
+import com.todayyu.application.notice.dto.NoticeCursor;
 import com.todayyu.application.notice.port.dto.NoticeSummaryView;
 import com.todayyu.application.notice.port.read.ReadNoticePort;
 import lombok.RequiredArgsConstructor;
@@ -46,9 +46,13 @@ public class GetNoticesUsecase {
                 .toList();
         
         NoticeCursor nextCursor = hasNext
-                ? NoticeCursor.from(contents.get(contents.size() - 1))
+                ? nextCursor(contents.get(contents.size() - 1))
                 : null;
         
         return new CursorResult<>(results, hasNext, nextCursor);
+    }
+    
+    private NoticeCursor nextCursor(NoticeSummaryView lastView) {
+        return new NoticeCursor(lastView.id());
     }
 }
