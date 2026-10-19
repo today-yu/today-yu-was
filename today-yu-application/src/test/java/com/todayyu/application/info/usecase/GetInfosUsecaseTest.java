@@ -2,7 +2,7 @@ package com.todayyu.application.info.usecase;
 
 import com.todayyu.application.common.dto.CursorResult;
 import com.todayyu.application.info.dto.query.GetInfosQuery;
-import com.todayyu.application.info.port.dto.InfoCursor;
+import com.todayyu.application.info.dto.InfoCursor;
 import com.todayyu.application.info.dto.result.InfoSummaryResult;
 import com.todayyu.application.info.port.dto.InfoSortType;
 import com.todayyu.application.info.port.dto.InfoSummaryView;
