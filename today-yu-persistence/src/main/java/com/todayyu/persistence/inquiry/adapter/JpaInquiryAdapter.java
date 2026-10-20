@@ -70,4 +70,16 @@ public class JpaInquiryAdapter implements ReadInquiryPort, SaveInquiryPort {
         
         return inquiryMapper.toDomain(savedJpaEntity);
     }
+    
+    /**
+     * 문의 ID({@link InquiryId})에 해당하는 문의를 삭제하는 메서드
+     *
+     * <p> 해당 문의가 존재하지 않으면 아무것도 하지 않는다. </p>
+     *
+     * @param id 삭제할 문의 ID
+     */
+    @Override
+    public void deleteById(InquiryId id) {
+        inquiryRepository.deleteById(id.getValue());
+    }
 }
