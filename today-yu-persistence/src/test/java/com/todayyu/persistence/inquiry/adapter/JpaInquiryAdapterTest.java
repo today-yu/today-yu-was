@@ -27,9 +27,12 @@ import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertSame;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.then;
+import static org.mockito.Mockito.never;
 
 @ExtendWith(MockitoExtension.class)
 class JpaInquiryAdapterTest {
@@ -105,6 +108,56 @@ class JpaInquiryAdapterTest {
         assertSame(savedInquiry, result);
         assertEquals(new InquiryId(INQUIRY_ID), result.getId());
         then(inquiryRepository).should().save(newJpaEntity);
+    }
+
+    @Test
+    @DisplayName("영속 상태의 JPA 엔티티를 조회해 수정 가능한 필드를 변경하고, 도메인 엔티티로 변환해 반환한다")
+    void update() {
+        // given
+        String newContactEmail = "new@yu.ac.kr";
+        String newTitle = "수정된 문의 제목";
+        String newContent = "수정된 문의 내용";
+        LocalDateTime updatedAt = LocalDateTime.of(2026, 10, 2, 9, 0);
+        Inquiry updatedInquiry = Inquiry.withId(
+                new InquiryId(INQUIRY_ID),
+                new MemberId(MEMBER_ID),
+                new Email(newContactEmail),
+                InquiryStatus.WAITING,
+                new InquiryTitle(newTitle),
+                new InquiryContent(newContent),
+                CREATED_AT,
+                updatedAt,
+                null
+        );
+        InquiryJpaEntity jpaEntity = waitingJpaEntity(INQUIRY_ID);
+
+        given(inquiryRepository.findById(INQUIRY_ID)).willReturn(Optional.of(jpaEntity));
+        given(inquiryMapper.toDomain(jpaEntity)).willReturn(updatedInquiry);
+
+        // when
+        Inquiry result = inquiryAdapter.update(updatedInquiry);
+
+        // then
+        assertSame(updatedInquiry, result);
+        assertEquals(newContactEmail, jpaEntity.getContactEmail());
+        assertEquals(newTitle, jpaEntity.getTitle());
+        assertEquals(newContent, jpaEntity.getContent());
+        assertEquals(updatedAt, jpaEntity.getUpdatedAt());
+        assertEquals(MEMBER_ID, jpaEntity.getMemberId());
+        assertEquals(InquiryStatus.WAITING, jpaEntity.getStatus());
+        assertEquals(CREATED_AT, jpaEntity.getCreatedAt());
+        then(inquiryRepository).should(never()).save(any());
+    }
+
+    @Test
+    @DisplayName("수정할 문의가 존재하지 않으면 IllegalStateException이 발생하고 변환하지 않는다")
+    void updateWithNotExistingInquiry() {
+        // given
+        given(inquiryRepository.findById(INQUIRY_ID)).willReturn(Optional.empty());
+
+        // when & then
+        assertThrows(IllegalStateException.class, () -> inquiryAdapter.update(waitingInquiry(INQUIRY_ID)));
+        then(inquiryMapper).shouldHaveNoInteractions();
     }
 
     @Test
