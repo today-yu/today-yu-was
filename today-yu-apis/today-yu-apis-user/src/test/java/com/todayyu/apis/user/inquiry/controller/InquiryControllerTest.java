@@ -3,12 +3,18 @@ package com.todayyu.apis.user.inquiry.controller;
 import com.todayyu.apis.common.exception.GlobalExceptionHandler;
 import com.todayyu.apis.common.security.principal.CustomUserDetails;
 import com.todayyu.application.inquiry.dto.command.SubmitInquiryCommand;
+import com.todayyu.application.inquiry.dto.query.GetInquiryDetailQuery;
+import com.todayyu.application.inquiry.dto.result.InquiryDetailResult;
 import com.todayyu.application.inquiry.dto.result.SubmitInquiryResult;
+import com.todayyu.application.inquiry.error.BusinessInquiryErrorType;
+import com.todayyu.application.inquiry.usecase.GetInquiryDetailUsecase;
 import com.todayyu.application.inquiry.usecase.SubmitInquiryUsecase;
 import com.todayyu.common.error.CommonErrorType;
+import com.todayyu.common.exception.CustomException;
 import com.todayyu.domain.common.vo.Email;
 import com.todayyu.domain.inquiry.vo.InquiryContent;
 import com.todayyu.domain.inquiry.vo.InquiryId;
+import com.todayyu.domain.inquiry.vo.InquiryStatus;
 import com.todayyu.domain.inquiry.vo.InquiryTitle;
 import com.todayyu.domain.member.vo.MemberId;
 import com.todayyu.domain.member.vo.Role;
@@ -31,11 +37,15 @@ import org.springframework.security.web.method.annotation.AuthenticationPrincipa
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
+import java.time.LocalDateTime;
+
+import static org.hamcrest.Matchers.nullValue;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.then;
 import static org.mockito.Mockito.never;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -43,11 +53,18 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @ExtendWith(MockitoExtension.class)
 class InquiryControllerTest {
     private static final String SUBMIT_URL = "/api/v1/inquiries";
+    private static final String DETAIL_URL = "/api/v1/inquiries/{inquiryId}";
     private static final Long MEMBER_ID = 1L;
     private static final Long INQUIRY_ID = 10L;
     private static final String CONTACT_EMAIL = "member@example.com";
     private static final String TITLE = "문의 제목";
     private static final String CONTENT = "문의 내용";
+    private static final LocalDateTime CREATED_AT = LocalDateTime.of(2026, 10, 1, 9, 0, 30);
+    private static final LocalDateTime UPDATED_AT = LocalDateTime.of(2026, 10, 2, 9, 0, 30);
+    private static final LocalDateTime ANSWERED_AT = LocalDateTime.of(2026, 10, 3, 9, 0, 30);
+
+    @Mock
+    private GetInquiryDetailUsecase getInquiryDetailUsecase;
 
     @Mock
     private SubmitInquiryUsecase submitInquiryUsecase;
@@ -57,6 +74,9 @@ class InquiryControllerTest {
 
     @Captor
     private ArgumentCaptor<SubmitInquiryCommand> commandCaptor;
+
+    @Captor
+    private ArgumentCaptor<GetInquiryDetailQuery> detailQueryCaptor;
 
     private MockMvc mockMvc;
 
@@ -76,6 +96,75 @@ class InquiryControllerTest {
     @AfterEach
     void tearDown() {
         SecurityContextHolder.clearContext();
+    }
+
+    @Test
+    @DisplayName("문의 상세 조회 요청 시 문의 ID와 인증된 회원 ID로 조회를 요청하고, 상세 내용을 원시값으로 변환해 반환한다")
+    void getInquiryDetail() throws Exception {
+        // given
+        given(getInquiryDetailUsecase.getInquiryDetail(any()))
+                .willReturn(detailResult(InquiryStatus.WAITING, null));
+
+        // when
+        mockMvc.perform(get(DETAIL_URL, INQUIRY_ID))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.message").value("문의 상세 조회에 성공하였습니다."))
+                .andExpect(jsonPath("$.data.id").value(INQUIRY_ID))
+                .andExpect(jsonPath("$.data.memberId").value(MEMBER_ID))
+                .andExpect(jsonPath("$.data.contactEmail").value(CONTACT_EMAIL))
+                .andExpect(jsonPath("$.data.status").value(InquiryStatus.WAITING.name()))
+                .andExpect(jsonPath("$.data.title").value(TITLE))
+                .andExpect(jsonPath("$.data.content").value(CONTENT))
+                .andExpect(jsonPath("$.data.createdAt").value(CREATED_AT.toString()))
+                .andExpect(jsonPath("$.data.updatedAt").value(UPDATED_AT.toString()))
+                .andExpect(jsonPath("$.data.answeredAt").value(nullValue()));
+
+        // then
+        then(getInquiryDetailUsecase).should().getInquiryDetail(detailQueryCaptor.capture());
+        assertEquals(new InquiryId(INQUIRY_ID), detailQueryCaptor.getValue().inquiryId());
+        assertEquals(new MemberId(MEMBER_ID), detailQueryCaptor.getValue().memberId());
+    }
+
+    @Test
+    @DisplayName("답변 완료(ANSWERED)된 문의를 조회하면 답변 시각을 함께 반환한다")
+    void getAnsweredInquiryDetail() throws Exception {
+        // given
+        given(getInquiryDetailUsecase.getInquiryDetail(any()))
+                .willReturn(detailResult(InquiryStatus.ANSWERED, ANSWERED_AT));
+
+        // when & then
+        mockMvc.perform(get(DETAIL_URL, INQUIRY_ID))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.status").value(InquiryStatus.ANSWERED.name()))
+                .andExpect(jsonPath("$.data.answeredAt").value(ANSWERED_AT.toString()));
+    }
+
+    @Test
+    @DisplayName("존재하지 않는 문의를 조회하면 문의 없음 에러를 응답한다")
+    void getInquiryDetailWithNotExistingInquiry() throws Exception {
+        // given
+        given(getInquiryDetailUsecase.getInquiryDetail(any()))
+                .willThrow(new CustomException(BusinessInquiryErrorType.NOT_FOUND));
+
+        // when & then
+        mockMvc.perform(get(DETAIL_URL, INQUIRY_ID))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.errorCode").value(BusinessInquiryErrorType.NOT_FOUND.getErrorCode()))
+                .andExpect(jsonPath("$.message").value(BusinessInquiryErrorType.NOT_FOUND.getMessage()));
+    }
+
+    @Test
+    @DisplayName("작성한 회원 본인이 아닌 회원이 조회하면 접근 권한 없음 에러를 응답한다")
+    void getInquiryDetailByOtherMember() throws Exception {
+        // given
+        given(getInquiryDetailUsecase.getInquiryDetail(any()))
+                .willThrow(new CustomException(BusinessInquiryErrorType.FORBIDDEN));
+
+        // when & then
+        mockMvc.perform(get(DETAIL_URL, INQUIRY_ID))
+                .andExpect(status().isForbidden())
+                .andExpect(jsonPath("$.errorCode").value(BusinessInquiryErrorType.FORBIDDEN.getErrorCode()))
+                .andExpect(jsonPath("$.message").value(BusinessInquiryErrorType.FORBIDDEN.getMessage()));
     }
 
     @Test
@@ -183,6 +272,20 @@ class InquiryControllerTest {
 
         // then
         then(submitInquiryUsecase).should(never()).submit(any());
+    }
+
+    private InquiryDetailResult detailResult(InquiryStatus status, LocalDateTime answeredAt) {
+        return new InquiryDetailResult(
+                new InquiryId(INQUIRY_ID),
+                new MemberId(MEMBER_ID),
+                new Email(CONTACT_EMAIL),
+                status,
+                new InquiryTitle(TITLE),
+                new InquiryContent(CONTENT),
+                CREATED_AT,
+                UPDATED_AT,
+                answeredAt
+        );
     }
 
     private String body(String contactEmail, String title, String content) {
