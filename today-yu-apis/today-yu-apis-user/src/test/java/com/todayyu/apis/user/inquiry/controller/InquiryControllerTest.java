@@ -6,6 +6,7 @@ import com.todayyu.application.common.dto.CursorResult;
 import com.todayyu.application.inquiry.dto.InquiryCursor;
 import com.todayyu.application.inquiry.dto.command.DeleteInquiryCommand;
 import com.todayyu.application.inquiry.dto.command.SubmitInquiryCommand;
+import com.todayyu.application.inquiry.dto.command.UpdateInquiryCommand;
 import com.todayyu.application.inquiry.dto.query.GetInquiriesQuery;
 import com.todayyu.application.inquiry.dto.query.GetInquiryDetailQuery;
 import com.todayyu.application.inquiry.dto.result.InquiryDetailResult;
@@ -16,9 +17,11 @@ import com.todayyu.application.inquiry.usecase.DeleteInquiryUsecase;
 import com.todayyu.application.inquiry.usecase.GetInquiriesUsecase;
 import com.todayyu.application.inquiry.usecase.GetInquiryDetailUsecase;
 import com.todayyu.application.inquiry.usecase.SubmitInquiryUsecase;
+import com.todayyu.application.inquiry.usecase.UpdateInquiryUsecase;
 import com.todayyu.common.error.CommonErrorType;
 import com.todayyu.common.exception.CustomException;
 import com.todayyu.domain.common.vo.Email;
+import com.todayyu.domain.inquiry.error.InquiryErrorType;
 import com.todayyu.domain.inquiry.vo.InquiryContent;
 import com.todayyu.domain.inquiry.vo.InquiryId;
 import com.todayyu.domain.inquiry.vo.InquiryStatus;
@@ -58,6 +61,7 @@ import static org.mockito.Mockito.never;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -66,6 +70,7 @@ class InquiryControllerTest {
     private static final String LIST_URL = "/api/v1/inquiries";
     private static final String SUBMIT_URL = "/api/v1/inquiries";
     private static final String DETAIL_URL = "/api/v1/inquiries/{inquiryId}";
+    private static final String UPDATE_URL = "/api/v1/inquiries/{inquiryId}";
     private static final String DELETE_URL = "/api/v1/inquiries/{inquiryId}";
     private static final Long MEMBER_ID = 1L;
     private static final Long INQUIRY_ID = 10L;
@@ -89,6 +94,9 @@ class InquiryControllerTest {
     private SubmitInquiryUsecase submitInquiryUsecase;
 
     @Mock
+    private UpdateInquiryUsecase updateInquiryUsecase;
+
+    @Mock
     private DeleteInquiryUsecase deleteInquiryUsecase;
 
     @InjectMocks
@@ -102,6 +110,9 @@ class InquiryControllerTest {
 
     @Captor
     private ArgumentCaptor<GetInquiriesQuery> inquiriesQueryCaptor;
+
+    @Captor
+    private ArgumentCaptor<UpdateInquiryCommand> updateCommandCaptor;
 
     @Captor
     private ArgumentCaptor<DeleteInquiryCommand> deleteCommandCaptor;
@@ -376,6 +387,124 @@ class InquiryControllerTest {
 
         // then
         then(submitInquiryUsecase).should(never()).submit(any());
+    }
+
+    @Test
+    @DisplayName("문의 수정 요청 시 문의 ID와 인증된 회원 ID, 요청 본문으로 수정을 요청하고, 성공 메시지를 반환한다")
+    void updateInquiry() throws Exception {
+        // when
+        mockMvc.perform(put(UPDATE_URL, INQUIRY_ID)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(body(CONTACT_EMAIL, TITLE, CONTENT)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.message").value("문의 수정에 성공하였습니다."))
+                .andExpect(jsonPath("$.data").value(nullValue()));
+
+        // then
+        then(updateInquiryUsecase).should().update(updateCommandCaptor.capture());
+        UpdateInquiryCommand command = updateCommandCaptor.getValue();
+        assertEquals(new InquiryId(INQUIRY_ID), command.id());
+        assertEquals(new MemberId(MEMBER_ID), command.memberId());
+        assertEquals(new Email(CONTACT_EMAIL), command.contactEmail());
+        assertEquals(new InquiryTitle(TITLE), command.title());
+        assertEquals(new InquiryContent(CONTENT), command.content());
+    }
+
+    @Test
+    @DisplayName("요청 본문에 회원 ID가 포함되어도 무시하고 인증된 회원 ID로 수정을 요청한다")
+    void updateInquiryIgnoresMemberIdInBody() throws Exception {
+        // when
+        mockMvc.perform(put(UPDATE_URL, INQUIRY_ID)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {"memberId": 999, "contactEmail": "%s", "title": "%s", "content": "%s"}
+                                """.formatted(CONTACT_EMAIL, TITLE, CONTENT)))
+                .andExpect(status().isOk());
+
+        // then
+        then(updateInquiryUsecase).should().update(updateCommandCaptor.capture());
+        assertEquals(new MemberId(MEMBER_ID), updateCommandCaptor.getValue().memberId());
+    }
+
+    @Test
+    @DisplayName("수정 요청에 필수 값이 모두 없으면 각 필드의 유효성 검증 에러를 응답하고 수정하지 않는다")
+    void updateInquiryWithoutRequiredFields() throws Exception {
+        // given & when
+        mockMvc.perform(put(UPDATE_URL, INQUIRY_ID)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{}"))
+                .andExpect(status().isUnprocessableContent())
+                .andExpect(jsonPath("$.errorCode").value(CommonErrorType.VALIDATION_ERROR.getErrorCode()))
+                .andExpect(jsonPath("$.errors.contactEmail").value("이메일은 비어있을 수 없습니다."))
+                .andExpect(jsonPath("$.errors.title").value("제목은 비어있을 수 없습니다."))
+                .andExpect(jsonPath("$.errors.content").value("내용은 비어있을 수 없습니다."));
+
+        // then
+        then(updateInquiryUsecase).should(never()).update(any());
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {"invalid-email", "user@localhost", "user@yu..ac.kr"})
+    @DisplayName("수정할 연락용 이메일 형식이 Email VO의 형식과 다르면 유효성 검증 에러를 응답하고 수정하지 않는다")
+    void updateInquiryWithInvalidContactEmail(String contactEmail) throws Exception {
+        // given & when
+        mockMvc.perform(put(UPDATE_URL, INQUIRY_ID)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(body(contactEmail, TITLE, CONTENT)))
+                .andExpect(status().isUnprocessableContent())
+                .andExpect(jsonPath("$.errorCode").value(CommonErrorType.VALIDATION_ERROR.getErrorCode()))
+                .andExpect(jsonPath("$.errors.contactEmail").value("이메일 양식이 잘못되었습니다."));
+
+        // then
+        then(updateInquiryUsecase).should(never()).update(any());
+    }
+
+    @Test
+    @DisplayName("존재하지 않는 문의를 수정하면 문의 없음 에러를 응답한다")
+    void updateInquiryWithNotExistingInquiry() throws Exception {
+        // given
+        willThrow(new CustomException(BusinessInquiryErrorType.NOT_FOUND))
+                .given(updateInquiryUsecase).update(any());
+
+        // when & then
+        mockMvc.perform(put(UPDATE_URL, INQUIRY_ID)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(body(CONTACT_EMAIL, TITLE, CONTENT)))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.errorCode").value(BusinessInquiryErrorType.NOT_FOUND.getErrorCode()))
+                .andExpect(jsonPath("$.message").value(BusinessInquiryErrorType.NOT_FOUND.getMessage()));
+    }
+
+    @Test
+    @DisplayName("작성한 회원 본인이 아닌 회원이 수정하면 접근 권한 없음 에러를 응답한다")
+    void updateInquiryByOtherMember() throws Exception {
+        // given
+        willThrow(new CustomException(BusinessInquiryErrorType.FORBIDDEN))
+                .given(updateInquiryUsecase).update(any());
+
+        // when & then
+        mockMvc.perform(put(UPDATE_URL, INQUIRY_ID)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(body(CONTACT_EMAIL, TITLE, CONTENT)))
+                .andExpect(status().isForbidden())
+                .andExpect(jsonPath("$.errorCode").value(BusinessInquiryErrorType.FORBIDDEN.getErrorCode()))
+                .andExpect(jsonPath("$.message").value(BusinessInquiryErrorType.FORBIDDEN.getMessage()));
+    }
+
+    @Test
+    @DisplayName("답변 대기 중 상태가 아닌 문의를 수정하면 수정 불가 에러를 응답한다")
+    void updateAnsweredInquiry() throws Exception {
+        // given
+        willThrow(new CustomException(InquiryErrorType.FAIL_UPDATE))
+                .given(updateInquiryUsecase).update(any());
+
+        // when & then
+        mockMvc.perform(put(UPDATE_URL, INQUIRY_ID)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(body(CONTACT_EMAIL, TITLE, CONTENT)))
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.errorCode").value(InquiryErrorType.FAIL_UPDATE.getErrorCode()))
+                .andExpect(jsonPath("$.message").value(InquiryErrorType.FAIL_UPDATE.getMessage()));
     }
 
     @Test
