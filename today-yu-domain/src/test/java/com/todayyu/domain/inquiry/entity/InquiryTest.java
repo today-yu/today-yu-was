@@ -17,9 +17,11 @@ import java.util.stream.Stream;
 
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class InquiryTest {
     private static final InquiryId INQUIRY_ID = new InquiryId(1L);
@@ -242,5 +244,25 @@ class InquiryTest {
                 CREATED_AT, UPDATED_AT, null);
 
         assertNotEquals(inquiry, other);
+    }
+
+    @Test
+    @DisplayName("답변 대기 중 상태의 문의는 삭제할 수 있다")
+    void canDeleteWhenWaiting() {
+        Inquiry inquiry = Inquiry.withId(
+                INQUIRY_ID, MEMBER_ID, CONTACT_EMAIL, InquiryStatus.WAITING, TITLE, CONTENT,
+                CREATED_AT, UPDATED_AT, null);
+
+        assertTrue(inquiry.canDelete());
+    }
+
+    @Test
+    @DisplayName("답변 완료 상태의 문의는 삭제할 수 없다")
+    void cannotDeleteWhenAnswered() {
+        Inquiry inquiry = Inquiry.withId(
+                INQUIRY_ID, MEMBER_ID, CONTACT_EMAIL, InquiryStatus.ANSWERED, TITLE, CONTENT,
+                CREATED_AT, UPDATED_AT, ANSWERED_AT);
+
+        assertFalse(inquiry.canDelete());
     }
 }

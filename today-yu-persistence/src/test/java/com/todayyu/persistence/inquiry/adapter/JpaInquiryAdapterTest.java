@@ -149,6 +149,16 @@ class JpaInquiryAdapterTest {
         then(inquiryRepository).should().findByCursor(MEMBER_ID, null, 3);
     }
 
+    @Test
+    @DisplayName("문의 ID 값으로 문의를 삭제한다")
+    void deleteById() {
+        // when
+        inquiryAdapter.deleteById(new InquiryId(INQUIRY_ID));
+
+        // then
+        then(inquiryRepository).should().deleteById(INQUIRY_ID);
+    }
+
     private InquiryJpaEntity waitingJpaEntity(Long inquiryId) {
         InquiryJpaEntity jpaEntity = InquiryJpaEntity.builder()
                 .memberId(MEMBER_ID)

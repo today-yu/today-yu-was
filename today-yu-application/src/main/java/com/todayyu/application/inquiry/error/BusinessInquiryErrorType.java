@@ -13,6 +13,7 @@ import lombok.RequiredArgsConstructor;
 public enum BusinessInquiryErrorType implements BaseErrorType {
     NOT_FOUND(ErrorCategory.NOT_FOUND, "INQUIRY-1001","문의가 존재하지 않습니다."),
     FORBIDDEN(ErrorCategory.FORBIDDEN, "INQUIRY-1002","문의에 접근 권한이 없습니다."),
+    FAIL_DELETE(ErrorCategory.CONFLICT, "INQUIRY-1003","답변 대기 중 상태의 문의만 삭제할 수 있습니다."),
     ;
     
     private final ErrorCategory category;

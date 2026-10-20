@@ -11,10 +11,12 @@ import com.todayyu.apis.user.inquiry.dto.response.InquirySummaryResponse;
 import com.todayyu.apis.user.inquiry.dto.response.SubmitInquiryResponse;
 import com.todayyu.application.common.dto.CursorResult;
 import com.todayyu.application.inquiry.dto.InquiryCursor;
+import com.todayyu.application.inquiry.dto.command.DeleteInquiryCommand;
 import com.todayyu.application.inquiry.dto.query.GetInquiryDetailQuery;
 import com.todayyu.application.inquiry.dto.result.InquiryDetailResult;
 import com.todayyu.application.inquiry.dto.result.InquirySummaryResult;
 import com.todayyu.application.inquiry.dto.result.SubmitInquiryResult;
+import com.todayyu.application.inquiry.usecase.DeleteInquiryUsecase;
 import com.todayyu.application.inquiry.usecase.GetInquiriesUsecase;
 import com.todayyu.application.inquiry.usecase.GetInquiryDetailUsecase;
 import com.todayyu.application.inquiry.usecase.SubmitInquiryUsecase;
@@ -24,6 +26,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -38,6 +41,7 @@ public class InquiryController {
     private final GetInquiriesUsecase getInquiriesUsecase;
     private final GetInquiryDetailUsecase getInquiryDetailUsecase;
     private final SubmitInquiryUsecase submitInquiryUsecase;
+    private final DeleteInquiryUsecase deleteInquiryUsecase;
     
     @GetMapping
     public ResponseEntity<?> getInquiries(
@@ -79,5 +83,15 @@ public class InquiryController {
                         "문의 작성에 성공하였습니다.",
                         new SubmitInquiryResponse(result.id().getValue())
                 ));
+    }
+    
+    @DeleteMapping("/{inquiryId}")
+    public ResponseEntity<?> delete(
+            @PathVariable(name = "inquiryId") Long inquiryId,
+            @AuthenticationPrincipal CustomUserDetails userDetails
+    ) {
+        deleteInquiryUsecase.delete(new DeleteInquiryCommand(new InquiryId(inquiryId), userDetails.getMemberId()));
+        
+        return ResponseEntity.ok(SuccessResponse.from("문의 삭제에 성공하였습니다."));
     }
 }

@@ -187,4 +187,15 @@ public class Inquiry {
     public boolean isAuthor(MemberId memberId) {
         return this.memberId.equals(memberId);
     }
+    
+    /**
+     * 문의를 삭제할 수 있는지 확인하는 메서드
+     *
+     * <p> 답변 대기 중({@link InquiryStatus#WAITING}) 상태의 문의만 삭제할 수 있다. </p>
+     *
+     * @return 문의 삭제 가능 여부
+     */
+    public boolean canDelete() {
+        return status == InquiryStatus.WAITING;
+    }
 }
