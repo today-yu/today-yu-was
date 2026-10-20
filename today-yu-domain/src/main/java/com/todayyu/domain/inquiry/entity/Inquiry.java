@@ -1,6 +1,8 @@
 package com.todayyu.domain.inquiry.entity;
 
+import com.todayyu.common.exception.CustomException;
 import com.todayyu.domain.common.vo.Email;
+import com.todayyu.domain.inquiry.error.InquiryErrorType;
 import com.todayyu.domain.inquiry.vo.InquiryContent;
 import com.todayyu.domain.inquiry.vo.InquiryId;
 import com.todayyu.domain.inquiry.vo.InquiryStatus;
@@ -196,6 +198,17 @@ public class Inquiry {
      * @return 문의 삭제 가능 여부
      */
     public boolean canDelete() {
+        return status == InquiryStatus.WAITING;
+    }
+    
+    /**
+     * 문의 수정 가능 여부를 확인하는 메서드
+     *
+     * <p> 답변 대기 중({@link InquiryStatus#WAITING}) 상태의 문의만 수정할 수 있다. </p>
+     *
+     * @return 문의 수정 가능 여부
+     */
+    public boolean canUpdate() {
         return status == InquiryStatus.WAITING;
     }
 }
