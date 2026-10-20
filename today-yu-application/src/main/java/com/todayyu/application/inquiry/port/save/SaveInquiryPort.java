@@ -5,5 +5,6 @@ import com.todayyu.domain.inquiry.vo.InquiryId;
 
 public interface SaveInquiryPort {
     Inquiry save(Inquiry inquiry);
+    Inquiry update(Inquiry inquiry);
     void deleteById(InquiryId id);
 }
