@@ -12,6 +12,7 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public enum BusinessMemberErrorType implements BaseErrorType {
     DUPLICATED_EMAIL(ErrorCategory.CONFLICT, "MEMBER-1001", "이미 가입된 이메일입니다."),
+    NOT_FOUND(ErrorCategory.NOT_FOUND, "MEMBER-1002", "존재하지 않는 회원입니다."),
     ;
     
     private final ErrorCategory category;
