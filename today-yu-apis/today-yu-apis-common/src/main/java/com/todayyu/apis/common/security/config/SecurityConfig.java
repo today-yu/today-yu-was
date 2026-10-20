@@ -39,7 +39,8 @@ public class SecurityConfig {
             PathPatternRequestMatcher.pathPattern("/api/v1/auth/sign-out"),
             PathPatternRequestMatcher.pathPattern("/api/v1/infos/**"),
             PathPatternRequestMatcher.pathPattern("/api/v1/notices/**"),
-            PathPatternRequestMatcher.pathPattern("/api/v1/inquiries/**")
+            PathPatternRequestMatcher.pathPattern("/api/v1/inquiries/**"),
+            PathPatternRequestMatcher.pathPattern("/api/v1/members/**")
     );
     
     @Bean
