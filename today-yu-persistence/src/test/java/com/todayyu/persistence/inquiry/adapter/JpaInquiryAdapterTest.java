@@ -1,0 +1,101 @@
+package com.todayyu.persistence.inquiry.adapter;
+
+import com.todayyu.domain.common.vo.Email;
+import com.todayyu.domain.inquiry.entity.Inquiry;
+import com.todayyu.domain.inquiry.vo.InquiryContent;
+import com.todayyu.domain.inquiry.vo.InquiryId;
+import com.todayyu.domain.inquiry.vo.InquiryStatus;
+import com.todayyu.domain.inquiry.vo.InquiryTitle;
+import com.todayyu.domain.member.vo.MemberId;
+import com.todayyu.persistence.inquiry.entity.InquiryJpaEntity;
+import com.todayyu.persistence.inquiry.mapper.InquiryMapper;
+import com.todayyu.persistence.inquiry.repository.InquiryJpaRepository;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.test.util.ReflectionTestUtils;
+
+import java.time.LocalDateTime;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertSame;
+import static org.mockito.BDDMockito.given;
+import static org.mockito.BDDMockito.then;
+
+@ExtendWith(MockitoExtension.class)
+class JpaInquiryAdapterTest {
+    private static final Long INQUIRY_ID = 10L;
+    private static final Long MEMBER_ID = 100L;
+    private static final String CONTACT_EMAIL = "member@yu.ac.kr";
+    private static final String TITLE = "문의 제목";
+    private static final String CONTENT = "문의 내용";
+    private static final LocalDateTime CREATED_AT = LocalDateTime.of(2026, 10, 1, 9, 0);
+
+    @Mock
+    private InquiryJpaRepository inquiryRepository;
+
+    @Mock
+    private InquiryMapper inquiryMapper;
+
+    @InjectMocks
+    private JpaInquiryAdapter inquiryAdapter;
+
+    @Test
+    @DisplayName("문의를 JPA 엔티티로 변환해 저장하고, 저장된 JPA 엔티티를 도메인 엔티티로 변환해 반환한다")
+    void save() {
+        // given
+        Inquiry newInquiry = Inquiry.withoutId(
+                new MemberId(MEMBER_ID),
+                new Email(CONTACT_EMAIL),
+                new InquiryTitle(TITLE),
+                new InquiryContent(CONTENT),
+                CREATED_AT
+        );
+        InquiryJpaEntity newJpaEntity = waitingJpaEntity(null);
+        InquiryJpaEntity savedJpaEntity = waitingJpaEntity(INQUIRY_ID);
+        Inquiry savedInquiry = waitingInquiry(INQUIRY_ID);
+
+        given(inquiryMapper.toJpaEntity(newInquiry)).willReturn(newJpaEntity);
+        given(inquiryRepository.save(newJpaEntity)).willReturn(savedJpaEntity);
+        given(inquiryMapper.toDomain(savedJpaEntity)).willReturn(savedInquiry);
+
+        // when
+        Inquiry result = inquiryAdapter.save(newInquiry);
+
+        // then
+        assertSame(savedInquiry, result);
+        assertEquals(new InquiryId(INQUIRY_ID), result.getId());
+        then(inquiryRepository).should().save(newJpaEntity);
+    }
+
+    private InquiryJpaEntity waitingJpaEntity(Long inquiryId) {
+        InquiryJpaEntity jpaEntity = InquiryJpaEntity.builder()
+                .memberId(MEMBER_ID)
+                .contactEmail(CONTACT_EMAIL)
+                .status(InquiryStatus.WAITING)
+                .title(TITLE)
+                .content(CONTENT)
+                .createdAt(CREATED_AT)
+                .updatedAt(CREATED_AT)
+                .build();
+        ReflectionTestUtils.setField(jpaEntity, "id", inquiryId);
+        return jpaEntity;
+    }
+
+    private Inquiry waitingInquiry(Long inquiryId) {
+        return Inquiry.withId(
+                new InquiryId(inquiryId),
+                new MemberId(MEMBER_ID),
+                new Email(CONTACT_EMAIL),
+                InquiryStatus.WAITING,
+                new InquiryTitle(TITLE),
+                new InquiryContent(CONTENT),
+                CREATED_AT,
+                CREATED_AT,
+                null
+        );
+    }
+}
