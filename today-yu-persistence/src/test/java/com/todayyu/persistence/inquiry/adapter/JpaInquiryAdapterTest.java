@@ -19,9 +19,11 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.test.util.ReflectionTestUtils;
 
 import java.time.LocalDateTime;
+import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertSame;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.then;
 
@@ -42,6 +44,36 @@ class JpaInquiryAdapterTest {
 
     @InjectMocks
     private JpaInquiryAdapter inquiryAdapter;
+
+    @Test
+    @DisplayName("문의 ID에 해당하는 문의가 존재하면 도메인 엔티티로 변환해 반환한다")
+    void readById() {
+        // given
+        InquiryJpaEntity jpaEntity = waitingJpaEntity(INQUIRY_ID);
+        Inquiry inquiry = waitingInquiry(INQUIRY_ID);
+        given(inquiryRepository.findById(INQUIRY_ID)).willReturn(Optional.of(jpaEntity));
+        given(inquiryMapper.toDomain(jpaEntity)).willReturn(inquiry);
+
+        // when
+        Optional<Inquiry> result = inquiryAdapter.readById(new InquiryId(INQUIRY_ID));
+
+        // then
+        assertEquals(Optional.of(inquiry), result);
+    }
+
+    @Test
+    @DisplayName("문의 ID에 해당하는 문의가 존재하지 않으면 빈 Optional을 반환하고 변환하지 않는다")
+    void readByIdWithNotExistingInquiry() {
+        // given
+        given(inquiryRepository.findById(INQUIRY_ID)).willReturn(Optional.empty());
+
+        // when
+        Optional<Inquiry> result = inquiryAdapter.readById(new InquiryId(INQUIRY_ID));
+
+        // then
+        assertTrue(result.isEmpty());
+        then(inquiryMapper).shouldHaveNoInteractions();
+    }
 
     @Test
     @DisplayName("문의를 JPA 엔티티로 변환해 저장하고, 저장된 JPA 엔티티를 도메인 엔티티로 변환해 반환한다")
