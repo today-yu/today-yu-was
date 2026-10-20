@@ -177,4 +177,14 @@ public class Inquiry {
             throw new IllegalArgumentException("문의 상태와 답변 시각 상태가 일치하지 않습니다.");
         }
     }
+
+    /**
+     * 주어진 회원이 문의를 작성한 회원인지 확인하는 메서드
+     *
+     * @param memberId 확인할 회원 ID
+     * @return 문의 작성자 여부
+     */
+    public boolean isAuthor(MemberId memberId) {
+        return this.memberId.equals(memberId);
+    }
 }
