@@ -22,7 +22,7 @@ import java.util.Optional;
 public class JpaInquiryAdapter implements ReadInquiryPort, SaveInquiryPort {
     private final InquiryJpaRepository inquiryRepository;
     private final InquiryMapper inquiryMapper;
-
+    
     /**
      * 문의 ID({@link InquiryId})를 통해 문의({@link Inquiry})를 조회하는 메서드
      *
@@ -69,6 +69,30 @@ public class JpaInquiryAdapter implements ReadInquiryPort, SaveInquiryPort {
         InquiryJpaEntity savedJpaEntity = inquiryRepository.save(inquiryMapper.toJpaEntity(inquiry));
         
         return inquiryMapper.toDomain(savedJpaEntity);
+    }
+
+    /**
+     * 문의의 연락용 이메일, 제목, 내용, 수정 시각을 수정하는 메서드
+     *
+     * <p> 영속 상태의 {@link InquiryJpaEntity}를 조회해 필드를 변경하며, 트랜잭션 커밋 시 변경 감지를 통해 반영된다. </p>
+     *
+     * @param inquiry 수정된 문의 객체
+     * @return 수정된 문의 객체
+     * @throws IllegalStateException 문의 ID에 해당하는 문의가 존재하지 않는 경우
+     */
+    @Override
+    public Inquiry update(Inquiry inquiry) {
+        InquiryJpaEntity jpaEntity = inquiryRepository.findById(inquiry.getId().getValue())
+                .orElseThrow(() -> new IllegalStateException("문의가 존재하지 않습니다. inquiryId = " + inquiry.getId().getValue()));
+        
+        jpaEntity.update(
+                inquiry.getContactEmail().getValue(),
+                inquiry.getTitle().getValue(),
+                inquiry.getContent().getValue(),
+                inquiry.getUpdatedAt()
+        );
+        
+        return inquiryMapper.toDomain(jpaEntity);
     }
     
     /**
