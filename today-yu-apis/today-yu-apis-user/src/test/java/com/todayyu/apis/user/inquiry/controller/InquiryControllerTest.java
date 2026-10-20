@@ -4,6 +4,7 @@ import com.todayyu.apis.common.exception.GlobalExceptionHandler;
 import com.todayyu.apis.common.security.principal.CustomUserDetails;
 import com.todayyu.application.common.dto.CursorResult;
 import com.todayyu.application.inquiry.dto.InquiryCursor;
+import com.todayyu.application.inquiry.dto.command.DeleteInquiryCommand;
 import com.todayyu.application.inquiry.dto.command.SubmitInquiryCommand;
 import com.todayyu.application.inquiry.dto.query.GetInquiriesQuery;
 import com.todayyu.application.inquiry.dto.query.GetInquiryDetailQuery;
@@ -11,6 +12,7 @@ import com.todayyu.application.inquiry.dto.result.InquiryDetailResult;
 import com.todayyu.application.inquiry.dto.result.InquirySummaryResult;
 import com.todayyu.application.inquiry.dto.result.SubmitInquiryResult;
 import com.todayyu.application.inquiry.error.BusinessInquiryErrorType;
+import com.todayyu.application.inquiry.usecase.DeleteInquiryUsecase;
 import com.todayyu.application.inquiry.usecase.GetInquiriesUsecase;
 import com.todayyu.application.inquiry.usecase.GetInquiryDetailUsecase;
 import com.todayyu.application.inquiry.usecase.SubmitInquiryUsecase;
@@ -51,7 +53,9 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.then;
+import static org.mockito.BDDMockito.willThrow;
 import static org.mockito.Mockito.never;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -62,6 +66,7 @@ class InquiryControllerTest {
     private static final String LIST_URL = "/api/v1/inquiries";
     private static final String SUBMIT_URL = "/api/v1/inquiries";
     private static final String DETAIL_URL = "/api/v1/inquiries/{inquiryId}";
+    private static final String DELETE_URL = "/api/v1/inquiries/{inquiryId}";
     private static final Long MEMBER_ID = 1L;
     private static final Long INQUIRY_ID = 10L;
     private static final Long SECOND_INQUIRY_ID = 11L;
@@ -83,6 +88,9 @@ class InquiryControllerTest {
     @Mock
     private SubmitInquiryUsecase submitInquiryUsecase;
 
+    @Mock
+    private DeleteInquiryUsecase deleteInquiryUsecase;
+
     @InjectMocks
     private InquiryController inquiryController;
 
@@ -94,6 +102,9 @@ class InquiryControllerTest {
 
     @Captor
     private ArgumentCaptor<GetInquiriesQuery> inquiriesQueryCaptor;
+
+    @Captor
+    private ArgumentCaptor<DeleteInquiryCommand> deleteCommandCaptor;
 
     private MockMvc mockMvc;
 
@@ -365,6 +376,62 @@ class InquiryControllerTest {
 
         // then
         then(submitInquiryUsecase).should(never()).submit(any());
+    }
+
+    @Test
+    @DisplayName("문의 삭제 요청 시 문의 ID와 인증된 회원 ID로 삭제를 요청하고, 성공 메시지를 반환한다")
+    void deleteInquiry() throws Exception {
+        // when
+        mockMvc.perform(delete(DELETE_URL, INQUIRY_ID))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.message").value("문의 삭제에 성공하였습니다."));
+
+        // then
+        then(deleteInquiryUsecase).should().delete(deleteCommandCaptor.capture());
+        assertEquals(new InquiryId(INQUIRY_ID), deleteCommandCaptor.getValue().id());
+        assertEquals(new MemberId(MEMBER_ID), deleteCommandCaptor.getValue().memberId());
+    }
+
+    @Test
+    @DisplayName("존재하지 않는 문의를 삭제하면 문의 없음 에러를 응답한다")
+    void deleteInquiryWithNotExistingInquiry() throws Exception {
+        // given
+        willThrow(new CustomException(BusinessInquiryErrorType.NOT_FOUND))
+                .given(deleteInquiryUsecase).delete(any());
+
+        // when & then
+        mockMvc.perform(delete(DELETE_URL, INQUIRY_ID))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.errorCode").value(BusinessInquiryErrorType.NOT_FOUND.getErrorCode()))
+                .andExpect(jsonPath("$.message").value(BusinessInquiryErrorType.NOT_FOUND.getMessage()));
+    }
+
+    @Test
+    @DisplayName("작성한 회원 본인이 아닌 회원이 삭제하면 접근 권한 없음 에러를 응답한다")
+    void deleteInquiryByOtherMember() throws Exception {
+        // given
+        willThrow(new CustomException(BusinessInquiryErrorType.FORBIDDEN))
+                .given(deleteInquiryUsecase).delete(any());
+
+        // when & then
+        mockMvc.perform(delete(DELETE_URL, INQUIRY_ID))
+                .andExpect(status().isForbidden())
+                .andExpect(jsonPath("$.errorCode").value(BusinessInquiryErrorType.FORBIDDEN.getErrorCode()))
+                .andExpect(jsonPath("$.message").value(BusinessInquiryErrorType.FORBIDDEN.getMessage()));
+    }
+
+    @Test
+    @DisplayName("답변 대기 중 상태가 아닌 문의를 삭제하면 삭제 불가 에러를 응답한다")
+    void deleteAnsweredInquiry() throws Exception {
+        // given
+        willThrow(new CustomException(BusinessInquiryErrorType.FAIL_DELETE))
+                .given(deleteInquiryUsecase).delete(any());
+
+        // when & then
+        mockMvc.perform(delete(DELETE_URL, INQUIRY_ID))
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.errorCode").value(BusinessInquiryErrorType.FAIL_DELETE.getErrorCode()))
+                .andExpect(jsonPath("$.message").value(BusinessInquiryErrorType.FAIL_DELETE.getMessage()));
     }
 
     private InquirySummaryResult summaryResult(Long inquiryId, InquiryStatus status, String title) {
