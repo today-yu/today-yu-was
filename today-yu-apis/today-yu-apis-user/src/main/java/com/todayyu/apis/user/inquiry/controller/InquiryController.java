@@ -2,12 +2,20 @@ package com.todayyu.apis.user.inquiry.controller;
 
 import com.todayyu.apis.common.response.SuccessResponse;
 import com.todayyu.apis.common.security.principal.CustomUserDetails;
+import com.todayyu.apis.user.common.dto.CursorResponse;
+import com.todayyu.apis.user.inquiry.dto.request.GetInquiriesRequest;
 import com.todayyu.apis.user.inquiry.dto.request.SubmitInquiryRequest;
+import com.todayyu.apis.user.inquiry.dto.response.InquiryCursorResponse;
 import com.todayyu.apis.user.inquiry.dto.response.InquiryDetailResponse;
+import com.todayyu.apis.user.inquiry.dto.response.InquirySummaryResponse;
 import com.todayyu.apis.user.inquiry.dto.response.SubmitInquiryResponse;
+import com.todayyu.application.common.dto.CursorResult;
+import com.todayyu.application.inquiry.dto.InquiryCursor;
 import com.todayyu.application.inquiry.dto.query.GetInquiryDetailQuery;
 import com.todayyu.application.inquiry.dto.result.InquiryDetailResult;
+import com.todayyu.application.inquiry.dto.result.InquirySummaryResult;
 import com.todayyu.application.inquiry.dto.result.SubmitInquiryResult;
+import com.todayyu.application.inquiry.usecase.GetInquiriesUsecase;
 import com.todayyu.application.inquiry.usecase.GetInquiryDetailUsecase;
 import com.todayyu.application.inquiry.usecase.SubmitInquiryUsecase;
 import com.todayyu.domain.inquiry.vo.InquiryId;
@@ -27,8 +35,23 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping("/api/v1/inquiries")
 @RequiredArgsConstructor
 public class InquiryController {
+    private final GetInquiriesUsecase getInquiriesUsecase;
     private final GetInquiryDetailUsecase getInquiryDetailUsecase;
     private final SubmitInquiryUsecase submitInquiryUsecase;
+    
+    @GetMapping
+    public ResponseEntity<?> getInquiries(
+            @Valid GetInquiriesRequest request,
+            @AuthenticationPrincipal CustomUserDetails userDetails
+    ) {
+        CursorResult<InquirySummaryResult, InquiryCursor> result
+                = getInquiriesUsecase.getInquiries(request.toQuery(userDetails.getMemberId()));
+        
+        return ResponseEntity.ok(SuccessResponse.from(
+                "문의 목록 조회에 성공하였습니다.",
+                CursorResponse.of(result, InquirySummaryResponse::from, InquiryCursorResponse::from)
+        ));
+    }
     
     @GetMapping("/{inquiryId}")
     public ResponseEntity<?> getInquiryDetail(

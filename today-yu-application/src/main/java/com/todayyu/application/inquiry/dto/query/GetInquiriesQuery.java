@@ -2,7 +2,9 @@ package com.todayyu.application.inquiry.dto.query;
 
 import com.todayyu.application.inquiry.dto.InquiryCursor;
 import com.todayyu.domain.member.vo.MemberId;
+import lombok.Builder;
 
+@Builder
 public record GetInquiriesQuery(
         MemberId memberId,
         InquiryCursor cursor,
