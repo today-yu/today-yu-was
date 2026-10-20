@@ -1,15 +1,20 @@
 package com.todayyu.persistence.inquiry.adapter;
 
+import com.todayyu.application.inquiry.dto.InquiryCursor;
+import com.todayyu.application.inquiry.port.dto.InquirySummaryView;
 import com.todayyu.application.inquiry.port.read.ReadInquiryPort;
 import com.todayyu.application.inquiry.port.save.SaveInquiryPort;
 import com.todayyu.domain.inquiry.entity.Inquiry;
 import com.todayyu.domain.inquiry.vo.InquiryId;
+import com.todayyu.domain.member.vo.MemberId;
 import com.todayyu.persistence.common.PersistenceAdapter;
+import com.todayyu.persistence.inquiry.dto.InquirySummaryViewProjection;
 import com.todayyu.persistence.inquiry.entity.InquiryJpaEntity;
 import com.todayyu.persistence.inquiry.mapper.InquiryMapper;
 import com.todayyu.persistence.inquiry.repository.InquiryJpaRepository;
 import lombok.RequiredArgsConstructor;
 
+import java.util.List;
 import java.util.Optional;
 
 @PersistenceAdapter
@@ -28,6 +33,29 @@ public class JpaInquiryAdapter implements ReadInquiryPort, SaveInquiryPort {
     public Optional<Inquiry> readById(InquiryId id) {
         return inquiryRepository.findById(id.getValue())
                 .map(inquiryMapper::toDomain);
+    }
+    
+    /**
+     * 회원이 작성한 문의 중 커서({@link InquiryCursor}) 이후의 문의 목록을 최신 작성 순으로 조회해
+     * 문의 요약({@link InquirySummaryView}) 목록으로 반환하는 메서드
+     *
+     * <p> 커서가 {@code null}이면 처음부터 조회한다. </p>
+     *
+     * @param memberId 문의 작성 회원 ID
+     * @param cursor   마지막으로 조회한 문의의 커서
+     * @param limit    최대 조회 개수
+     * @return 문의 요약 목록
+     */
+    @Override
+    public List<InquirySummaryView> readByCursor(MemberId memberId, InquiryCursor cursor, int limit) {
+        Long cursorId = (cursor == null) ? null : cursor.id().getValue();
+        
+        List<InquirySummaryViewProjection> projections
+                = inquiryRepository.findByCursor(memberId.getValue(), cursorId, limit);
+        
+        return projections.stream()
+                .map(InquirySummaryViewProjection::toView)
+                .toList();
     }
     
     /**

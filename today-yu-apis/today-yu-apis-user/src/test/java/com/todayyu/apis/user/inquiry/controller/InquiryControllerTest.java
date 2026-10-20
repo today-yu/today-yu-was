@@ -2,11 +2,16 @@ package com.todayyu.apis.user.inquiry.controller;
 
 import com.todayyu.apis.common.exception.GlobalExceptionHandler;
 import com.todayyu.apis.common.security.principal.CustomUserDetails;
+import com.todayyu.application.common.dto.CursorResult;
+import com.todayyu.application.inquiry.dto.InquiryCursor;
 import com.todayyu.application.inquiry.dto.command.SubmitInquiryCommand;
+import com.todayyu.application.inquiry.dto.query.GetInquiriesQuery;
 import com.todayyu.application.inquiry.dto.query.GetInquiryDetailQuery;
 import com.todayyu.application.inquiry.dto.result.InquiryDetailResult;
+import com.todayyu.application.inquiry.dto.result.InquirySummaryResult;
 import com.todayyu.application.inquiry.dto.result.SubmitInquiryResult;
 import com.todayyu.application.inquiry.error.BusinessInquiryErrorType;
+import com.todayyu.application.inquiry.usecase.GetInquiriesUsecase;
 import com.todayyu.application.inquiry.usecase.GetInquiryDetailUsecase;
 import com.todayyu.application.inquiry.usecase.SubmitInquiryUsecase;
 import com.todayyu.common.error.CommonErrorType;
@@ -38,9 +43,11 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 import static org.hamcrest.Matchers.nullValue;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.then;
@@ -52,16 +59,23 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 @ExtendWith(MockitoExtension.class)
 class InquiryControllerTest {
+    private static final String LIST_URL = "/api/v1/inquiries";
     private static final String SUBMIT_URL = "/api/v1/inquiries";
     private static final String DETAIL_URL = "/api/v1/inquiries/{inquiryId}";
     private static final Long MEMBER_ID = 1L;
     private static final Long INQUIRY_ID = 10L;
+    private static final Long SECOND_INQUIRY_ID = 11L;
+    private static final Long CURSOR_INQUIRY_ID = 12L;
     private static final String CONTACT_EMAIL = "member@example.com";
     private static final String TITLE = "문의 제목";
+    private static final String SECOND_TITLE = "두 번째 문의 제목";
     private static final String CONTENT = "문의 내용";
     private static final LocalDateTime CREATED_AT = LocalDateTime.of(2026, 10, 1, 9, 0, 30);
     private static final LocalDateTime UPDATED_AT = LocalDateTime.of(2026, 10, 2, 9, 0, 30);
     private static final LocalDateTime ANSWERED_AT = LocalDateTime.of(2026, 10, 3, 9, 0, 30);
+
+    @Mock
+    private GetInquiriesUsecase getInquiriesUsecase;
 
     @Mock
     private GetInquiryDetailUsecase getInquiryDetailUsecase;
@@ -77,6 +91,9 @@ class InquiryControllerTest {
 
     @Captor
     private ArgumentCaptor<GetInquiryDetailQuery> detailQueryCaptor;
+
+    @Captor
+    private ArgumentCaptor<GetInquiriesQuery> inquiriesQueryCaptor;
 
     private MockMvc mockMvc;
 
@@ -96,6 +113,82 @@ class InquiryControllerTest {
     @AfterEach
     void tearDown() {
         SecurityContextHolder.clearContext();
+    }
+
+    @Test
+    @DisplayName("문의 목록 조회 요청 시 인증된 회원 ID와 커서·조회 크기로 조회를 요청하고, 목록과 다음 커서를 원시값으로 변환해 반환한다")
+    void getInquiries() throws Exception {
+        // given
+        given(getInquiriesUsecase.getInquiries(any())).willReturn(new CursorResult<>(
+                List.of(
+                        summaryResult(SECOND_INQUIRY_ID, InquiryStatus.ANSWERED, SECOND_TITLE),
+                        summaryResult(INQUIRY_ID, InquiryStatus.WAITING, TITLE)
+                ),
+                true,
+                new InquiryCursor(new InquiryId(INQUIRY_ID))
+        ));
+
+        // when
+        mockMvc.perform(get(LIST_URL)
+                        .param("cursorId", String.valueOf(CURSOR_INQUIRY_ID))
+                        .param("size", "2"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.message").value("문의 목록 조회에 성공하였습니다."))
+                .andExpect(jsonPath("$.data.contents.length()").value(2))
+                .andExpect(jsonPath("$.data.contents[0].id").value(SECOND_INQUIRY_ID))
+                .andExpect(jsonPath("$.data.contents[0].status").value(InquiryStatus.ANSWERED.name()))
+                .andExpect(jsonPath("$.data.contents[0].title").value(SECOND_TITLE))
+                .andExpect(jsonPath("$.data.contents[0].createdAt").value(CREATED_AT.toString()))
+                .andExpect(jsonPath("$.data.contents[0].updatedAt").value(UPDATED_AT.toString()))
+                .andExpect(jsonPath("$.data.contents[1].id").value(INQUIRY_ID))
+                .andExpect(jsonPath("$.data.contents[1].status").value(InquiryStatus.WAITING.name()))
+                .andExpect(jsonPath("$.data.contents[1].title").value(TITLE))
+                .andExpect(jsonPath("$.data.hasNext").value(true))
+                .andExpect(jsonPath("$.data.nextCursor.id").value(INQUIRY_ID));
+
+        // then
+        then(getInquiriesUsecase).should().getInquiries(inquiriesQueryCaptor.capture());
+        GetInquiriesQuery query = inquiriesQueryCaptor.getValue();
+        assertEquals(new MemberId(MEMBER_ID), query.memberId());
+        assertEquals(new InquiryCursor(new InquiryId(CURSOR_INQUIRY_ID)), query.cursor());
+        assertEquals(2, query.size());
+    }
+
+    @Test
+    @DisplayName("첫 요청(커서·조회 크기 없음)이면 커서 없이 기본 조회 크기로 조회를 요청하고, 다음 데이터가 없으면 다음 커서는 null이다")
+    void getInquiriesWithFirstRequest() throws Exception {
+        // given
+        given(getInquiriesUsecase.getInquiries(any())).willReturn(new CursorResult<>(List.of(), false, null));
+
+        // when
+        mockMvc.perform(get(LIST_URL))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.contents").isArray())
+                .andExpect(jsonPath("$.data.contents.length()").value(0))
+                .andExpect(jsonPath("$.data.hasNext").value(false))
+                .andExpect(jsonPath("$.data.nextCursor").value(nullValue()));
+
+        // then
+        then(getInquiriesUsecase).should().getInquiries(inquiriesQueryCaptor.capture());
+        GetInquiriesQuery query = inquiriesQueryCaptor.getValue();
+        assertEquals(new MemberId(MEMBER_ID), query.memberId());
+        assertNull(query.cursor());
+        assertEquals(GetInquiriesQuery.DEFAULT_SIZE, query.size());
+    }
+
+    @ParameterizedTest
+    @ValueSource(ints = {GetInquiriesQuery.MIN_SIZE - 1, GetInquiriesQuery.MAX_SIZE + 1})
+    @DisplayName("조회 크기가 허용 범위를 벗어나면 유효성 검증 에러를 응답하고 조회를 하지 않는다")
+    void getInquiriesWithOutOfRangeSize(int size) throws Exception {
+        // given & when
+        mockMvc.perform(get(LIST_URL)
+                        .param("size", String.valueOf(size)))
+                .andExpect(status().isUnprocessableContent())
+                .andExpect(jsonPath("$.errorCode").value(CommonErrorType.VALIDATION_ERROR.getErrorCode()))
+                .andExpect(jsonPath("$.errors.size").exists());
+
+        // then
+        then(getInquiriesUsecase).should(never()).getInquiries(any());
     }
 
     @Test
@@ -272,6 +365,16 @@ class InquiryControllerTest {
 
         // then
         then(submitInquiryUsecase).should(never()).submit(any());
+    }
+
+    private InquirySummaryResult summaryResult(Long inquiryId, InquiryStatus status, String title) {
+        return new InquirySummaryResult(
+                new InquiryId(inquiryId),
+                status,
+                new InquiryTitle(title),
+                CREATED_AT,
+                UPDATED_AT
+        );
     }
 
     private InquiryDetailResult detailResult(InquiryStatus status, LocalDateTime answeredAt) {

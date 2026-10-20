@@ -1,5 +1,7 @@
 package com.todayyu.persistence.inquiry.adapter;
 
+import com.todayyu.application.inquiry.dto.InquiryCursor;
+import com.todayyu.application.inquiry.port.dto.InquirySummaryView;
 import com.todayyu.domain.common.vo.Email;
 import com.todayyu.domain.inquiry.entity.Inquiry;
 import com.todayyu.domain.inquiry.vo.InquiryContent;
@@ -7,6 +9,7 @@ import com.todayyu.domain.inquiry.vo.InquiryId;
 import com.todayyu.domain.inquiry.vo.InquiryStatus;
 import com.todayyu.domain.inquiry.vo.InquiryTitle;
 import com.todayyu.domain.member.vo.MemberId;
+import com.todayyu.persistence.inquiry.dto.InquirySummaryViewProjection;
 import com.todayyu.persistence.inquiry.entity.InquiryJpaEntity;
 import com.todayyu.persistence.inquiry.mapper.InquiryMapper;
 import com.todayyu.persistence.inquiry.repository.InquiryJpaRepository;
@@ -19,6 +22,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.test.util.ReflectionTestUtils;
 
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -101,6 +105,48 @@ class JpaInquiryAdapterTest {
         assertSame(savedInquiry, result);
         assertEquals(new InquiryId(INQUIRY_ID), result.getId());
         then(inquiryRepository).should().save(newJpaEntity);
+    }
+
+    @Test
+    @DisplayName("회원 ID와 커서로 문의 목록을 조회해 문의 요약 목록으로 변환해 반환한다")
+    void readByCursor() {
+        // given
+        Long cursorId = 20L;
+        LocalDateTime updatedAt = LocalDateTime.of(2026, 10, 2, 9, 0);
+        given(inquiryRepository.findByCursor(MEMBER_ID, cursorId, 3)).willReturn(List.of(
+                new InquirySummaryViewProjection(INQUIRY_ID, InquiryStatus.WAITING, TITLE, CREATED_AT, updatedAt)
+        ));
+
+        // when
+        List<InquirySummaryView> result = inquiryAdapter.readByCursor(
+                new MemberId(MEMBER_ID),
+                new InquiryCursor(new InquiryId(cursorId)),
+                3
+        );
+
+        // then
+        InquirySummaryView expected = InquirySummaryView.builder()
+                .id(new InquiryId(INQUIRY_ID))
+                .status(InquiryStatus.WAITING)
+                .title(new InquiryTitle(TITLE))
+                .createdAt(CREATED_AT)
+                .updatedAt(updatedAt)
+                .build();
+        assertEquals(List.of(expected), result);
+    }
+
+    @Test
+    @DisplayName("커서가 없으면 커서 조건 없이 처음부터 조회한다")
+    void readByCursorWithoutCursor() {
+        // given
+        given(inquiryRepository.findByCursor(MEMBER_ID, null, 3)).willReturn(List.of());
+
+        // when
+        List<InquirySummaryView> result = inquiryAdapter.readByCursor(new MemberId(MEMBER_ID), null, 3);
+
+        // then
+        assertTrue(result.isEmpty());
+        then(inquiryRepository).should().findByCursor(MEMBER_ID, null, 3);
     }
 
     private InquiryJpaEntity waitingJpaEntity(Long inquiryId) {
