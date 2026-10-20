@@ -211,4 +211,27 @@ public class Inquiry {
     public boolean canUpdate() {
         return status == InquiryStatus.WAITING;
     }
+
+    /**
+     * 문의의 제목, 내용, 연락용 이메일을 수정하는 메서드
+     *
+     * @param title        수정할 문의 제목
+     * @param content      수정할 문의 내용
+     * @param contactEmail 수정할 연락용 이메일
+     * @param updatedAt    문의 수정 시각
+     * @throws CustomException          {@link InquiryErrorType#FAIL_UPDATE} - 답변 대기 중 상태의 문의가 아닌 경우
+     * @throws IllegalArgumentException 수정할 필드가 비어있는 경우
+     */
+    public void update(InquiryTitle title, InquiryContent content, Email contactEmail, LocalDateTime updatedAt) {
+        if (!canUpdate()) {
+            throw new CustomException(InquiryErrorType.FAIL_UPDATE);
+        }
+        
+        validateRequiredFields(memberId, contactEmail, title, content, createdAt, updatedAt);
+        
+        this.title = title;
+        this.content = content;
+        this.contactEmail = contactEmail;
+        this.updatedAt = updatedAt;
+    }
 }
