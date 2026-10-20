@@ -70,4 +70,19 @@ public class InquiryJpaEntity {
         this.updatedAt = updatedAt;
         this.answeredAt = answeredAt;
     }
+    
+    /**
+     * 문의의 수정 가능한 필드를 변경하는 메서드
+     *
+     * @param contactEmail 수정할 연락용 이메일
+     * @param title        수정할 문의 제목
+     * @param content      수정할 문의 내용
+     * @param updatedAt    문의 수정 시각
+     */
+    public void update(String contactEmail, String title, String content, LocalDateTime updatedAt) {
+        this.contactEmail = contactEmail;
+        this.title = title;
+        this.content = content;
+        this.updatedAt = updatedAt;
+    }
 }
