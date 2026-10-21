@@ -91,10 +91,12 @@ public class EmailVerification {
     /**
      * 이메일 인증 코드 일치 여부를 검증하는 메서드
      *
+     * <p> {@link VerificationCode#verify(VerificationCode)}를 호출하여 검증한다. </p>
+     *
      * @param code 입력된 이메일 인증 코드
      * @return 인증 코드 일치 여부
      */
     public boolean verify(VerificationCode code) {
-        return code.equals(this.code);
+        return this.code.verify(code);
     }
 }
