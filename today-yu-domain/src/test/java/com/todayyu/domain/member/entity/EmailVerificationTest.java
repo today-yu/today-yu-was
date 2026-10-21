@@ -8,7 +8,9 @@ import org.junit.jupiter.api.Test;
 import java.time.LocalDateTime;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class EmailVerificationTest {
     private static final Email EMAIL = new Email("user@yu.ac.kr");
@@ -44,5 +46,21 @@ class EmailVerificationTest {
     void createWithoutIssuedAt() {
         assertThrows(IllegalArgumentException.class,
                 () -> new EmailVerification(EMAIL, CODE, null));
+    }
+
+    @Test
+    @DisplayName("입력된 인증 코드가 일치하면 true를 반환한다")
+    void verifyMatched() {
+        EmailVerification verification = new EmailVerification(EMAIL, CODE, ISSUED_AT);
+
+        assertTrue(verification.verify(new VerificationCode("123456")));
+    }
+
+    @Test
+    @DisplayName("입력된 인증 코드가 일치하지 않으면 false를 반환한다")
+    void verifyNotMatched() {
+        EmailVerification verification = new EmailVerification(EMAIL, CODE, ISSUED_AT);
+
+        assertFalse(verification.verify(new VerificationCode("654321")));
     }
 }
