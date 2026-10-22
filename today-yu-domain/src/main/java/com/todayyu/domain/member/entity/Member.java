@@ -73,4 +73,14 @@ public class Member {
                 .map(LocalAccount::getPassword)
                 .findFirst();
     }
+    
+    /**
+     * 회원이 일반 로그인({@link LocalAccount}) 계정 보유 여부를 반환하는 메서드
+     *
+     * @return 일반 로그인 계정 보유 여부
+     */
+    public boolean hasLocalAccount() {
+        return accounts.stream()
+                .anyMatch(account -> LocalAccount.class.isInstance(account));
+    }
 }
