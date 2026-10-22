@@ -1,7 +1,7 @@
 package com.todayyu.application.member.usecase;
 
 import com.todayyu.application.common.annotation.Usecase;
-import com.todayyu.application.member.dto.command.PasswordResetVerificationIssueCommand;
+import com.todayyu.application.member.dto.command.IssuePasswordResetVerificationCommand;
 import com.todayyu.application.member.port.read.ReadMemberPort;
 import com.todayyu.application.member.port.read.ReadPasswordResetVerificationPort;
 import com.todayyu.application.member.port.save.SavePasswordResetVerificationPort;
@@ -19,7 +19,7 @@ import java.time.LocalDateTime;
 
 @Usecase
 @RequiredArgsConstructor
-public class PasswordResetVerificationUsecase {
+public class IssuePasswordResetVerificationUsecase {
     private final ReadPasswordResetVerificationPort readPasswordResetVerificationPort;
     private final SavePasswordResetVerificationPort savePasswordResetVerificationPort;
     private final ReadMemberPort readMemberPort;
@@ -35,7 +35,7 @@ public class PasswordResetVerificationUsecase {
      * @throws CustomException {@link MemberErrorType#VERIFICATION_CODE_REISSUE_TOO_EARLY} - 재발급 가능 시각 이전에 요청한 경우
      */
     @Transactional(readOnly = true)
-    public void issue(PasswordResetVerificationIssueCommand command) {
+    public void issue(IssuePasswordResetVerificationCommand command) {
         Email email = command.email();
         
         boolean hasLocalAccount = readMemberPort.readByEmail(email)

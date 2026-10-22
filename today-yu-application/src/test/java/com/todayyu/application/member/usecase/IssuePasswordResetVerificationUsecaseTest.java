@@ -1,6 +1,6 @@
 package com.todayyu.application.member.usecase;
 
-import com.todayyu.application.member.dto.command.PasswordResetVerificationIssueCommand;
+import com.todayyu.application.member.dto.command.IssuePasswordResetVerificationCommand;
 import com.todayyu.application.member.port.read.ReadMemberPort;
 import com.todayyu.application.member.port.read.ReadPasswordResetVerificationPort;
 import com.todayyu.application.member.port.save.SavePasswordResetVerificationPort;
@@ -44,9 +44,9 @@ import static org.mockito.BDDMockito.then;
 import static org.mockito.Mockito.never;
 
 @ExtendWith(MockitoExtension.class)
-class PasswordResetVerificationUsecaseTest {
+class IssuePasswordResetVerificationUsecaseTest {
     private static final Email EMAIL = new Email("user@example.com");
-    private static final PasswordResetVerificationIssueCommand COMMAND = new PasswordResetVerificationIssueCommand(EMAIL);
+    private static final IssuePasswordResetVerificationCommand COMMAND = new IssuePasswordResetVerificationCommand(EMAIL);
     private static final MemberId MEMBER_ID = new MemberId(1L);
     private static final EncodedPassword ENCODED_PASSWORD = new EncodedPassword("encoded-password");
 
@@ -60,7 +60,7 @@ class PasswordResetVerificationUsecaseTest {
     private ReadMemberPort readMemberPort;
 
     @InjectMocks
-    private PasswordResetVerificationUsecase passwordResetVerificationUsecase;
+    private IssuePasswordResetVerificationUsecase issuePasswordResetVerificationUsecase;
 
     @Captor
     private ArgumentCaptor<PasswordResetVerification> verificationCaptor;
@@ -71,7 +71,7 @@ class PasswordResetVerificationUsecaseTest {
         given(readMemberPort.readByEmail(EMAIL)).willReturn(Optional.of(localMember()));
         given(readPasswordResetVerificationPort.readByEmail(EMAIL)).willReturn(Optional.empty());
 
-        passwordResetVerificationUsecase.issue(COMMAND);
+        issuePasswordResetVerificationUsecase.issue(COMMAND);
 
         then(savePasswordResetVerificationPort).should().save(verificationCaptor.capture());
         PasswordResetVerification saved = verificationCaptor.getValue();
@@ -89,7 +89,7 @@ class PasswordResetVerificationUsecaseTest {
         given(readMemberPort.readByEmail(EMAIL)).willReturn(Optional.of(localMember()));
         given(readPasswordResetVerificationPort.readByEmail(EMAIL)).willReturn(Optional.of(existing));
 
-        passwordResetVerificationUsecase.issue(COMMAND);
+        issuePasswordResetVerificationUsecase.issue(COMMAND);
 
         then(savePasswordResetVerificationPort).should().save(verificationCaptor.capture());
         PasswordResetVerification saved = verificationCaptor.getValue();
@@ -105,7 +105,7 @@ class PasswordResetVerificationUsecaseTest {
         given(readMemberPort.readByEmail(EMAIL)).willReturn(Optional.of(localMember()));
         given(readPasswordResetVerificationPort.readByEmail(EMAIL)).willReturn(Optional.of(existing));
 
-        passwordResetVerificationUsecase.issue(COMMAND);
+        issuePasswordResetVerificationUsecase.issue(COMMAND);
 
         then(savePasswordResetVerificationPort).should().save(verificationCaptor.capture());
         assertEquals(VerificationFailCount.zero(), verificationCaptor.getValue().getFailCount());
@@ -120,7 +120,7 @@ class PasswordResetVerificationUsecaseTest {
         given(readPasswordResetVerificationPort.readByEmail(EMAIL)).willReturn(Optional.of(existing));
 
         CustomException exception = assertThrows(CustomException.class,
-                () -> passwordResetVerificationUsecase.issue(COMMAND));
+                () -> issuePasswordResetVerificationUsecase.issue(COMMAND));
 
         assertEquals(MemberErrorType.VERIFICATION_CODE_REISSUE_TOO_EARLY, exception.getErrorType());
         then(savePasswordResetVerificationPort).should(never()).save(any());
@@ -131,7 +131,7 @@ class PasswordResetVerificationUsecaseTest {
     void notRegisteredEmail() {
         given(readMemberPort.readByEmail(EMAIL)).willReturn(Optional.empty());
 
-        passwordResetVerificationUsecase.issue(COMMAND);
+        issuePasswordResetVerificationUsecase.issue(COMMAND);
 
         then(readPasswordResetVerificationPort).shouldHaveNoInteractions();
         then(savePasswordResetVerificationPort).shouldHaveNoInteractions();
@@ -142,7 +142,7 @@ class PasswordResetVerificationUsecaseTest {
     void noLocalAccount() {
         given(readMemberPort.readByEmail(EMAIL)).willReturn(Optional.of(socialOnlyMember()));
 
-        passwordResetVerificationUsecase.issue(COMMAND);
+        issuePasswordResetVerificationUsecase.issue(COMMAND);
 
         then(readPasswordResetVerificationPort).shouldHaveNoInteractions();
         then(savePasswordResetVerificationPort).shouldHaveNoInteractions();
