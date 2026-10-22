@@ -1,7 +1,7 @@
 package com.todayyu.application.member.usecase;
 
 import com.todayyu.application.member.dto.command.IssueEmailVerificationCommand;
-import com.todayyu.application.member.port.VerificationCodeSender;
+import com.todayyu.application.member.port.SendEmailVerificationPort;
 import com.todayyu.application.member.port.read.ReadEmailVerificationPort;
 import com.todayyu.application.member.port.save.SaveEmailVerificationPort;
 import com.todayyu.common.exception.CustomException;
@@ -45,7 +45,7 @@ class IssueEmailVerificationUsecaseTest {
     private SaveEmailVerificationPort saveEmailVerificationPort;
 
     @Mock
-    private VerificationCodeSender verificationCodeSender;
+    private SendEmailVerificationPort sendEmailVerificationPort;
 
     @InjectMocks
     private IssueEmailVerificationUsecase issueEmailVerificationUsecase;
@@ -92,7 +92,7 @@ class IssueEmailVerificationUsecaseTest {
 
         assertEquals(MemberErrorType.VERIFICATION_CODE_REISSUE_TOO_EARLY, exception.getErrorType());
         then(saveEmailVerificationPort).should(never()).save(any());
-        then(verificationCodeSender).should(never()).send(any());
+        then(sendEmailVerificationPort).should(never()).send(any());
     }
 
     @Test
@@ -102,10 +102,10 @@ class IssueEmailVerificationUsecaseTest {
 
         issueEmailVerificationUsecase.issue(COMMAND);
 
-        InOrder inOrder = inOrder(saveEmailVerificationPort, verificationCodeSender);
+        InOrder inOrder = inOrder(saveEmailVerificationPort, sendEmailVerificationPort);
         inOrder.verify(saveEmailVerificationPort).save(verificationCaptor.capture());
         EmailVerification saved = verificationCaptor.getValue();
-        inOrder.verify(verificationCodeSender).send(verificationCaptor.capture());
+        inOrder.verify(sendEmailVerificationPort).send(verificationCaptor.capture());
         assertSame(saved, verificationCaptor.getValue());
     }
 
@@ -118,7 +118,7 @@ class IssueEmailVerificationUsecaseTest {
 
         issueEmailVerificationUsecase.issue(COMMAND);
 
-        then(verificationCodeSender).should().send(verificationCaptor.capture());
+        then(sendEmailVerificationPort).should().send(verificationCaptor.capture());
         EmailVerification sent = verificationCaptor.getValue();
         assertEquals(EMAIL, sent.getEmail());
         assertTrue(sent.getIssuedAt().isAfter(previousIssuedAt));
@@ -132,6 +132,6 @@ class IssueEmailVerificationUsecaseTest {
 
         assertThrows(RuntimeException.class, () -> issueEmailVerificationUsecase.issue(COMMAND));
 
-        then(verificationCodeSender).should(never()).send(any());
+        then(sendEmailVerificationPort).should(never()).send(any());
     }
 }

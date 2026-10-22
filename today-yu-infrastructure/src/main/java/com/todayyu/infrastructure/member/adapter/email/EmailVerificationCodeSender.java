@@ -1,6 +1,6 @@
 package com.todayyu.infrastructure.member.adapter.email;
 
-import com.todayyu.application.member.port.VerificationCodeSender;
+import com.todayyu.application.member.port.SendEmailVerificationPort;
 import com.todayyu.domain.member.entity.EmailVerification;
 import com.todayyu.infrastructure.common.annotation.Adapter;
 import com.todayyu.infrastructure.email.sender.EmailSender;
@@ -12,7 +12,7 @@ import java.util.Map;
 
 @Adapter
 @RequiredArgsConstructor
-public class EmailVerificationCodeSender implements VerificationCodeSender {
+public class EmailVerificationCodeSender implements SendEmailVerificationPort {
     private final EmailSender emailSender;
     
     private static final String CODE_CONTEXT_KEY = "code";

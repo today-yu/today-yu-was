@@ -2,7 +2,7 @@ package com.todayyu.application.member.usecase;
 
 import com.todayyu.application.common.annotation.Usecase;
 import com.todayyu.application.member.dto.command.IssueEmailVerificationCommand;
-import com.todayyu.application.member.port.VerificationCodeSender;
+import com.todayyu.application.member.port.SendEmailVerificationPort;
 import com.todayyu.application.member.port.read.ReadEmailVerificationPort;
 import com.todayyu.application.member.port.save.SaveEmailVerificationPort;
 import com.todayyu.application.member.util.VerificationCodeGenerator;
@@ -19,7 +19,7 @@ import java.util.Optional;
 public class IssueEmailVerificationUsecase {
     private final ReadEmailVerificationPort readEmailVerificationPort;
     private final SaveEmailVerificationPort saveEmailVerificationPort;
-    private final VerificationCodeSender verificationCodeSender;
+    private final SendEmailVerificationPort sendEmailVerificationPort;
     
     /**
      * 이메일 인증 코드 발급 메서드
@@ -44,6 +44,6 @@ public class IssueEmailVerificationUsecase {
         }
         
         saveEmailVerificationPort.save(newVerification);
-        verificationCodeSender.send(newVerification);
+        sendEmailVerificationPort.send(newVerification);
     }
 }
