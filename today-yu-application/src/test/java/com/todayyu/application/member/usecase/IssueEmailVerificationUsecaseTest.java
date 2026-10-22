@@ -1,7 +1,6 @@
 package com.todayyu.application.member.usecase;
 
-import com.todayyu.application.member.dto.command.VerificationCodeIssueCommand;
-import com.todayyu.application.member.dto.command.VerificationCodeVerifyCommand;
+import com.todayyu.application.member.dto.command.IssueEmailVerificationCommand;
 import com.todayyu.application.member.port.VerificationCodeSender;
 import com.todayyu.application.member.port.read.ReadEmailVerificationPort;
 import com.todayyu.application.member.port.save.SaveEmailVerificationPort;
@@ -35,9 +34,9 @@ import static org.mockito.Mockito.inOrder;
 import static org.mockito.Mockito.never;
 
 @ExtendWith(MockitoExtension.class)
-class EmailVerificationUsecaseTest {
+class IssueEmailVerificationUsecaseTest {
     private static final Email EMAIL = new Email("user@example.com");
-    private static final VerificationCodeIssueCommand COMMAND = new VerificationCodeIssueCommand(EMAIL);
+    private static final IssueEmailVerificationCommand COMMAND = new IssueEmailVerificationCommand(EMAIL);
 
     @Mock
     private ReadEmailVerificationPort readEmailVerificationPort;
@@ -49,7 +48,7 @@ class EmailVerificationUsecaseTest {
     private VerificationCodeSender verificationCodeSender;
 
     @InjectMocks
-    private EmailVerificationUsecase emailVerificationUsecase;
+    private IssueEmailVerificationUsecase issueEmailVerificationUsecase;
 
     @Captor
     private ArgumentCaptor<EmailVerification> verificationCaptor;
@@ -59,7 +58,7 @@ class EmailVerificationUsecaseTest {
     void issue() {
         given(readEmailVerificationPort.readByEmail(EMAIL)).willReturn(Optional.empty());
 
-        emailVerificationUsecase.issueVerificationCode(COMMAND);
+        issueEmailVerificationUsecase.issue(COMMAND);
 
         then(saveEmailVerificationPort).should().save(verificationCaptor.capture());
         EmailVerification saved = verificationCaptor.getValue();
@@ -74,7 +73,7 @@ class EmailVerificationUsecaseTest {
         EmailVerification existing = new EmailVerification(EMAIL, new VerificationCode("111111"), previousIssuedAt);
         given(readEmailVerificationPort.readByEmail(EMAIL)).willReturn(Optional.of(existing));
 
-        emailVerificationUsecase.issueVerificationCode(COMMAND);
+        issueEmailVerificationUsecase.issue(COMMAND);
 
         then(saveEmailVerificationPort).should().save(verificationCaptor.capture());
         EmailVerification saved = verificationCaptor.getValue();
@@ -89,7 +88,7 @@ class EmailVerificationUsecaseTest {
         given(readEmailVerificationPort.readByEmail(EMAIL)).willReturn(Optional.of(existing));
 
         CustomException exception = assertThrows(CustomException.class,
-                () -> emailVerificationUsecase.issueVerificationCode(COMMAND));
+                () -> issueEmailVerificationUsecase.issue(COMMAND));
 
         assertEquals(MemberErrorType.VERIFICATION_CODE_REISSUE_TOO_EARLY, exception.getErrorType());
         then(saveEmailVerificationPort).should(never()).save(any());
@@ -101,7 +100,7 @@ class EmailVerificationUsecaseTest {
     void sendAfterSave() {
         given(readEmailVerificationPort.readByEmail(EMAIL)).willReturn(Optional.empty());
 
-        emailVerificationUsecase.issueVerificationCode(COMMAND);
+        issueEmailVerificationUsecase.issue(COMMAND);
 
         InOrder inOrder = inOrder(saveEmailVerificationPort, verificationCodeSender);
         inOrder.verify(saveEmailVerificationPort).save(verificationCaptor.capture());
@@ -117,7 +116,7 @@ class EmailVerificationUsecaseTest {
         EmailVerification existing = new EmailVerification(EMAIL, new VerificationCode("111111"), previousIssuedAt);
         given(readEmailVerificationPort.readByEmail(EMAIL)).willReturn(Optional.of(existing));
 
-        emailVerificationUsecase.issueVerificationCode(COMMAND);
+        issueEmailVerificationUsecase.issue(COMMAND);
 
         then(verificationCodeSender).should().send(verificationCaptor.capture());
         EmailVerification sent = verificationCaptor.getValue();
@@ -131,46 +130,8 @@ class EmailVerificationUsecaseTest {
         given(readEmailVerificationPort.readByEmail(EMAIL)).willReturn(Optional.empty());
         willThrow(new RuntimeException("save failed")).given(saveEmailVerificationPort).save(any());
 
-        assertThrows(RuntimeException.class, () -> emailVerificationUsecase.issueVerificationCode(COMMAND));
+        assertThrows(RuntimeException.class, () -> issueEmailVerificationUsecase.issue(COMMAND));
 
         then(verificationCodeSender).should(never()).send(any());
-    }
-
-    @Test
-    @DisplayName("인증 코드가 일치하면 인증에 성공하고 저장된 이메일 인증을 삭제한다")
-    void verify() {
-        EmailVerification existing = new EmailVerification(EMAIL, new VerificationCode("123456"), LocalDateTime.now());
-        given(readEmailVerificationPort.readByEmail(EMAIL)).willReturn(Optional.of(existing));
-
-        emailVerificationUsecase.verify(new VerificationCodeVerifyCommand(EMAIL, new VerificationCode("123456")));
-
-        then(saveEmailVerificationPort).should().delete(existing);
-    }
-
-    @Test
-    @DisplayName("발급된 인증 코드가 없으면 인증에 실패한다")
-    void verifyWithoutIssuedCode() {
-        given(readEmailVerificationPort.readByEmail(EMAIL)).willReturn(Optional.empty());
-        VerificationCodeVerifyCommand command = new VerificationCodeVerifyCommand(EMAIL, new VerificationCode("123456"));
-
-        CustomException exception = assertThrows(CustomException.class,
-                () -> emailVerificationUsecase.verify(command));
-
-        assertEquals(MemberErrorType.EMAIL_VERIFICATION_FAIL, exception.getErrorType());
-        then(saveEmailVerificationPort).should(never()).delete(any());
-    }
-
-    @Test
-    @DisplayName("인증 코드가 일치하지 않으면 인증에 실패하고 저장된 이메일 인증을 삭제하지 않는다")
-    void verifyWithMismatchedCode() {
-        EmailVerification existing = new EmailVerification(EMAIL, new VerificationCode("123456"), LocalDateTime.now());
-        given(readEmailVerificationPort.readByEmail(EMAIL)).willReturn(Optional.of(existing));
-        VerificationCodeVerifyCommand command = new VerificationCodeVerifyCommand(EMAIL, new VerificationCode("654321"));
-
-        CustomException exception = assertThrows(CustomException.class,
-                () -> emailVerificationUsecase.verify(command));
-
-        assertEquals(MemberErrorType.EMAIL_VERIFICATION_FAIL, exception.getErrorType());
-        then(saveEmailVerificationPort).should(never()).delete(any());
     }
 }

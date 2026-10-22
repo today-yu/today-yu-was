@@ -16,16 +16,16 @@ public class RedisEmailVerificationStore {
     
     private static final String KEY_PREFIX = "email-verification:";
     
-    public Optional<RedisEmailVerificationValue> get(String key) {
-        return Optional.ofNullable(redisTemplate.opsForValue().get(KEY_PREFIX + key))
+    public Optional<RedisEmailVerificationValue> get(String email) {
+        return Optional.ofNullable(redisTemplate.opsForValue().get(KEY_PREFIX + email))
                 .map(json -> jsonMapper.readValue(json, RedisEmailVerificationValue.class));
     }
     
-    public void save(String key, RedisEmailVerificationValue value, Duration duration) {
-        redisTemplate.opsForValue().set(KEY_PREFIX + key, jsonMapper.writeValueAsString(value), duration);
+    public void save(String email, RedisEmailVerificationValue value, Duration ttl) {
+        redisTemplate.opsForValue().set(KEY_PREFIX + email, jsonMapper.writeValueAsString(value), ttl);
     }
     
-    public void delete(String key) {
-        redisTemplate.delete(KEY_PREFIX + key);
+    public void delete(String email) {
+        redisTemplate.delete(KEY_PREFIX + email);
     }
 }

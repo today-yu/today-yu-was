@@ -2,10 +2,11 @@ package com.todayyu.apis.user.member.controller;
 
 import com.todayyu.apis.common.exception.GlobalExceptionHandler;
 import com.todayyu.application.member.dto.command.SignupCommand;
-import com.todayyu.application.member.dto.command.VerificationCodeIssueCommand;
-import com.todayyu.application.member.dto.command.VerificationCodeVerifyCommand;
-import com.todayyu.application.member.usecase.EmailVerificationUsecase;
+import com.todayyu.application.member.dto.command.IssueEmailVerificationCommand;
+import com.todayyu.application.member.dto.command.VerifyEmailVerificationCommand;
+import com.todayyu.application.member.usecase.IssueEmailVerificationUsecase;
 import com.todayyu.application.member.usecase.SignupUsecase;
+import com.todayyu.application.member.usecase.VerifyEmailVerificationUsecase;
 import com.todayyu.common.error.BaseErrorType;
 import com.todayyu.common.error.ErrorCategory;
 import com.todayyu.common.exception.CustomException;
@@ -46,7 +47,10 @@ class SignupControllerTest {
             "비밀번호는 최소 " + Password.MIN_LENGTH + "자 이상, 최대 " + Password.MAX_LENGTH + "자 이하여야 합니다.";
 
     @Mock
-    private EmailVerificationUsecase emailVerificationUsecase;
+    private IssueEmailVerificationUsecase issueEmailVerificationUsecase;
+
+    @Mock
+    private VerifyEmailVerificationUsecase verifyEmailVerificationUsecase;
 
     @Mock
     private SignupUsecase signupUsecase;
@@ -55,10 +59,10 @@ class SignupControllerTest {
     private SignupController signupController;
 
     @Captor
-    private ArgumentCaptor<VerificationCodeIssueCommand> commandCaptor;
+    private ArgumentCaptor<IssueEmailVerificationCommand> commandCaptor;
 
     @Captor
-    private ArgumentCaptor<VerificationCodeVerifyCommand> verifyCommandCaptor;
+    private ArgumentCaptor<VerifyEmailVerificationCommand> verifyCommandCaptor;
 
     @Captor
     private ArgumentCaptor<SignupCommand> signupCommandCaptor;
@@ -85,7 +89,7 @@ class SignupControllerTest {
                 .andExpect(jsonPath("$.message").value("이메일 인증 코드 발급에 성공하였습니다."));
 
         // then
-        then(emailVerificationUsecase).should().issueVerificationCode(commandCaptor.capture());
+        then(issueEmailVerificationUsecase).should().issue(commandCaptor.capture());
         assertEquals(EMAIL, commandCaptor.getValue().email().getValue());
     }
 
@@ -101,7 +105,7 @@ class SignupControllerTest {
                 .andExpect(jsonPath("$.errors.email").value("이메일은 비어있을 수 없습니다."));
 
         // then
-        then(emailVerificationUsecase).should(never()).issueVerificationCode(any());
+        then(issueEmailVerificationUsecase).should(never()).issue(any());
     }
 
     @ParameterizedTest
@@ -119,7 +123,7 @@ class SignupControllerTest {
                 .andExpect(jsonPath("$.errors.email").value("이메일 양식이 잘못되었습니다."));
 
         // then
-        then(emailVerificationUsecase).should(never()).issueVerificationCode(any());
+        then(issueEmailVerificationUsecase).should(never()).issue(any());
     }
 
     @Test
@@ -133,7 +137,7 @@ class SignupControllerTest {
                 .andExpect(jsonPath("$.errorCode").value("COMMON-0003"));
 
         // then
-        then(emailVerificationUsecase).should(never()).issueVerificationCode(any());
+        then(issueEmailVerificationUsecase).should(never()).issue(any());
     }
 
     @Test
@@ -141,7 +145,7 @@ class SignupControllerTest {
     void issueVerificationCodeWithBusinessException() throws Exception {
         // given
         willThrow(new CustomException(TestErrorType.TOO_EARLY))
-                .given(emailVerificationUsecase).issueVerificationCode(any());
+                .given(issueEmailVerificationUsecase).issue(any());
 
         // when & then
         mockMvc.perform(post(ISSUE_VERIFICATION_CODE_URL)
@@ -167,7 +171,7 @@ class SignupControllerTest {
                 .andExpect(jsonPath("$.message").value("이메일 인증에 성공하였습니다."));
 
         // then
-        then(emailVerificationUsecase).should().verify(verifyCommandCaptor.capture());
+        then(verifyEmailVerificationUsecase).should().verify(verifyCommandCaptor.capture());
         assertEquals(EMAIL, verifyCommandCaptor.getValue().email().getValue());
         assertEquals(CODE, verifyCommandCaptor.getValue().code().getValue());
     }
@@ -186,7 +190,7 @@ class SignupControllerTest {
                 .andExpect(jsonPath("$.errors.email").value("이메일은 비어있을 수 없습니다."));
 
         // then
-        then(emailVerificationUsecase).should(never()).verify(any());
+        then(verifyEmailVerificationUsecase).should(never()).verify(any());
     }
 
     @ParameterizedTest
@@ -204,7 +208,7 @@ class SignupControllerTest {
                 .andExpect(jsonPath("$.errors.email").value("이메일 양식이 잘못되었습니다."));
 
         // then
-        then(emailVerificationUsecase).should(never()).verify(any());
+        then(verifyEmailVerificationUsecase).should(never()).verify(any());
     }
 
     @Test
@@ -221,7 +225,7 @@ class SignupControllerTest {
                 .andExpect(jsonPath("$.errors.code").value("인증 코드는 비어있을 수 없습니다."));
 
         // then
-        then(emailVerificationUsecase).should(never()).verify(any());
+        then(verifyEmailVerificationUsecase).should(never()).verify(any());
     }
 
     @Test
@@ -229,7 +233,7 @@ class SignupControllerTest {
     void verifyVerificationCodeWithBusinessException() throws Exception {
         // given
         willThrow(new CustomException(TestErrorType.VERIFICATION_FAIL))
-                .given(emailVerificationUsecase).verify(any());
+                .given(verifyEmailVerificationUsecase).verify(any());
 
         // when & then
         mockMvc.perform(post(VERIFY_VERIFICATION_CODE_URL)
