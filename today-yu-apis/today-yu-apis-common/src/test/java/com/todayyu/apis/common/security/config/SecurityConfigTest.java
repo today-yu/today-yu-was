@@ -104,7 +104,8 @@ class SecurityConfigTest {
             "/api/v1/auth/sign-in",
             "/api/v1/auth/sign-up",
             "/api/v1/auth/email-verification/issue",
-            "/api/v1/auth/email-verification/verify"
+            "/api/v1/auth/email-verification/verify",
+            "/api/v1/auth/password-reset-verification/issue"
     })
     @DisplayName("공개 엔드포인트는 만료된 토큰이 있어도 토큰을 검증하지 않고 요청이 처리된다")
     void publicEndpointWithExpiredToken(String uri) throws Exception {
@@ -149,6 +150,7 @@ class SecurityConfigTest {
                 "/api/v1/auth/sign-up",
                 "/api/v1/auth/email-verification/issue",
                 "/api/v1/auth/email-verification/verify",
+                "/api/v1/auth/password-reset-verification/issue",
                 "/api/v1/auth/logout"
         })
         String ok() {

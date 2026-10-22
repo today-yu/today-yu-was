@@ -32,7 +32,8 @@ public class SecurityConfig {
             PathPatternRequestMatcher.pathPattern("/api/v1/auth/sign-in"),
             PathPatternRequestMatcher.pathPattern("/api/v1/auth/sign-up"),
             PathPatternRequestMatcher.pathPattern("/api/v1/auth/email-verification/**"),
-            PathPatternRequestMatcher.pathPattern("/api/v1/auth/reissue")
+            PathPatternRequestMatcher.pathPattern("/api/v1/auth/reissue"),
+            PathPatternRequestMatcher.pathPattern("/api/v1/auth/password-reset-verification/**")
     );
     
     private static final RequestMatcher MEMBER_ENDPOINTS = new OrRequestMatcher(
