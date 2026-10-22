@@ -18,8 +18,8 @@ public class RedisRefreshTokenStore {
         return Optional.ofNullable(redisTemplate.opsForValue().get(key(memberId, sessionId)));
     }
     
-    public void save(String memberId, String sessionId, String refreshToken, Duration duration) {
-        redisTemplate.opsForValue().set(key(memberId, sessionId), refreshToken, duration);
+    public void save(String memberId, String sessionId, String refreshToken, Duration ttl) {
+        redisTemplate.opsForValue().set(key(memberId, sessionId), refreshToken, ttl);
     }
     
     public void delete(String memberId, String sessionId) {
