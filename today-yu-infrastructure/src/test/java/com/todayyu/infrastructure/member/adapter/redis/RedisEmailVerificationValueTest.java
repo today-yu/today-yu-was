@@ -26,7 +26,7 @@ class RedisEmailVerificationValueTest {
         String json = jsonMapper.writeValueAsString(value);
         RedisEmailVerificationValue restored = jsonMapper.readValue(json, RedisEmailVerificationValue.class);
 
-        assertEquals(value.getVerificationCode(), restored.getVerificationCode());
+        assertEquals(value.getCode(), restored.getCode());
         assertEquals(value.getIssuedAt(), restored.getIssuedAt());
     }
 
