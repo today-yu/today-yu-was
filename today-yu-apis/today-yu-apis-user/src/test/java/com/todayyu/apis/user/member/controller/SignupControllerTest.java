@@ -37,8 +37,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 @ExtendWith(MockitoExtension.class)
 class SignupControllerTest {
-    private static final String ISSUE_VERIFICATION_CODE_URL = "/api/v1/auth/email-verification/issue";
-    private static final String VERIFY_VERIFICATION_CODE_URL = "/api/v1/auth/email-verification/verify";
+    private static final String ISSUE_EMAIL_VERIFICATION_URL = "/api/v1/auth/email-verification/issue";
+    private static final String VERIFY_EMAIL_VERIFICATION_URL = "/api/v1/auth/email-verification/verify";
     private static final String EMAIL = "user@example.com";
     private static final String SIGNUP_URL = "/api/v1/auth/sign-up";
     private static final String CODE = "123456";
@@ -78,9 +78,9 @@ class SignupControllerTest {
 
     @Test
     @DisplayName("이메일 인증 코드 발급 요청 시 요청 이메일로 인증 코드 발급을 요청하고 성공 응답을 반환한다")
-    void issueVerificationCode() throws Exception {
+    void issueEmailVerification() throws Exception {
         // given & when
-        mockMvc.perform(post(ISSUE_VERIFICATION_CODE_URL)
+        mockMvc.perform(post(ISSUE_EMAIL_VERIFICATION_URL)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
                                 {"email": "%s"}
@@ -95,9 +95,9 @@ class SignupControllerTest {
 
     @Test
     @DisplayName("이메일이 없으면 유효성 검증 에러를 응답하고 인증 코드를 발급하지 않는다")
-    void issueVerificationCodeWithoutEmail() throws Exception {
+    void issueEmailVerificationWithoutEmail() throws Exception {
         // given & when
-        mockMvc.perform(post(ISSUE_VERIFICATION_CODE_URL)
+        mockMvc.perform(post(ISSUE_EMAIL_VERIFICATION_URL)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{}"))
                 .andExpect(status().isUnprocessableContent())
@@ -111,9 +111,9 @@ class SignupControllerTest {
     @ParameterizedTest
     @ValueSource(strings = {"invalid-email", "user@localhost", "user@yu..ac.kr"})
     @DisplayName("이메일 형식이 Email VO의 형식과 다르면 유효성 검증 에러를 응답하고 인증 코드를 발급하지 않는다")
-    void issueVerificationCodeWithInvalidEmail(String email) throws Exception {
+    void issueEmailVerificationWithInvalidEmail(String email) throws Exception {
         // given & when
-        mockMvc.perform(post(ISSUE_VERIFICATION_CODE_URL)
+        mockMvc.perform(post(ISSUE_EMAIL_VERIFICATION_URL)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
                                 {"email": "%s"}
@@ -128,9 +128,9 @@ class SignupControllerTest {
 
     @Test
     @DisplayName("요청 본문을 읽을 수 없으면 잘못된 요청 에러를 응답한다")
-    void issueVerificationCodeWithMalformedBody() throws Exception {
+    void issueEmailVerificationWithMalformedBody() throws Exception {
         // given & when
-        mockMvc.perform(post(ISSUE_VERIFICATION_CODE_URL)
+        mockMvc.perform(post(ISSUE_EMAIL_VERIFICATION_URL)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{\"email\": "))
                 .andExpect(status().isBadRequest())
@@ -142,13 +142,13 @@ class SignupControllerTest {
 
     @Test
     @DisplayName("인증 코드 발급 중 비즈니스 예외가 발생하면 에러 카테고리에 맞는 상태 코드와 에러 응답을 반환한다")
-    void issueVerificationCodeWithBusinessException() throws Exception {
+    void issueEmailVerificationWithBusinessException() throws Exception {
         // given
         willThrow(new CustomException(TestErrorType.TOO_EARLY))
                 .given(issueEmailVerificationUsecase).issue(any());
 
         // when & then
-        mockMvc.perform(post(ISSUE_VERIFICATION_CODE_URL)
+        mockMvc.perform(post(ISSUE_EMAIL_VERIFICATION_URL)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
                                 {"email": "%s"}
@@ -160,9 +160,9 @@ class SignupControllerTest {
 
     @Test
     @DisplayName("이메일 인증 코드 검증 요청 시 요청 이메일과 인증 코드로 검증을 요청하고 성공 응답을 반환한다")
-    void verifyVerificationCode() throws Exception {
+    void verifyEmailVerification() throws Exception {
         // given & when
-        mockMvc.perform(post(VERIFY_VERIFICATION_CODE_URL)
+        mockMvc.perform(post(VERIFY_EMAIL_VERIFICATION_URL)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
                                 {"email": "%s", "code": "%s"}
@@ -178,9 +178,9 @@ class SignupControllerTest {
 
     @Test
     @DisplayName("검증 요청에 이메일이 없으면 유효성 검증 에러를 응답하고 인증 코드를 검증하지 않는다")
-    void verifyVerificationCodeWithoutEmail() throws Exception {
+    void verifyEmailVerificationWithoutEmail() throws Exception {
         // given & when
-        mockMvc.perform(post(VERIFY_VERIFICATION_CODE_URL)
+        mockMvc.perform(post(VERIFY_EMAIL_VERIFICATION_URL)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
                                 {"code": "%s"}
@@ -196,9 +196,9 @@ class SignupControllerTest {
     @ParameterizedTest
     @ValueSource(strings = {"invalid-email", "user@localhost", "user@yu..ac.kr"})
     @DisplayName("검증 요청의 이메일 형식이 Email VO의 형식과 다르면 유효성 검증 에러를 응답하고 인증 코드를 검증하지 않는다")
-    void verifyVerificationCodeWithInvalidEmail(String email) throws Exception {
+    void verifyEmailVerificationWithInvalidEmail(String email) throws Exception {
         // given & when
-        mockMvc.perform(post(VERIFY_VERIFICATION_CODE_URL)
+        mockMvc.perform(post(VERIFY_EMAIL_VERIFICATION_URL)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
                                 {"email": "%s", "code": "%s"}
@@ -213,9 +213,9 @@ class SignupControllerTest {
 
     @Test
     @DisplayName("검증 요청에 인증 코드가 없으면 유효성 검증 에러를 응답하고 인증 코드를 검증하지 않는다")
-    void verifyVerificationCodeWithoutCode() throws Exception {
+    void verifyEmailVerificationWithoutCode() throws Exception {
         // given & when
-        mockMvc.perform(post(VERIFY_VERIFICATION_CODE_URL)
+        mockMvc.perform(post(VERIFY_EMAIL_VERIFICATION_URL)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
                                 {"email": "%s"}
@@ -230,13 +230,13 @@ class SignupControllerTest {
 
     @Test
     @DisplayName("인증 코드 검증에 실패하면 에러 카테고리에 맞는 상태 코드와 에러 응답을 반환한다")
-    void verifyVerificationCodeWithBusinessException() throws Exception {
+    void verifyEmailVerificationWithBusinessException() throws Exception {
         // given
         willThrow(new CustomException(TestErrorType.VERIFICATION_FAIL))
                 .given(verifyEmailVerificationUsecase).verify(any());
 
         // when & then
-        mockMvc.perform(post(VERIFY_VERIFICATION_CODE_URL)
+        mockMvc.perform(post(VERIFY_EMAIL_VERIFICATION_URL)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
                                 {"email": "%s", "code": "%s"}

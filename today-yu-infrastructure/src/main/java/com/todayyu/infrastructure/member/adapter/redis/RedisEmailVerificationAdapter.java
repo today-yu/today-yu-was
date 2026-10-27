@@ -18,7 +18,7 @@ public class RedisEmailVerificationAdapter implements ReadEmailVerificationPort,
     @Override
     public Optional<EmailVerification> readByEmail(Email email) {
         return emailVerificationStore.get(email.getValue())
-                .map(value -> value.toEmailVerification(email));
+                .map(value -> value.toDomain(email));
     }
     
     @Override

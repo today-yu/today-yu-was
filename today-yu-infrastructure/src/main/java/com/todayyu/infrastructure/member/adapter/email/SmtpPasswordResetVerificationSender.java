@@ -12,7 +12,7 @@ import java.util.Map;
 
 @Adapter
 @RequiredArgsConstructor
-public class EmailPasswordResetVerificationSender implements SendPasswordResetVerificationPort {
+public class SmtpPasswordResetVerificationSender implements SendPasswordResetVerificationPort {
     private final EmailSender emailSender;
     
     private static final String CODE_CONTEXT_KEY = "code";

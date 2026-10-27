@@ -22,7 +22,7 @@ import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.BDDMockito.then;
 
 @ExtendWith(MockitoExtension.class)
-class EmailVerificationCodeSenderTest {
+class SmtpEmailVerificationSenderTest {
     private static final Email EMAIL = new Email("user@example.com");
     private static final VerificationCode CODE = new VerificationCode("123456");
     private static final LocalDateTime ISSUED_AT = LocalDateTime.of(2026, 9, 27, 10, 0);
@@ -31,21 +31,21 @@ class EmailVerificationCodeSenderTest {
     private EmailSender emailSender;
 
     @InjectMocks
-    private EmailVerificationCodeSender verificationCodeSender;
+    private SmtpEmailVerificationSender emailVerificationSender;
 
     @Captor
     private ArgumentCaptor<Map<String, String>> contextsCaptor;
 
     @Test
-    @DisplayName("인증 코드 템플릿으로 이메일 인증의 이메일 주소에 인증 코드와 유효 시간을 담아 발송한다")
+    @DisplayName("이메일 인증 템플릿으로 이메일 인증의 이메일 주소에 인증 코드와 유효 시간을 담아 발송한다")
     void send() {
         EmailVerification verification = new EmailVerification(EMAIL, CODE, ISSUED_AT);
 
-        verificationCodeSender.send(verification);
+        emailVerificationSender.send(verification);
 
-        then(emailSender).should().sendTemplateEmail(eq(EMAIL.getValue()), eq(EmailTemplate.VERIFICATION_CODE), contextsCaptor.capture());
+        then(emailSender).should().sendTemplateEmail(eq(EMAIL.getValue()), eq(EmailTemplate.EMAIL_VERIFICATION), contextsCaptor.capture());
         Map<String, String> contexts = contextsCaptor.getValue();
         assertEquals(CODE.getValue(), contexts.get("code"));
-        assertEquals(String.valueOf(EmailVerification.EMAIL_VERIFICATION_DURATION_MINUTE), contexts.get("durationMinute"));
+        assertEquals(String.valueOf(EmailVerification.EXPIRATION_MINUTE), contexts.get("durationMinute"));
     }
 }

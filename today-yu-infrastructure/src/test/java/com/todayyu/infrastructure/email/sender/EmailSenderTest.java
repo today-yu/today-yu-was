@@ -34,7 +34,7 @@ import static org.mockito.BDDMockito.willThrow;
 class EmailSenderTest {
     private static final String FROM = "sender@example.com";
     private static final String TO = "user@example.com";
-    private static final EmailTemplate TEMPLATE = EmailTemplate.VERIFICATION_CODE;
+    private static final EmailTemplate TEMPLATE = EmailTemplate.EMAIL_VERIFICATION;
 
     @Mock
     private JavaMailSender javaMailSender;

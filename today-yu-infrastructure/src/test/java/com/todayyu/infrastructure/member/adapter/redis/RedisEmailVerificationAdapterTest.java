@@ -46,7 +46,7 @@ class RedisEmailVerificationAdapterTest {
 
         then(store).should().save(eq(EMAIL.getValue()), valueCaptor.capture(), eq(Duration.between(ISSUED_AT, verification.getExpiredAt())));
         RedisEmailVerificationValue saved = valueCaptor.getValue();
-        assertEquals(CODE.getValue(), saved.getVerificationCode());
+        assertEquals(CODE.getValue(), saved.getCode());
         assertEquals(ISSUED_AT, saved.getIssuedAt());
     }
 

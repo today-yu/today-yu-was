@@ -26,16 +26,16 @@ class RedisEmailVerificationValueTest {
         String json = jsonMapper.writeValueAsString(value);
         RedisEmailVerificationValue restored = jsonMapper.readValue(json, RedisEmailVerificationValue.class);
 
-        assertEquals(value.getVerificationCode(), restored.getVerificationCode());
+        assertEquals(value.getCode(), restored.getCode());
         assertEquals(value.getIssuedAt(), restored.getIssuedAt());
     }
 
     @Test
     @DisplayName("저장 값을 이메일 인증으로 변환하면 원래의 코드와 발급 시각을 가진다")
-    void toEmailVerification() {
+    void toDomain() {
         EmailVerification verification = new EmailVerification(EMAIL, new VerificationCode("123456"), ISSUED_AT);
 
-        EmailVerification restored = RedisEmailVerificationValue.from(verification).toEmailVerification(EMAIL);
+        EmailVerification restored = RedisEmailVerificationValue.from(verification).toDomain(EMAIL);
 
         assertEquals(EMAIL, restored.getEmail());
         assertEquals(verification.getCode(), restored.getCode());

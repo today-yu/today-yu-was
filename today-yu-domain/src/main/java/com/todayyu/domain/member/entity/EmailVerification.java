@@ -15,7 +15,7 @@ public class EmailVerification {
     private VerificationCode code;
     private LocalDateTime issuedAt;
     
-    public static final Long EMAIL_VERIFICATION_DURATION_MINUTE = 3L;
+    public static final Long EXPIRATION_MINUTE = 3L;
     private static final Long REISSUE_POSSIBLE_OFFSET_MINUTE = 1L;
     
     public EmailVerification(Email email, VerificationCode code, LocalDateTime issuedAt) {
@@ -80,12 +80,12 @@ public class EmailVerification {
     /**
      * 이메일 인증 코드 만료 시각을 반환하는 메서드
      *
-     * <p> 발급 시각({@link #issuedAt}) 이후 {@value #EMAIL_VERIFICATION_DURATION_MINUTE} 시간(분)까지만 유효하다.</p>
+     * <p> 발급 시각({@link #issuedAt}) 이후 {@value #EXPIRATION_MINUTE} 시간(분)까지만 유효하다.</p>
      *
      * @return 이메일 인증 코드 만료 시각
      */
     public LocalDateTime getExpiredAt() {
-        return issuedAt.plusMinutes(EMAIL_VERIFICATION_DURATION_MINUTE);
+        return issuedAt.plusMinutes(EXPIRATION_MINUTE);
     }
     
     /**
