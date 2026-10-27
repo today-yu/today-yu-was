@@ -43,7 +43,7 @@ class SmtpEmailVerificationSenderTest {
 
         emailVerificationSender.send(verification);
 
-        then(emailSender).should().sendTemplateEmail(eq(EMAIL.getValue()), eq(EmailTemplate.VERIFICATION_CODE), contextsCaptor.capture());
+        then(emailSender).should().sendTemplateEmail(eq(EMAIL.getValue()), eq(EmailTemplate.EMAIL_VERIFICATION), contextsCaptor.capture());
         Map<String, String> contexts = contextsCaptor.getValue();
         assertEquals(CODE.getValue(), contexts.get("code"));
         assertEquals(String.valueOf(EmailVerification.EMAIL_VERIFICATION_DURATION_MINUTE), contexts.get("durationMinute"));

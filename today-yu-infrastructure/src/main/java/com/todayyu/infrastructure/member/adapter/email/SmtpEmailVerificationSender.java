@@ -30,7 +30,7 @@ public class SmtpEmailVerificationSender implements SendEmailVerificationPort {
     public void send(EmailVerification verification) {
         emailSender.sendTemplateEmail(
                 verification.getEmail().getValue(),
-                EmailTemplate.VERIFICATION_CODE,
+                EmailTemplate.EMAIL_VERIFICATION,
                 Map.of(
                         CODE_CONTEXT_KEY, verification.getCode().getValue(),
                         DURATION_MINUTE_CONTEXT_KEY, String.valueOf(EmailVerification.EMAIL_VERIFICATION_DURATION_MINUTE)

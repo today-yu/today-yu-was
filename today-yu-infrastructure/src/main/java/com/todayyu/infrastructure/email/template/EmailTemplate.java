@@ -9,7 +9,7 @@ import java.util.List;
 @Getter
 @RequiredArgsConstructor
 public enum EmailTemplate {
-    VERIFICATION_CODE(
+    EMAIL_VERIFICATION(
             "mail/verification-code",
             "[오늘의 영대] 이메일 인증 코드",
             List.of(
