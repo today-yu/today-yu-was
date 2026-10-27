@@ -17,8 +17,8 @@ public class PasswordResetVerification {
     private LocalDateTime issuedAt;
     private VerificationFailCount failCount;
     
+    public static final int EXPIRATION_MINUTE = 5;
     private static final int MAX_FAIL_COUNT = 5;
-    private static final int EXPIRATION_MINUTE = 5;
     private static final int REISSUE_POSSIBLE_OFFSET_MINUTE = 1;
     
     private PasswordResetVerification(
