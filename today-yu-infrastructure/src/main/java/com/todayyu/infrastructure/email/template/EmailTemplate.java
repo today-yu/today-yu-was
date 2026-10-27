@@ -10,7 +10,7 @@ import java.util.List;
 @RequiredArgsConstructor
 public enum EmailTemplate {
     EMAIL_VERIFICATION(
-            "mail/verification-code",
+            "mail/email-verification",
             "[오늘의 영대] 이메일 인증 코드",
             List.of(
                     new EmailContent("logo", "mail/images/logo.png"),
