@@ -19,7 +19,7 @@ public class SmtpEmailVerificationSender implements SendEmailVerificationPort {
     private static final String DURATION_MINUTE_CONTEXT_KEY = "durationMinute";
     
     /**
-     * 이메일을 통해 인증 코드를 발송하는 메서드
+     * 이메일을 통해 이메일 인증 코드를 발송하는 메서드
      *
      * <p> 이메일 인증 인증 코드 전용 이메일 템플릿을 통해 이메일을 전송한다. </p>
      *
