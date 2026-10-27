@@ -1,6 +1,7 @@
 package com.todayyu.application.member.usecase;
 
 import com.todayyu.application.member.dto.command.IssuePasswordResetVerificationCommand;
+import com.todayyu.application.member.port.SendPasswordResetVerificationPort;
 import com.todayyu.application.member.port.read.ReadMemberPort;
 import com.todayyu.application.member.port.read.ReadPasswordResetVerificationPort;
 import com.todayyu.application.member.port.save.SavePasswordResetVerificationPort;
@@ -59,6 +60,9 @@ class IssuePasswordResetVerificationUsecaseTest {
     @Mock
     private ReadMemberPort readMemberPort;
 
+    @Mock
+    private SendPasswordResetVerificationPort sendPasswordResetVerificationPort;
+
     @InjectMocks
     private IssuePasswordResetVerificationUsecase issuePasswordResetVerificationUsecase;
 
@@ -66,7 +70,7 @@ class IssuePasswordResetVerificationUsecaseTest {
     private ArgumentCaptor<PasswordResetVerification> verificationCaptor;
 
     @Test
-    @DisplayName("로컬 계정 회원이고 진행 중인 인증이 없으면 6자리 인증 코드를 새로 발급해 저장한다")
+    @DisplayName("로컬 계정 회원이고 진행 중인 인증이 없으면 6자리 인증 코드를 새로 발급해 저장하고 발송한다")
     void issue() {
         given(readMemberPort.readByEmail(EMAIL)).willReturn(Optional.of(localMember()));
         given(readPasswordResetVerificationPort.readByEmail(EMAIL)).willReturn(Optional.empty());
@@ -78,10 +82,11 @@ class IssuePasswordResetVerificationUsecaseTest {
         assertEquals(EMAIL, saved.getEmail());
         assertTrue(saved.getCode().getValue().matches("\\d{6}"));
         assertEquals(VerificationFailCount.zero(), saved.getFailCount());
+        then(sendPasswordResetVerificationPort).should().send(saved);
     }
 
     @Test
-    @DisplayName("발급 후 1분이 지났다면 인증 코드를 재발급해 저장한다")
+    @DisplayName("발급 후 1분이 지났다면 인증 코드를 재발급해 저장하고 발송한다")
     void reissue() {
         LocalDateTime previousIssuedAt = LocalDateTime.now().minusMinutes(2);
         PasswordResetVerification existing = PasswordResetVerification.issue(
@@ -95,6 +100,7 @@ class IssuePasswordResetVerificationUsecaseTest {
         PasswordResetVerification saved = verificationCaptor.getValue();
         assertEquals(EMAIL, saved.getEmail());
         assertTrue(saved.getIssuedAt().isAfter(previousIssuedAt));
+        then(sendPasswordResetVerificationPort).should().send(saved);
     }
 
     @Test
@@ -112,7 +118,7 @@ class IssuePasswordResetVerificationUsecaseTest {
     }
 
     @Test
-    @DisplayName("발급 후 1분이 지나지 않았다면 재발급할 수 없고 저장하지 않는다")
+    @DisplayName("발급 후 1분이 지나지 않았다면 재발급할 수 없고 저장·발송하지 않는다")
     void reissueTooEarly() {
         PasswordResetVerification existing = PasswordResetVerification.issue(
                 EMAIL, new VerificationCode("111111"), LocalDateTime.now());
@@ -124,6 +130,7 @@ class IssuePasswordResetVerificationUsecaseTest {
 
         assertEquals(MemberErrorType.VERIFICATION_CODE_REISSUE_TOO_EARLY, exception.getErrorType());
         then(savePasswordResetVerificationPort).should(never()).save(any());
+        then(sendPasswordResetVerificationPort).shouldHaveNoInteractions();
     }
 
     @Test
@@ -135,6 +142,7 @@ class IssuePasswordResetVerificationUsecaseTest {
 
         then(readPasswordResetVerificationPort).shouldHaveNoInteractions();
         then(savePasswordResetVerificationPort).shouldHaveNoInteractions();
+        then(sendPasswordResetVerificationPort).shouldHaveNoInteractions();
     }
 
     @Test
@@ -146,6 +154,7 @@ class IssuePasswordResetVerificationUsecaseTest {
 
         then(readPasswordResetVerificationPort).shouldHaveNoInteractions();
         then(savePasswordResetVerificationPort).shouldHaveNoInteractions();
+        then(sendPasswordResetVerificationPort).shouldHaveNoInteractions();
     }
 
     private Member localMember() {
