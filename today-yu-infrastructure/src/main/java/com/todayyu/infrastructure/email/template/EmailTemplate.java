@@ -18,6 +18,15 @@ public enum EmailTemplate {
                     new EmailContent("clock", "mail/images/clock.png")
             )
     ),
+    PASSWORD_RESET(
+            "mail/password-reset",
+            "[오늘의 영대] 비밀번호 초기화",
+            List.of(
+                    new EmailContent("logo", "mail/images/logo.png"),
+                    new EmailContent("header-decoration", "mail/images/header-decoration.png"),
+                    new EmailContent("clock", "mail/images/clock.png")
+            )
+    ),
     ;
     
     private final String templatePath;
