@@ -37,7 +37,7 @@ class SmtpEmailVerificationSenderTest {
     private ArgumentCaptor<Map<String, String>> contextsCaptor;
 
     @Test
-    @DisplayName("인증 코드 템플릿으로 이메일 인증의 이메일 주소에 인증 코드와 유효 시간을 담아 발송한다")
+    @DisplayName("이메일 인증 템플릿으로 이메일 인증의 이메일 주소에 인증 코드와 유효 시간을 담아 발송한다")
     void send() {
         EmailVerification verification = new EmailVerification(EMAIL, CODE, ISSUED_AT);
 
