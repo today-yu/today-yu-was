@@ -22,7 +22,7 @@ import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.BDDMockito.then;
 
 @ExtendWith(MockitoExtension.class)
-class EmailPasswordResetVerificationSenderTest {
+class SmtpPasswordResetVerificationSenderTest {
     private static final Email EMAIL = new Email("user@example.com");
     private static final VerificationCode CODE = new VerificationCode("123456");
     private static final LocalDateTime ISSUED_AT = LocalDateTime.of(2026, 10, 28, 10, 0);
@@ -31,7 +31,7 @@ class EmailPasswordResetVerificationSenderTest {
     private EmailSender emailSender;
 
     @InjectMocks
-    private EmailPasswordResetVerificationSender passwordResetVerificationSender;
+    private SmtpPasswordResetVerificationSender passwordResetVerificationSender;
 
     @Captor
     private ArgumentCaptor<Map<String, String>> contextsCaptor;
