@@ -28,7 +28,7 @@ public class RedisEmailVerificationValue {
                 .build();
     }
     
-    public EmailVerification toEmailVerification(Email email) {
+    public EmailVerification toDomain(Email email) {
         return new EmailVerification(email, new VerificationCode(code), issuedAt);
     }
 }
