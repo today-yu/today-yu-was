@@ -12,7 +12,7 @@ import java.util.Map;
 
 @Adapter
 @RequiredArgsConstructor
-public class EmailVerificationCodeSender implements SendEmailVerificationPort {
+public class SmtpEmailVerificationSender implements SendEmailVerificationPort {
     private final EmailSender emailSender;
     
     private static final String CODE_CONTEXT_KEY = "code";
@@ -21,7 +21,7 @@ public class EmailVerificationCodeSender implements SendEmailVerificationPort {
     /**
      * 이메일을 통해 인증 코드를 발송하는 메서드
      *
-     * <p> 인증 코드 전용 이메일 템플릿을 통해 이메일을 전송한다. </p>
+     * <p> 이메일 인증 인증 코드 전용 이메일 템플릿을 통해 이메일을 전송한다. </p>
      *
      * @param verification 이메일 인증 도메인 엔티티
      */
