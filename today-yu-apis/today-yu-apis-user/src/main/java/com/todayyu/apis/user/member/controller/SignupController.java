@@ -25,13 +25,13 @@ public class SignupController {
     private final SignupUsecase signupUsecase;
     
     @PostMapping("/email-verification/issue")
-    public ResponseEntity<?> issueVerificationCode(@Valid @RequestBody IssueEmailVerificationRequest request) {
+    public ResponseEntity<?> issueEmailVerification(@Valid @RequestBody IssueEmailVerificationRequest request) {
         issueEmailVerificationUsecase.issue(request.toCommand());
         return ResponseEntity.ok(SuccessResponse.from("이메일 인증 코드 발급에 성공하였습니다."));
     }
     
     @PostMapping("/email-verification/verify")
-    public ResponseEntity<?> verifyVerificationCode(@Valid @RequestBody VerifyEmailVerificationRequest request) {
+    public ResponseEntity<?> verifyEmailVerification(@Valid @RequestBody VerifyEmailVerificationRequest request) {
         verifyEmailVerificationUsecase.verify(request.toCommand());
         return ResponseEntity.ok(SuccessResponse.from("이메일 인증에 성공하였습니다."));
     }
