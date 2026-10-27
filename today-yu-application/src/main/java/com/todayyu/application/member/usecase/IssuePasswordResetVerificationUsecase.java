@@ -2,6 +2,7 @@ package com.todayyu.application.member.usecase;
 
 import com.todayyu.application.common.annotation.Usecase;
 import com.todayyu.application.member.dto.command.IssuePasswordResetVerificationCommand;
+import com.todayyu.application.member.port.SendPasswordResetVerificationPort;
 import com.todayyu.application.member.port.read.ReadMemberPort;
 import com.todayyu.application.member.port.read.ReadPasswordResetVerificationPort;
 import com.todayyu.application.member.port.save.SavePasswordResetVerificationPort;
@@ -23,6 +24,7 @@ public class IssuePasswordResetVerificationUsecase {
     private final ReadPasswordResetVerificationPort readPasswordResetVerificationPort;
     private final SavePasswordResetVerificationPort savePasswordResetVerificationPort;
     private final ReadMemberPort readMemberPort;
+    private final SendPasswordResetVerificationPort sendPasswordResetVerificationPort;
     
     /**
      * 비밀번호 재설정 인증 코드 발급 메서드
@@ -30,6 +32,8 @@ public class IssuePasswordResetVerificationUsecase {
      * <p> 가입 여부 노출을 막기 위해, 해당 이메일로 가입된 로컬 계정이 없으면 예외 없이 발급을 생략한다. </p>
      *
      * <p> 기존 인증이 존재하는 경우 {@link PasswordResetVerification#reissue(VerificationCode, LocalDateTime)}로 재발급한다. </p>
+     *
+     * <p> 발급한 인증을 저장한 후, {@link SendPasswordResetVerificationPort}를 통해 인증 코드를 이메일로 발송한다. </p>
      *
      * @param command 비밀번호 재설정 인증 코드 발급 요청 DTO
      * @throws CustomException {@link MemberErrorType#VERIFICATION_CODE_REISSUE_TOO_EARLY} - 재발급 가능 시각 이전에 요청한 경우
@@ -55,6 +59,6 @@ public class IssuePasswordResetVerificationUsecase {
         
         savePasswordResetVerificationPort.save(verification);
         
-        // TODO: 메일 발송
+        sendPasswordResetVerificationPort.send(verification);
     }
 }
