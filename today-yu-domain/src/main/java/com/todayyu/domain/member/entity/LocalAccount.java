@@ -52,4 +52,13 @@ public class LocalAccount implements Account {
         }
         return new LocalAccount(id, password);
     }
+    
+    /**
+     * 비밀번호 변경 메서드
+     *
+     * @param password 새 비밀번호
+     */
+    public void changePassword(EncodedPassword password) {
+        this.password = password;
+    }
 }
