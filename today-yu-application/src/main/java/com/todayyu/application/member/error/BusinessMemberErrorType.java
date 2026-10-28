@@ -13,6 +13,8 @@ import lombok.RequiredArgsConstructor;
 public enum BusinessMemberErrorType implements BaseErrorType {
     DUPLICATED_EMAIL(ErrorCategory.CONFLICT, "MEMBER-1001", "이미 가입된 이메일입니다."),
     NOT_FOUND(ErrorCategory.NOT_FOUND, "MEMBER-1002", "존재하지 않는 회원입니다."),
+    NO_LOCAL_ACCOUNT(ErrorCategory.BUSINESS, "MEMBER-1003", "이메일로 가입한 계정만 비밀번호를 변경할 수 있습니다."),
+    CURRENT_PASSWORD_MISMATCH(ErrorCategory.BUSINESS, "MEMBER-1004", "현재 비밀번호가 일치하지 않습니다."),
     ;
     
     private final ErrorCategory category;

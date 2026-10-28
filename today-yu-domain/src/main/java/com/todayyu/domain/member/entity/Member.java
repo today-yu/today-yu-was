@@ -83,4 +83,22 @@ public class Member {
         return accounts.stream()
                 .anyMatch(account -> LocalAccount.class.isInstance(account));
     }
+    
+    /**
+     * 회원의 비밀번호를 변경하는 메서드
+     *
+     * <p> 회원이 로컬 계정({@link LocalAccount})을 가지고 있지 않은 경우 예외를 응답한다. </p>
+     *
+     * @param password 새 비밀번호
+     * @throws IllegalStateException 로컬 계정이 존재하지 않는 경우
+     */
+    public void changePassword(EncodedPassword password) {
+        LocalAccount localAccount = accounts.stream()
+                .filter(LocalAccount.class::isInstance)
+                .map(LocalAccount.class::cast)
+                .findFirst()
+                .orElseThrow(() -> new IllegalStateException("로컬 계정이 존재하지 않는 회원입니다."));
+        
+        localAccount.changePassword(password);
+    }
 }
