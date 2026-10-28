@@ -43,4 +43,13 @@ public class AccountJpaEntity {
         this.authProviderUserId = authProviderUserId;
         this.memberId = memberId;
     }
+    
+    /**
+     * 비밀번호 갱신 메서드
+     *
+     * @param password 새 비밀번호
+     */
+    public void updatePassword(String password) {
+        this.password = password;
+    }
 }

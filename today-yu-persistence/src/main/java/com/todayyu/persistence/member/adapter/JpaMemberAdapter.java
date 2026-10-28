@@ -3,6 +3,7 @@ package com.todayyu.persistence.member.adapter;
 import com.todayyu.application.member.port.read.ReadMemberPort;
 import com.todayyu.application.member.port.save.SaveMemberPort;
 import com.todayyu.domain.member.entity.Account;
+import com.todayyu.domain.member.entity.LocalAccount;
 import com.todayyu.domain.member.entity.Member;
 import com.todayyu.domain.common.vo.Email;
 import com.todayyu.domain.member.vo.MemberId;
@@ -17,7 +18,9 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @PersistenceAdapter
 @RequiredArgsConstructor
@@ -96,6 +99,45 @@ public class JpaMemberAdapter implements ReadMemberPort, SaveMemberPort {
         List<AccountJpaEntity> savedAccounts = accountRepository.saveAll(toAccountJpaEntities(member, savedMember.getId()));
         
         return toDomain(savedMember, savedAccounts);
+    }
+    
+    /**
+     * 회원 정보를 갱신하는 메서드
+     *
+     * <p> 영속 상태의 회원, 계정 JPA 엔티티({@link MemberJpaEntity}, {@link AccountJpaEntity})를 조회한 뒤,
+     *     변경 감지(Dirty Checking)를 통해 갱신한다. </p>
+     *
+     * <p> 회원의 계정 중 로컬 계정({@link LocalAccount})의 비밀번호를 갱신한다.
+     *     이메일, 닉네임, 역할은 수정할 수 없으므로 갱신하지 않는다. </p>
+     *
+     * @param member 회원 객체
+     * @return 갱신된 회원 객체
+     * @throws IllegalStateException 회원 또는 계정이 존재하지 않는 경우
+     */
+    @Override
+    public Member update(Member member) {
+        Long memberId = member.getId().getValue();
+
+        MemberJpaEntity memberJpaEntity = memberRepository.findById(memberId)
+                .orElseThrow(() -> new IllegalStateException("회원이 존재하지 않습니다. memberId = " + memberId));
+
+        Map<Long, AccountJpaEntity> accountJpaEntities = accountRepository.findByMemberId(memberId).stream()
+                .collect(Collectors.toMap(account -> account.getId(), account -> account));
+
+        for (Account account : member.getAccounts()) {
+            Long accountId = account.getId().getValue();
+            AccountJpaEntity accountJpaEntity = accountJpaEntities.get(accountId);
+
+            if (accountJpaEntity == null) {
+                throw new IllegalStateException("계정이 존재하지 않습니다. accountId = " + accountId);
+            }
+            
+            if (account instanceof LocalAccount localAccount) {
+                accountJpaEntity.updatePassword(localAccount.getPassword().getValue());
+            }
+        }
+        
+        return toDomain(memberJpaEntity, List.copyOf(accountJpaEntities.values()));
     }
     
     /**
