@@ -14,6 +14,7 @@ import org.junit.jupiter.api.Test;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
@@ -118,5 +119,33 @@ class MemberTest {
 
         // then
         assertEquals(List.of(account), member.getAccounts());
+    }
+
+    @Test
+    @DisplayName("로컬 계정을 가진 회원은 비밀번호를 변경할 수 있다")
+    void changePassword() {
+        // given
+        LocalAccount account = LocalAccount.withId(new AccountId(10L), ENCODED_PASSWORD);
+        Member member = Member.withId(MEMBER_ID, EMAIL, NICKNAME, Role.MEMBER, List.of(account));
+        EncodedPassword newPassword = new EncodedPassword("encoded-new-password");
+
+        // when
+        member.changePassword(newPassword);
+
+        // then
+        assertEquals(Optional.of(newPassword), member.getEncodedPassword());
+    }
+
+    @Test
+    @DisplayName("로컬 계정이 없는 회원은 비밀번호를 변경할 수 없다")
+    void changePasswordWithoutLocalAccount() {
+        // given
+        SocialIdentity identity = new SocialIdentity(AuthProvider.KAKAO, new AuthProviderUserId("kakao-12345"));
+        SocialAccount account = SocialAccount.withId(new AccountId(10L), identity);
+        Member member = Member.withId(MEMBER_ID, EMAIL, NICKNAME, Role.MEMBER, List.of(account));
+
+        // when & then
+        assertThrows(IllegalStateException.class,
+                () -> member.changePassword(new EncodedPassword("encoded-new-password")));
     }
 }
