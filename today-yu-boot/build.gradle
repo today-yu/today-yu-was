@@ -14,7 +14,11 @@ dependencies {
     implementation project(':today-yu-persistence')
     implementation project(':today-yu-common')
 
+    /* SpringBoot */
     implementation 'org.springframework.boot:spring-boot-starter'
-
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
+
+    /* Monitoring: Actuator, Micrometer */
+    implementation 'org.springframework.boot:spring-boot-starter-actuator'
+    runtimeOnly 'io.micrometer:micrometer-registry-prometheus'
 }
