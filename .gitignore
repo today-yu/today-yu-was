@@ -39,6 +39,9 @@ out/
 ### Documentation ###
 /.local/
 
+# MAC OS
+.DS_Store
+
 ### AI ###
 CLAUDE.md
 AGENTS.md
