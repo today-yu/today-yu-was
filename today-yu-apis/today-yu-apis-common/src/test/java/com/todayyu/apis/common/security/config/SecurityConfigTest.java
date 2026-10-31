@@ -122,6 +122,16 @@ class SecurityConfigTest {
                 .andExpect(status().isUnauthorized())
                 .andExpect(jsonPath("$.errorCode").value(CommonErrorType.UNAUTHORIZED.getErrorCode()));
     }
+    
+    @ParameterizedTest
+    @ValueSource(strings = {"/actuator/health", "/actuator/prometheus"})
+    @DisplayName("모니터링 엔드포인트는 공개 엔드포인트로 인증 없이 요청이 처리된다.")
+    void monitoringEndpointWithoutToken(String uri) throws Exception {
+        mockMvc.perform(get(uri))
+                .andExpect(status().isOk());
+    
+        then(authenticationUsecase).shouldHaveNoInteractions();
+    }
 
     @Configuration
     @EnableWebMvc
@@ -154,6 +164,11 @@ class SecurityConfigTest {
                 "/api/v1/auth/logout"
         })
         String ok() {
+            return "ok";
+        }
+        
+        @GetMapping({"/actuator/health", "/actuator/prometheus"})
+        String monitoring() {
             return "ok";
         }
     }
