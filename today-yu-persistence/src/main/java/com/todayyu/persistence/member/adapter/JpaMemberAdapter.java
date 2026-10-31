@@ -6,7 +6,10 @@ import com.todayyu.domain.member.entity.Account;
 import com.todayyu.domain.member.entity.LocalAccount;
 import com.todayyu.domain.member.entity.Member;
 import com.todayyu.domain.common.vo.Email;
+import com.todayyu.domain.member.vo.AuthProvider;
+import com.todayyu.domain.member.vo.AuthProviderUserId;
 import com.todayyu.domain.member.vo.MemberId;
+import com.todayyu.domain.member.vo.SocialIdentity;
 import com.todayyu.persistence.common.PersistenceAdapter;
 import com.todayyu.persistence.member.entity.AccountJpaEntity;
 import com.todayyu.persistence.member.entity.MemberJpaEntity;
@@ -73,6 +76,25 @@ public class JpaMemberAdapter implements ReadMemberPort, SaveMemberPort {
                 .toList();
         
         return Optional.of(memberMapper.toDomain(memberJpaEntity.get(), accounts));
+    }
+    
+    /**
+     * 소셜 식별 정보({@link SocialIdentity})를 통해 회원({@link Member})을 조회해 반환하는 메서드
+     *
+     * <p> 인증 제공자({@link AuthProvider})와 인증 제공자 내 사용자 ID({@link AuthProviderUserId})로 소셜 계정을
+     *     조회한 뒤, ({@link #readByMemberId(MemberId)})를 호출해 해당 계정의 회원 ID로 회원을 조회한다. </p>
+     *
+     * @param identity 소셜 식별 정보 객체
+     * @return 회원 객체
+     */
+    @Override
+    public Optional<Member> readBySocialIdentity(SocialIdentity identity) {
+        AuthProvider authProvider = identity.getAuthProvider();
+        AuthProviderUserId authProviderUserId = identity.getAuthProviderUserId();
+        
+        return accountRepository.findByAuthProviderAndAuthProviderUserId(authProvider, authProviderUserId.getValue())
+                .map(AccountJpaEntity::getMemberId)
+                .flatMap(memberId -> readByMemberId(new MemberId(memberId)));
     }
     
     /**
