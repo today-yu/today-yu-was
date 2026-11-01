@@ -21,4 +21,7 @@ dependencies {
     runtimeOnly 'io.jsonwebtoken:jjwt-orgjson:0.13.0'
     /* RestClient */
     implementation 'org.springframework.boot:spring-boot-starter-restclient'
+
+    /* Spring Test */
+    testImplementation 'org.springframework:spring-test'
 }
