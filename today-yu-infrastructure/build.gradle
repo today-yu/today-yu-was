@@ -19,4 +19,6 @@ dependencies {
     implementation 'io.jsonwebtoken:jjwt-api:0.13.0'
     runtimeOnly 'io.jsonwebtoken:jjwt-impl:0.13.0'
     runtimeOnly 'io.jsonwebtoken:jjwt-orgjson:0.13.0'
+    /* RestClient */
+    implementation 'org.springframework.boot:spring-boot-starter-restclient'
 }
