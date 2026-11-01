@@ -25,7 +25,7 @@ public class OidcProperties {
     ) {
         this.connectTimeout = connectTimeout;
         this.readTimeout = readTimeout;
-        this.providers = providers;
+        this.providers = (providers == null) ? Map.of() : Map.copyOf(providers);
     }
     
     public Provider getProvider(AuthProvider authProvider) {
@@ -33,7 +33,13 @@ public class OidcProperties {
             throw new IllegalArgumentException("소셜 인증 제공자가 아닙니다. authProvider = " + authProvider);
         }
         
-        return providers.get(authProvider);
+        Provider provider = providers.get(authProvider);
+        
+        if (provider == null) {
+            throw new IllegalStateException("인증 제공자의 OIDC 설정이 존재하지 않습니다.");
+        }
+        
+        return provider;
     }
     
     public record Provider(
