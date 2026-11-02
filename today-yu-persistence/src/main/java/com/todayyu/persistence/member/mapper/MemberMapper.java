@@ -19,8 +19,10 @@ public class MemberMapper {
      * @return {@link MemberJpaEntity} 객체
      */
     public MemberJpaEntity toJpaEntity(Member domainEntity) {
+        String email = (domainEntity.getEmail() == null) ? null : domainEntity.getEmail().getValue();
+        
         return MemberJpaEntity.builder()
-                .email(domainEntity.getEmail().getValue())
+                .email(email)
                 .nickname(domainEntity.getNickname().getValue())
                 .role(domainEntity.getRole())
                 .build();
@@ -34,9 +36,11 @@ public class MemberMapper {
      * @return {@link Member} 객체
      */
     public Member toDomain(MemberJpaEntity jpaEntity, List<Account> accounts) {
+        Email email = (jpaEntity.getEmail() == null) ? null : new Email(jpaEntity.getEmail());
+        
         return Member.withId(
                 new MemberId(jpaEntity.getId()),
-                new Email(jpaEntity.getEmail()),
+                email,
                 new Nickname(jpaEntity.getNickname()),
                 jpaEntity.getRole(),
                 accounts
