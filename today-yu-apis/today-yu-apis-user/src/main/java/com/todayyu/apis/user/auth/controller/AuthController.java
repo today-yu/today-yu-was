@@ -2,21 +2,25 @@ package com.todayyu.apis.user.auth.controller;
 
 import com.todayyu.apis.common.auth.AuthScheme;
 import com.todayyu.apis.common.response.SuccessResponse;
+import com.todayyu.apis.user.auth.dto.request.AuthProviderParam;
 import com.todayyu.apis.user.auth.dto.request.ReissueAuthTokenRequest;
 import com.todayyu.apis.user.auth.dto.request.SigninRequest;
+import com.todayyu.apis.user.auth.dto.request.SocialSigninRequest;
 import com.todayyu.apis.user.auth.dto.response.AuthTokenResponse;
-import com.todayyu.application.auth.dto.result.AuthTokenResult;
 import com.todayyu.application.auth.dto.command.SignoutCommand;
+import com.todayyu.application.auth.dto.result.AuthTokenResult;
 import com.todayyu.application.auth.error.BusinessAuthErrorType;
 import com.todayyu.application.auth.usecase.ReissueAuthTokenUsecase;
 import com.todayyu.application.auth.usecase.SigninUsecase;
 import com.todayyu.application.auth.usecase.SignoutUsecase;
+import com.todayyu.application.auth.usecase.SocialSigninUsecase;
 import com.todayyu.common.exception.CustomException;
 import com.todayyu.domain.auth.vo.AccessToken;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.CacheControl;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
@@ -28,6 +32,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RequiredArgsConstructor
 public class AuthController {
     private final SigninUsecase signinUsecase;
+    private final SocialSigninUsecase socialSigninUsecase;
     private final SignoutUsecase signoutUsecase;
     private final ReissueAuthTokenUsecase reissueAuthTokenUsecase;
     
@@ -42,6 +47,23 @@ public class AuthController {
                 .body(
                         SuccessResponse.from(
                                 "로그인에 성공하였습니다.",
+                                AuthTokenResponse.from(result)
+                        )
+                );
+    }
+    
+    @PostMapping("/sign-in/{provider}")
+    public ResponseEntity<?> socialSignin(
+            @PathVariable(name = "provider") AuthProviderParam provider,
+            @Valid @RequestBody SocialSigninRequest request
+    ) {
+        AuthTokenResult result = socialSigninUsecase.signin(request.toCommand(provider));
+        
+        return ResponseEntity.ok()
+                .cacheControl(CacheControl.noStore())
+                .body(
+                        SuccessResponse.from(
+                                "소셜 로그인에 성공하였습니다.",
                                 AuthTokenResponse.from(result)
                         )
                 );

@@ -102,6 +102,7 @@ class SecurityConfigTest {
     @ParameterizedTest
     @ValueSource(strings = {
             "/api/v1/auth/sign-in",
+            "/api/v1/auth/sign-in/KAKAO",
             "/api/v1/auth/sign-up",
             "/api/v1/auth/email-verification/issue",
             "/api/v1/auth/email-verification/verify",
@@ -157,6 +158,7 @@ class SecurityConfigTest {
 
         @PostMapping({
                 "/api/v1/auth/sign-in",
+                "/api/v1/auth/sign-in/KAKAO",
                 "/api/v1/auth/sign-up",
                 "/api/v1/auth/email-verification/issue",
                 "/api/v1/auth/email-verification/verify",

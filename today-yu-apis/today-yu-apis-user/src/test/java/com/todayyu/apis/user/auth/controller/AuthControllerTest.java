@@ -5,16 +5,19 @@ import com.todayyu.apis.common.exception.GlobalExceptionHandler;
 import com.todayyu.application.auth.dto.command.ReissueAuthTokenCommand;
 import com.todayyu.application.auth.dto.command.SigninCommand;
 import com.todayyu.application.auth.dto.command.SignoutCommand;
+import com.todayyu.application.auth.dto.command.SocialSigninCommand;
 import com.todayyu.application.auth.dto.result.AuthTokenResult;
 import com.todayyu.application.auth.error.BusinessAuthErrorType;
 import com.todayyu.application.auth.usecase.ReissueAuthTokenUsecase;
 import com.todayyu.application.auth.usecase.SigninUsecase;
 import com.todayyu.application.auth.usecase.SignoutUsecase;
+import com.todayyu.application.auth.usecase.SocialSigninUsecase;
 import com.todayyu.common.error.BaseErrorType;
 import com.todayyu.common.error.ErrorCategory;
 import com.todayyu.common.exception.CustomException;
 import com.todayyu.domain.auth.vo.AccessToken;
 import com.todayyu.domain.auth.vo.RefreshToken;
+import com.todayyu.domain.member.vo.AuthProvider;
 import com.todayyu.domain.member.vo.Password;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -48,10 +51,12 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @ExtendWith(MockitoExtension.class)
 class AuthControllerTest {
     private static final String SIGNIN_URL = "/api/v1/auth/sign-in";
+    private static final String SOCIAL_SIGNIN_URL = "/api/v1/auth/sign-in/{provider}";
     private static final String SIGNOUT_URL = "/api/v1/auth/sign-out";
     private static final String REISSUE_URL = "/api/v1/auth/reissue";
     private static final String EMAIL = "user@example.com";
     private static final String PASSWORD = "password1234";
+    private static final String AUTHORIZATION_CODE = "authorization-code";
     private static final String INVALID_PASSWORD_LENGTH_MESSAGE =
             "비밀번호는 최소 " + Password.MIN_LENGTH + "자 이상, 최대 " + Password.MAX_LENGTH + "자 이하여야 합니다.";
     private static final String ACCESS_TOKEN = "access-token";
@@ -61,6 +66,9 @@ class AuthControllerTest {
 
     @Mock
     private SigninUsecase signinUsecase;
+
+    @Mock
+    private SocialSigninUsecase socialSigninUsecase;
 
     @Mock
     private SignoutUsecase signoutUsecase;
@@ -73,6 +81,9 @@ class AuthControllerTest {
 
     @Captor
     private ArgumentCaptor<SigninCommand> signinCommandCaptor;
+
+    @Captor
+    private ArgumentCaptor<SocialSigninCommand> socialSigninCommandCaptor;
 
     @Captor
     private ArgumentCaptor<SignoutCommand> signoutCommandCaptor;
@@ -202,6 +213,103 @@ class AuthControllerTest {
                         .content("""
                                 {"email": "%s", "password": "%s"}
                                 """.formatted(EMAIL, PASSWORD)))
+                .andExpect(status().isUnauthorized())
+                .andExpect(jsonPath("$.errorCode").value(TestErrorType.UNAUTHORIZED.getErrorCode()))
+                .andExpect(jsonPath("$.message").value(TestErrorType.UNAUTHORIZED.getMessage()));
+    }
+
+    @Test
+    @DisplayName("소셜 로그인 요청 시 인증 제공자와 인가 코드로 소셜 로그인을 요청하고, 캐시되지 않는 응답으로 토큰과 만료 시각을 반환한다")
+    void socialSignin() throws Exception {
+        // given
+        given(socialSigninUsecase.signin(any())).willReturn(new AuthTokenResult(
+                new AccessToken(ACCESS_TOKEN), ACCESS_TOKEN_EXPIRES_AT,
+                new RefreshToken(REFRESH_TOKEN), REFRESH_TOKEN_EXPIRES_AT
+        ));
+
+        // when
+        mockMvc.perform(post(SOCIAL_SIGNIN_URL, "KAKAO")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {"authorizationCode": "%s"}
+                                """.formatted(AUTHORIZATION_CODE)))
+                .andExpect(status().isOk())
+                .andExpect(header().string("Cache-Control", "no-store"))
+                .andExpect(jsonPath("$.message").value("소셜 로그인에 성공하였습니다."))
+                .andExpect(jsonPath("$.data.tokenType").value(AuthScheme.BEARER))
+                .andExpect(jsonPath("$.data.accessToken").value(ACCESS_TOKEN))
+                .andExpect(jsonPath("$.data.accessTokenExpiresAt").value(ACCESS_TOKEN_EXPIRES_AT.toString()))
+                .andExpect(jsonPath("$.data.refreshToken").value(REFRESH_TOKEN))
+                .andExpect(jsonPath("$.data.refreshTokenExpiresAt").value(REFRESH_TOKEN_EXPIRES_AT.toString()));
+
+        // then
+        then(socialSigninUsecase).should().signin(socialSigninCommandCaptor.capture());
+        assertEquals(AuthProvider.KAKAO, socialSigninCommandCaptor.getValue().provider());
+        assertEquals(AUTHORIZATION_CODE, socialSigninCommandCaptor.getValue().authorizationCode());
+    }
+
+    @Test
+    @DisplayName("소셜 로그인 요청에 인가 코드가 없으면 유효성 검증 에러를 응답하고 소셜 로그인을 하지 않는다")
+    void socialSigninWithoutAuthorizationCode() throws Exception {
+        // given & when
+        mockMvc.perform(post(SOCIAL_SIGNIN_URL, "KAKAO")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{}"))
+                .andExpect(status().isUnprocessableContent())
+                .andExpect(jsonPath("$.errorCode").value("COMMON-0002"))
+                .andExpect(jsonPath("$.errors.authorizationCode").value("인가 코드는 비어있을 수 없습니다."));
+
+        // then
+        then(socialSigninUsecase).should(never()).signin(any());
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {"", " "})
+    @DisplayName("소셜 로그인 요청의 인가 코드가 비어있으면 유효성 검증 에러를 응답하고 소셜 로그인을 하지 않는다")
+    void socialSigninWithBlankAuthorizationCode(String authorizationCode) throws Exception {
+        // given & when
+        mockMvc.perform(post(SOCIAL_SIGNIN_URL, "KAKAO")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {"authorizationCode": "%s"}
+                                """.formatted(authorizationCode)))
+                .andExpect(status().isUnprocessableContent())
+                .andExpect(jsonPath("$.errorCode").value("COMMON-0002"))
+                .andExpect(jsonPath("$.errors.authorizationCode").value("인가 코드는 비어있을 수 없습니다."));
+
+        // then
+        then(socialSigninUsecase).should(never()).signin(any());
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {"LOCAL", "NAVER", "kakao"})
+    @DisplayName("지원하지 않는 인증 제공자로 소셜 로그인을 요청하면 잘못된 요청 에러를 응답하고 소셜 로그인을 하지 않는다")
+    void socialSigninWithUnsupportedProvider(String provider) throws Exception {
+        // given & when
+        mockMvc.perform(post(SOCIAL_SIGNIN_URL, provider)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {"authorizationCode": "%s"}
+                                """.formatted(AUTHORIZATION_CODE)))
+                .andExpect(status().isBadRequest());
+
+        // then
+        then(socialSigninUsecase).should(never()).signin(any());
+    }
+
+    @Test
+    @DisplayName("소셜 로그인 중 비즈니스 예외가 발생하면 에러 카테고리에 맞는 상태 코드와 에러 응답을 반환한다")
+    void socialSigninWithBusinessException() throws Exception {
+        // given
+        willThrow(new CustomException(TestErrorType.UNAUTHORIZED))
+                .given(socialSigninUsecase).signin(any());
+
+        // when & then
+        mockMvc.perform(post(SOCIAL_SIGNIN_URL, "KAKAO")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {"authorizationCode": "%s"}
+                                """.formatted(AUTHORIZATION_CODE)))
                 .andExpect(status().isUnauthorized())
                 .andExpect(jsonPath("$.errorCode").value(TestErrorType.UNAUTHORIZED.getErrorCode()))
                 .andExpect(jsonPath("$.message").value(TestErrorType.UNAUTHORIZED.getMessage()));

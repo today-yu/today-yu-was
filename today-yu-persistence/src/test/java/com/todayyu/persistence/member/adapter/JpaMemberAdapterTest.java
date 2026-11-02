@@ -34,6 +34,7 @@ import java.util.Optional;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.then;
@@ -64,6 +65,68 @@ class JpaMemberAdapterTest {
 
     @InjectMocks
     private JpaMemberAdapter memberAdapter;
+
+    @Test
+    @DisplayName("소셜 식별 정보로 소셜 계정을 조회한 뒤, 해당 회원을 회원이 가진 모든 계정과 함께 반환한다")
+    void readBySocialIdentity() {
+        // given
+        SocialIdentity identity = new SocialIdentity(AuthProvider.KAKAO, new AuthProviderUserId(AUTH_PROVIDER_USER_ID));
+        AccountJpaEntity socialAccountJpaEntity = socialAccountJpaEntity();
+
+        given(accountRepository.findByAuthProviderAndAuthProviderUserId(AuthProvider.KAKAO, AUTH_PROVIDER_USER_ID))
+                .willReturn(Optional.of(socialAccountJpaEntity));
+        given(memberRepository.findById(MEMBER_ID)).willReturn(Optional.of(memberJpaEntity()));
+        given(accountRepository.findByMemberId(MEMBER_ID))
+                .willReturn(List.of(localAccountJpaEntity(), socialAccountJpaEntity));
+
+        // when
+        Optional<Member> result = memberAdapter.readBySocialIdentity(identity);
+
+        // then
+        assertTrue(result.isPresent());
+        Member member = result.get();
+        assertEquals(new MemberId(MEMBER_ID), member.getId());
+        assertEquals(2, member.getAccounts().size());
+        assertTrue(member.hasLocalAccount());
+        assertTrue(member.getAccounts().stream()
+                .filter(SocialAccount.class::isInstance)
+                .map(SocialAccount.class::cast)
+                .anyMatch(account -> identity.equals(account.getSocialIdentity())));
+    }
+
+    @Test
+    @DisplayName("소셜 식별 정보에 해당하는 소셜 계정이 없으면 빈 값을 반환하고 회원을 조회하지 않는다")
+    void readBySocialIdentityWithNotExistingAccount() {
+        // given
+        SocialIdentity identity = new SocialIdentity(AuthProvider.KAKAO, new AuthProviderUserId(AUTH_PROVIDER_USER_ID));
+        given(accountRepository.findByAuthProviderAndAuthProviderUserId(AuthProvider.KAKAO, AUTH_PROVIDER_USER_ID))
+                .willReturn(Optional.empty());
+
+        // when
+        Optional<Member> result = memberAdapter.readBySocialIdentity(identity);
+
+        // then
+        assertTrue(result.isEmpty());
+        then(memberRepository).should(never()).findById(any());
+        then(accountRepository).should(never()).findByMemberId(any());
+    }
+
+    @Test
+    @DisplayName("소셜 계정은 있지만 연결된 회원이 없으면 빈 값을 반환하고 회원의 계정 목록을 조회하지 않는다")
+    void readBySocialIdentityWithNotExistingMember() {
+        // given
+        SocialIdentity identity = new SocialIdentity(AuthProvider.KAKAO, new AuthProviderUserId(AUTH_PROVIDER_USER_ID));
+        given(accountRepository.findByAuthProviderAndAuthProviderUserId(AuthProvider.KAKAO, AUTH_PROVIDER_USER_ID))
+                .willReturn(Optional.of(socialAccountJpaEntity()));
+        given(memberRepository.findById(MEMBER_ID)).willReturn(Optional.empty());
+
+        // when
+        Optional<Member> result = memberAdapter.readBySocialIdentity(identity);
+
+        // then
+        assertTrue(result.isEmpty());
+        then(accountRepository).should(never()).findByMemberId(any());
+    }
 
     @Test
     @DisplayName("영속 상태의 계정 JPA 엔티티를 조회해 로컬 계정의 비밀번호를 변경하고, 도메인 엔티티로 변환해 반환한다")
