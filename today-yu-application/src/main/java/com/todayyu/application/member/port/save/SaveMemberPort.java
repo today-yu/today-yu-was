@@ -5,4 +5,5 @@ import com.todayyu.domain.member.entity.Member;
 public interface SaveMemberPort {
     Member save(Member member);
     Member update(Member member);
+    void withdraw(Member member);
 }
