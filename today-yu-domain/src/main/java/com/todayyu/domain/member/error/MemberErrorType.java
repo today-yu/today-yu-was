@@ -17,6 +17,7 @@ public enum MemberErrorType implements BaseErrorType {
     PASSWORD_TOO_SHORT(ErrorCategory.VALIDATION, "MEMBER-0003", "비밀번호는 " + Password.MIN_LENGTH + "자 이상이어야 합니다."),
     PASSWORD_TOO_LONG(ErrorCategory.VALIDATION, "MEMBER-0004", "비밀번호는 " + Password.MAX_LENGTH + "자 이하여야 합니다."),
     EXCEED_VERIFICATION_FAIL_COUNT(ErrorCategory.TOO_MANY_REQUESTS, "MEMBER-0005", "인증 실패 횟수를 초과하였습니다."),
+    ALREADY_WITHDRAWN(ErrorCategory.CONFLICT, "MEMBER-0006", "이미 탈퇴한 회원입니다."),
     ;
     
     private final ErrorCategory category;
