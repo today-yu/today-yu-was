@@ -36,12 +36,14 @@ public class JpaMemberAdapter implements ReadMemberPort, SaveMemberPort {
     /**
      * 회원 ID({@link MemberId})를 통해 회원({@link Member})를 조회해 반환하는 메서드
      *
+     * <p> 탈퇴한 회원은 조회하지 않는다. </p>
+     *
      * @param memberId 회원 ID 객체
      * @return 회원 객체
      */
     @Override
     public Optional<Member> readByMemberId(MemberId memberId) {
-        Optional<MemberJpaEntity> optionalMemberJpaEntity = memberRepository.findById(memberId.getValue());
+        Optional<MemberJpaEntity> optionalMemberJpaEntity = memberRepository.findByIdAndWithdrawnAtIsNull(memberId.getValue());
         
         if (optionalMemberJpaEntity.isEmpty()) {
             return Optional.ofNullable(null);
@@ -134,13 +136,13 @@ public class JpaMemberAdapter implements ReadMemberPort, SaveMemberPort {
      *
      * @param member 회원 객체
      * @return 갱신된 회원 객체
-     * @throws IllegalStateException 회원 또는 계정이 존재하지 않는 경우
+     * @throws IllegalStateException 회원(탈퇴한 회원 포함) 또는 계정이 존재하지 않는 경우
      */
     @Override
     public Member update(Member member) {
         Long memberId = member.getId().getValue();
 
-        MemberJpaEntity memberJpaEntity = memberRepository.findById(memberId)
+        MemberJpaEntity memberJpaEntity = memberRepository.findByIdAndWithdrawnAtIsNull(memberId)
                 .orElseThrow(() -> new IllegalStateException("회원이 존재하지 않습니다. memberId = " + memberId));
 
         Map<Long, AccountJpaEntity> accountJpaEntities = accountRepository.findByMemberId(memberId).stream()
@@ -174,7 +176,7 @@ public class JpaMemberAdapter implements ReadMemberPort, SaveMemberPort {
      * @throws IllegalStateException
      * <ul>
      *     <li> 회원 탈퇴 시각이 비어있는 경우 </li>
-     *     <li> 회원이 존재하지 않는 경우 </li>
+     *     <li> 회원이 존재하지 않거나 이미 탈퇴한 경우 </li>
      * </ul>
      */
     @Override
@@ -185,7 +187,7 @@ public class JpaMemberAdapter implements ReadMemberPort, SaveMemberPort {
             throw new IllegalStateException("탈퇴 처리한 회원이 아닙니다.");
         }
         
-        MemberJpaEntity memberJpaEntity = memberRepository.findById(memberId)
+        MemberJpaEntity memberJpaEntity = memberRepository.findByIdAndWithdrawnAtIsNull(memberId)
                 .orElseThrow(() -> new IllegalStateException("회원이 존재하지 않습니다. memberId = " + memberId));
         
         accountRepository.deleteByMemberId(memberId);
