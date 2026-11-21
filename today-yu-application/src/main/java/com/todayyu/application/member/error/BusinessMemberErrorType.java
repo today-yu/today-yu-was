@@ -15,6 +15,7 @@ public enum BusinessMemberErrorType implements BaseErrorType {
     NOT_FOUND(ErrorCategory.NOT_FOUND, "MEMBER-1002", "존재하지 않는 회원입니다."),
     NO_LOCAL_ACCOUNT(ErrorCategory.BUSINESS, "MEMBER-1003", "이메일로 가입한 계정만 비밀번호를 변경할 수 있습니다."),
     CURRENT_PASSWORD_MISMATCH(ErrorCategory.BUSINESS, "MEMBER-1004", "현재 비밀번호가 일치하지 않습니다."),
+    PASSWORD_REQUIRED(ErrorCategory.BUSINESS, "MEMBER-1005", "비밀번호는 필수 입력값입니다."),
     ;
     
     private final ErrorCategory category;

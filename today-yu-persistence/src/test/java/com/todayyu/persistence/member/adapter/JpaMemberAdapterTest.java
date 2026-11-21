@@ -28,6 +28,7 @@ import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.test.util.ReflectionTestUtils;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -50,6 +51,7 @@ class JpaMemberAdapterTest {
     private static final String PASSWORD = "encoded-password";
     private static final String NEW_PASSWORD = "encoded-new-password";
     private static final String AUTH_PROVIDER_USER_ID = "kakao-12345";
+    private static final LocalDateTime WITHDRAWN_AT = LocalDateTime.of(2026, 11, 21, 12, 0);
 
     @Mock
     private MemberJpaRepository memberRepository;
@@ -67,6 +69,37 @@ class JpaMemberAdapterTest {
     private JpaMemberAdapter memberAdapter;
 
     @Test
+    @DisplayName("회원 ID로 탈퇴하지 않은 회원을 조회해, 회원이 가진 모든 계정과 함께 반환한다")
+    void readByMemberId() {
+        // given
+        given(memberRepository.findByIdAndWithdrawnAtIsNull(MEMBER_ID)).willReturn(Optional.of(memberJpaEntity()));
+        given(accountRepository.findByMemberId(MEMBER_ID)).willReturn(List.of(localAccountJpaEntity()));
+
+        // when
+        Optional<Member> result = memberAdapter.readByMemberId(new MemberId(MEMBER_ID));
+
+        // then
+        assertTrue(result.isPresent());
+        assertEquals(new MemberId(MEMBER_ID), result.get().getId());
+        assertEquals(1, result.get().getAccounts().size());
+        then(memberRepository).should(never()).findById(any());
+    }
+
+    @Test
+    @DisplayName("회원이 존재하지 않거나 탈퇴한 회원이면 빈 값을 반환하고 계정 목록을 조회하지 않는다")
+    void readByMemberIdWithNotExistingOrWithdrawnMember() {
+        // given
+        given(memberRepository.findByIdAndWithdrawnAtIsNull(MEMBER_ID)).willReturn(Optional.empty());
+
+        // when
+        Optional<Member> result = memberAdapter.readByMemberId(new MemberId(MEMBER_ID));
+
+        // then
+        assertTrue(result.isEmpty());
+        then(accountRepository).should(never()).findByMemberId(any());
+    }
+
+    @Test
     @DisplayName("소셜 식별 정보로 소셜 계정을 조회한 뒤, 해당 회원을 회원이 가진 모든 계정과 함께 반환한다")
     void readBySocialIdentity() {
         // given
@@ -75,7 +108,7 @@ class JpaMemberAdapterTest {
 
         given(accountRepository.findByAuthProviderAndAuthProviderUserId(AuthProvider.KAKAO, AUTH_PROVIDER_USER_ID))
                 .willReturn(Optional.of(socialAccountJpaEntity));
-        given(memberRepository.findById(MEMBER_ID)).willReturn(Optional.of(memberJpaEntity()));
+        given(memberRepository.findByIdAndWithdrawnAtIsNull(MEMBER_ID)).willReturn(Optional.of(memberJpaEntity()));
         given(accountRepository.findByMemberId(MEMBER_ID))
                 .willReturn(List.of(localAccountJpaEntity(), socialAccountJpaEntity));
 
@@ -107,7 +140,7 @@ class JpaMemberAdapterTest {
 
         // then
         assertTrue(result.isEmpty());
-        then(memberRepository).should(never()).findById(any());
+        then(memberRepository).should(never()).findByIdAndWithdrawnAtIsNull(any());
         then(accountRepository).should(never()).findByMemberId(any());
     }
 
@@ -118,7 +151,7 @@ class JpaMemberAdapterTest {
         SocialIdentity identity = new SocialIdentity(AuthProvider.KAKAO, new AuthProviderUserId(AUTH_PROVIDER_USER_ID));
         given(accountRepository.findByAuthProviderAndAuthProviderUserId(AuthProvider.KAKAO, AUTH_PROVIDER_USER_ID))
                 .willReturn(Optional.of(socialAccountJpaEntity()));
-        given(memberRepository.findById(MEMBER_ID)).willReturn(Optional.empty());
+        given(memberRepository.findByIdAndWithdrawnAtIsNull(MEMBER_ID)).willReturn(Optional.empty());
 
         // when
         Optional<Member> result = memberAdapter.readBySocialIdentity(identity);
@@ -138,7 +171,7 @@ class JpaMemberAdapterTest {
                 LocalAccount.withId(new AccountId(LOCAL_ACCOUNT_ID), new EncodedPassword(NEW_PASSWORD))
         ));
 
-        given(memberRepository.findById(MEMBER_ID)).willReturn(Optional.of(memberJpaEntity));
+        given(memberRepository.findByIdAndWithdrawnAtIsNull(MEMBER_ID)).willReturn(Optional.of(memberJpaEntity));
         given(accountRepository.findByMemberId(MEMBER_ID)).willReturn(List.of(localAccountJpaEntity));
 
         // when
@@ -165,7 +198,7 @@ class JpaMemberAdapterTest {
                 SocialAccount.withId(new AccountId(SOCIAL_ACCOUNT_ID), identity)
         ));
 
-        given(memberRepository.findById(MEMBER_ID)).willReturn(Optional.of(memberJpaEntity));
+        given(memberRepository.findByIdAndWithdrawnAtIsNull(MEMBER_ID)).willReturn(Optional.of(memberJpaEntity));
         given(accountRepository.findByMemberId(MEMBER_ID))
                 .willReturn(List.of(localAccountJpaEntity, socialAccountJpaEntity));
 
@@ -185,7 +218,7 @@ class JpaMemberAdapterTest {
         Member member = member(List.of(
                 LocalAccount.withId(new AccountId(LOCAL_ACCOUNT_ID), new EncodedPassword(NEW_PASSWORD))
         ));
-        given(memberRepository.findById(MEMBER_ID)).willReturn(Optional.empty());
+        given(memberRepository.findByIdAndWithdrawnAtIsNull(MEMBER_ID)).willReturn(Optional.empty());
 
         // when & then
         assertThrows(IllegalStateException.class, () -> memberAdapter.update(member));
@@ -199,11 +232,65 @@ class JpaMemberAdapterTest {
         Member member = member(List.of(
                 LocalAccount.withId(new AccountId(LOCAL_ACCOUNT_ID), new EncodedPassword(NEW_PASSWORD))
         ));
-        given(memberRepository.findById(MEMBER_ID)).willReturn(Optional.of(memberJpaEntity()));
+        given(memberRepository.findByIdAndWithdrawnAtIsNull(MEMBER_ID)).willReturn(Optional.of(memberJpaEntity()));
         given(accountRepository.findByMemberId(MEMBER_ID)).willReturn(List.of());
 
         // when & then
         assertThrows(IllegalStateException.class, () -> memberAdapter.update(member));
+    }
+
+    @Test
+    @DisplayName("회원의 모든 계정을 삭제하고, 영속 상태의 회원 JPA 엔티티에 탈퇴 일시를 기록하며 이메일을 비식별화한다")
+    void withdraw() {
+        // given
+        MemberJpaEntity memberJpaEntity = memberJpaEntity();
+        Member member = member(List.of(
+                LocalAccount.withId(new AccountId(LOCAL_ACCOUNT_ID), new EncodedPassword(PASSWORD))
+        ));
+        member.withdraw(WITHDRAWN_AT);
+
+        given(memberRepository.findByIdAndWithdrawnAtIsNull(MEMBER_ID)).willReturn(Optional.of(memberJpaEntity));
+
+        // when
+        memberAdapter.withdraw(member);
+
+        // then
+        then(accountRepository).should().deleteByMemberId(MEMBER_ID);
+        assertEquals(WITHDRAWN_AT, memberJpaEntity.getWithdrawnAt());
+        assertNull(memberJpaEntity.getEmail());
+        assertEquals(NICKNAME, memberJpaEntity.getNickname());
+        assertEquals(Role.MEMBER, memberJpaEntity.getRole());
+        then(memberRepository).should(never()).save(any());
+    }
+
+    @Test
+    @DisplayName("탈퇴할 회원이 존재하지 않거나 이미 탈퇴한 회원이면 예외가 발생하고 계정을 삭제하지 않는다")
+    void withdrawWithNotExistingMember() {
+        // given
+        Member member = member(List.of(
+                LocalAccount.withId(new AccountId(LOCAL_ACCOUNT_ID), new EncodedPassword(PASSWORD))
+        ));
+        member.withdraw(WITHDRAWN_AT);
+
+        given(memberRepository.findByIdAndWithdrawnAtIsNull(MEMBER_ID)).willReturn(Optional.empty());
+
+        // when & then
+        assertThrows(IllegalStateException.class, () -> memberAdapter.withdraw(member));
+        then(accountRepository).should(never()).deleteByMemberId(any());
+    }
+
+    @Test
+    @DisplayName("탈퇴 처리되지 않은(탈퇴 일시가 없는) 회원이면 예외가 발생하고 회원 조회와 계정 삭제를 하지 않는다")
+    void withdrawWithNotWithdrawnMember() {
+        // given
+        Member member = member(List.of(
+                LocalAccount.withId(new AccountId(LOCAL_ACCOUNT_ID), new EncodedPassword(PASSWORD))
+        ));
+
+        // when & then
+        assertThrows(IllegalStateException.class, () -> memberAdapter.withdraw(member));
+        then(memberRepository).should(never()).findByIdAndWithdrawnAtIsNull(any());
+        then(accountRepository).should(never()).deleteByMemberId(any());
     }
 
     private Member member(List<Account> accounts) {
