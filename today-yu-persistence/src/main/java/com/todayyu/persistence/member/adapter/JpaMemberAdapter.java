@@ -188,10 +188,8 @@ public class JpaMemberAdapter implements ReadMemberPort, SaveMemberPort {
         MemberJpaEntity memberJpaEntity = memberRepository.findById(memberId)
                 .orElseThrow(() -> new IllegalStateException("회원이 존재하지 않습니다. memberId = " + memberId));
         
-        // 연동된 계정 삭제
         accountRepository.deleteByMemberId(memberId);
         
-        // 회원 비식별화
         memberJpaEntity.withdraw(member.getWithdrawnAt());
     }
     
