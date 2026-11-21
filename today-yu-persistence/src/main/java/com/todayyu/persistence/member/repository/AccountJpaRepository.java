@@ -10,4 +10,5 @@ import java.util.Optional;
 public interface AccountJpaRepository extends JpaRepository<AccountJpaEntity, Long> {
     List<AccountJpaEntity> findByMemberId(Long memberId);
     Optional<AccountJpaEntity> findByAuthProviderAndAuthProviderUserId(AuthProvider authProvider, String authProviderUserId);
+    void deleteByMemberId(Long memberId);
 }

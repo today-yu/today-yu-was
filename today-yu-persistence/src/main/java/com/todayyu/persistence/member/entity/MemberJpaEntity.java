@@ -14,6 +14,8 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
+import java.time.LocalDateTime;
+
 @Getter
 @Entity
 @Table(name = "member")
@@ -29,6 +31,9 @@ public class MemberJpaEntity {
     @Column(name = "nickname", nullable = false, unique = true)
     private String nickname;
     
+    @Column(name = "withdrawn_at")
+    private LocalDateTime withdrawnAt;
+    
     @Column(name = "role", nullable = false)
     @Enumerated(value = EnumType.STRING)
     private Role role;
@@ -38,5 +43,17 @@ public class MemberJpaEntity {
         this.email = email;
         this.nickname = nickname;
         this.role = role;
+    }
+    
+    /**
+     * 회원 탈퇴 메서드
+     *
+     * <p> 탈퇴 일시를 기록하고, 이메일을 제거하여 비식별화한다. </p>
+     *
+     * @param time 탈퇴 일시
+     */
+    public void withdraw(LocalDateTime time) {
+        this.withdrawnAt = time;
+        this.email = null;
     }
 }

@@ -2,10 +2,10 @@ package com.todayyu.persistence.member.adapter;
 
 import com.todayyu.application.member.port.read.ReadMemberPort;
 import com.todayyu.application.member.port.save.SaveMemberPort;
+import com.todayyu.domain.common.vo.Email;
 import com.todayyu.domain.member.entity.Account;
 import com.todayyu.domain.member.entity.LocalAccount;
 import com.todayyu.domain.member.entity.Member;
-import com.todayyu.domain.common.vo.Email;
 import com.todayyu.domain.member.vo.AuthProvider;
 import com.todayyu.domain.member.vo.AuthProviderUserId;
 import com.todayyu.domain.member.vo.MemberId;
@@ -160,6 +160,39 @@ public class JpaMemberAdapter implements ReadMemberPort, SaveMemberPort {
         }
         
         return toDomain(memberJpaEntity, List.copyOf(accountJpaEntities.values()));
+    }
+    
+    /**
+     * 회원 탈퇴 메서드
+     *
+     * <p> 회원의 모든 계정({@link AccountJpaEntity})을 삭제한 뒤, 회원 JPA 엔티티({@link MemberJpaEntity})에
+     *     탈퇴 일시를 기록하고 이메일을 비식별화한다. 회원 정보는 변경 감지(Dirty Checking)를 통해 갱신한다. </p>
+     *
+     * <p> 닉네임과 역할은 유지한다. </p>
+     *
+     * @param member 탈퇴 처리된 회원 객체
+     * @throws IllegalStateException
+     * <ul>
+     *     <li> 회원 탈퇴 시각이 비어있는 경우 </li>
+     *     <li> 회원이 존재하지 않는 경우 </li>
+     * </ul>
+     */
+    @Override
+    public void withdraw(Member member) {
+        Long memberId = member.getId().getValue();
+        
+        if (!member.isWithdrawn()) {
+            throw new IllegalStateException("탈퇴 처리한 회원이 아닙니다.");
+        }
+        
+        MemberJpaEntity memberJpaEntity = memberRepository.findById(memberId)
+                .orElseThrow(() -> new IllegalStateException("회원이 존재하지 않습니다. memberId = " + memberId));
+        
+        // 연동된 계정 삭제
+        accountRepository.deleteByMemberId(memberId);
+        
+        // 회원 비식별화
+        memberJpaEntity.withdraw(member.getWithdrawnAt());
     }
     
     /**
