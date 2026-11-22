@@ -43,6 +43,19 @@ public class JpaInfoRegistrationRequestAdapter implements ReadInfoRegistrationRe
     }
     
     /**
+     * 회원 ID({@link MemberId})를 통해 해당 회원이 요청한 모든 정보 등록 요청을 조회하는 메서드
+     *
+     * @param memberId 정보 등록 요청자 ID
+     * @return 해당 회원의 정보 등록 요청 목록 (요청 상태와 무관하게 전부)
+     */
+    @Override
+    public List<InfoRegistrationRequest> readAllByMemberId(MemberId memberId) {
+        return infoRegistrationRequestRepository.findAllByRequesterId(memberId.getValue()).stream()
+                .map(infoRegistrationRequestMapper::toDomain)
+                .toList();
+    }
+    
+    /**
      * 정보 ID({@link InfoId})와 요청 상태({@link InfoRequestStatus})를 통해 정보 등록 요청 목록을
      * 요청자 닉네임과 함께 조회하는 메서드
      *
@@ -106,5 +119,45 @@ public class JpaInfoRegistrationRequestAdapter implements ReadInfoRegistrationRe
         );
         
         return infoRegistrationRequestMapper.toDomain(savedRequest);
+    }
+    
+    /**
+     * 정보 등록 요청 ID({@link InfoRegistrationRequestId}) 목록에 해당하는 정보 등록 요청을 일괄 삭제하는 메서드
+     *
+     * <p> 영속성 컨텍스트를 거치지 않고 단일 DELETE 쿼리로 삭제하며, 목록이 비어있으면 쿼리를 실행하지 않는다. </p>
+     *
+     * @param ids 삭제할 정보 등록 요청 ID 목록
+     */
+    @Override
+    public void deleteByIds(List<InfoRegistrationRequestId> ids) {
+        if (ids.isEmpty()) return;
+        
+        List<Long> requestIds = ids.stream().map(id -> id.getValue()).toList();
+        infoRegistrationRequestRepository.deleteAllByIdInBatch(requestIds);
+    }
+    
+    /**
+     * 비식별화 처리된 정보 등록 요청 목록을 저장하는 메서드
+     *
+     * <p> 요청 ID로 JPA 엔티티를 조회한 후 연락 이메일을 제거하며, 더티 체킹을 통해 갱신된다.
+     *     목록이 비어있으면 조회하지 않는다. </p>
+     *
+     * @param requests 도메인에서 비식별화({@link InfoRegistrationRequest#anonymize()}) 처리한 정보 등록 요청 목록
+     * @throws IllegalStateException 비식별화 처리하지 않은 정보 등록 요청이 포함된 경우
+     */
+    @Override
+    public void anonymizeAll(List<InfoRegistrationRequest> requests) {
+        if (requests.isEmpty()) return;
+        
+        if (!requests.stream().allMatch(request -> request.isAnonymized())) {
+            throw new IllegalStateException("비식별화 처리하지 않은 정보 등록 요청이 존재합니다.");
+        }
+        
+        List<Long> ids = requests.stream()
+                .map(request -> request.getId().getValue())
+                .toList();
+        
+        infoRegistrationRequestRepository.findAllById(ids)
+                .forEach(request -> request.anonymize());
     }
 }

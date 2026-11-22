@@ -16,6 +16,7 @@ import java.util.Optional;
 
 public interface ReadInfoUpdateRequestPort {
     Optional<InfoUpdateRequest> readById(InfoUpdateRequestId id);
+    List<InfoUpdateRequest> readAllByMemberId(MemberId memberId);
     List<InfoUpdateRequestView> readByInfoIdAndStatus(InfoId infoId, InfoRequestStatus status);
     List<InfoUpdateRequestSummaryView> readByCursor(
             MemberId requesterId,

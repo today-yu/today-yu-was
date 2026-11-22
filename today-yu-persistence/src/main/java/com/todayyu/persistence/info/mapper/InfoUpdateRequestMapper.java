@@ -24,7 +24,7 @@ public class InfoUpdateRequestMapper {
                 .status(domainEntity.getStatus())
                 .infoId(domainEntity.getInfoId().getValue())
                 .content(domainEntity.getContent().getValue())
-                .contactEmail(domainEntity.getContactEmail().getValue())
+                .contactEmail(domainEntity.getContactEmail() == null ? null : domainEntity.getContactEmail().getValue())
                 .rejectionReason(domainEntity.getRejectionReason() == null ? null : domainEntity.getRejectionReason().getValue())
                 .observedAt(domainEntity.getObservedAt())
                 .requestedAt(domainEntity.getRequestedAt())
@@ -44,7 +44,7 @@ public class InfoUpdateRequestMapper {
                 jpaEntity.getStatus(),
                 new InfoId(jpaEntity.getInfoId()),
                 new InfoUpdateRequestContent(jpaEntity.getContent()),
-                new Email(jpaEntity.getContactEmail()),
+                jpaEntity.getContactEmail() == null ? null : new Email(jpaEntity.getContactEmail()),
                 jpaEntity.getRejectionReason() == null ? null : new RejectionReason(jpaEntity.getRejectionReason()),
                 jpaEntity.getObservedAt(),
                 jpaEntity.getRequestedAt()

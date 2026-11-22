@@ -31,7 +31,9 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertSame;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.then;
@@ -203,6 +205,116 @@ class JpaInfoUpdateRequestAdapterTest {
         assertSame(savedRequest, result);
         assertEquals(new InfoUpdateRequestId(FIRST_REQUEST_ID), result.getId());
         then(infoUpdateRequestRepository).should().save(newJpaEntity);
+    }
+
+    @Test
+    @DisplayName("회원 ID로 해당 회원의 모든 정보 수정 요청을 조회해 도메인 엔티티로 변환해 반환한다")
+    void readAllByMemberId() {
+        // given
+        InfoUpdateRequestJpaEntity pendingJpaEntity = pendingJpaEntity(FIRST_REQUEST_ID);
+        InfoUpdateRequestJpaEntity acceptedJpaEntity = jpaEntity(SECOND_REQUEST_ID, FIRST_REQUESTER_ID);
+        InfoUpdateRequest pendingRequest = pendingRequest(FIRST_REQUEST_ID);
+        InfoUpdateRequest acceptedRequest = request(SECOND_REQUEST_ID, FIRST_REQUESTER_ID);
+
+        given(infoUpdateRequestRepository.findAllByRequesterId(FIRST_REQUESTER_ID))
+                .willReturn(List.of(pendingJpaEntity, acceptedJpaEntity));
+        given(infoUpdateRequestMapper.toDomain(pendingJpaEntity)).willReturn(pendingRequest);
+        given(infoUpdateRequestMapper.toDomain(acceptedJpaEntity)).willReturn(acceptedRequest);
+
+        // when
+        List<InfoUpdateRequest> result = infoUpdateRequestAdapter.readAllByMemberId(new MemberId(FIRST_REQUESTER_ID));
+
+        // then
+        assertEquals(List.of(pendingRequest, acceptedRequest), result);
+    }
+
+    @Test
+    @DisplayName("회원의 정보 수정 요청이 없으면 빈 목록을 반환하고 변환하지 않는다")
+    void readAllByMemberIdWithoutRequests() {
+        // given
+        given(infoUpdateRequestRepository.findAllByRequesterId(FIRST_REQUESTER_ID)).willReturn(List.of());
+
+        // when
+        List<InfoUpdateRequest> result = infoUpdateRequestAdapter.readAllByMemberId(new MemberId(FIRST_REQUESTER_ID));
+
+        // then
+        assertTrue(result.isEmpty());
+        then(infoUpdateRequestMapper).shouldHaveNoInteractions();
+    }
+
+    @Test
+    @DisplayName("정보 수정 요청 ID 목록을 원시 ID 목록으로 변환해 일괄 삭제한다")
+    void deleteByIds() {
+        // when
+        infoUpdateRequestAdapter.deleteByIds(List.of(
+                new InfoUpdateRequestId(FIRST_REQUEST_ID),
+                new InfoUpdateRequestId(SECOND_REQUEST_ID)
+        ));
+
+        // then
+        then(infoUpdateRequestRepository).should()
+                .deleteAllByIdInBatch(List.of(FIRST_REQUEST_ID, SECOND_REQUEST_ID));
+    }
+
+    @Test
+    @DisplayName("삭제할 정보 수정 요청 ID 목록이 비어있으면 삭제하지 않는다")
+    void deleteByIdsWithEmptyIds() {
+        // when
+        infoUpdateRequestAdapter.deleteByIds(List.of());
+
+        // then
+        then(infoUpdateRequestRepository).shouldHaveNoInteractions();
+    }
+
+    @Test
+    @DisplayName("비식별화된 정보 수정 요청의 JPA 엔티티를 조회해 연락 이메일을 제거한다")
+    void anonymizeAll() {
+        // given
+        InfoUpdateRequest firstRequest = anonymizedRequest(FIRST_REQUEST_ID);
+        InfoUpdateRequest secondRequest = anonymizedRequest(SECOND_REQUEST_ID);
+        InfoUpdateRequestJpaEntity firstJpaEntity = jpaEntity(FIRST_REQUEST_ID, FIRST_REQUESTER_ID);
+        InfoUpdateRequestJpaEntity secondJpaEntity = jpaEntity(SECOND_REQUEST_ID, FIRST_REQUESTER_ID);
+
+        given(infoUpdateRequestRepository.findAllById(List.of(FIRST_REQUEST_ID, SECOND_REQUEST_ID)))
+                .willReturn(List.of(firstJpaEntity, secondJpaEntity));
+
+        // when
+        infoUpdateRequestAdapter.anonymizeAll(List.of(firstRequest, secondRequest));
+
+        // then
+        assertNull(firstJpaEntity.getContactEmail());
+        assertNull(secondJpaEntity.getContactEmail());
+    }
+
+    @Test
+    @DisplayName("비식별화할 정보 수정 요청 목록이 비어있으면 조회하지 않는다")
+    void anonymizeAllWithEmptyRequests() {
+        // when
+        infoUpdateRequestAdapter.anonymizeAll(List.of());
+
+        // then
+        then(infoUpdateRequestRepository).shouldHaveNoInteractions();
+    }
+
+    @Test
+    @DisplayName("비식별화 처리하지 않은 정보 수정 요청이 포함되어 있으면 예외가 발생하고 갱신하지 않는다")
+    void anonymizeAllWithNotAnonymizedRequest() {
+        // given
+        InfoUpdateRequest anonymizedRequest = anonymizedRequest(FIRST_REQUEST_ID);
+        InfoUpdateRequest notAnonymizedRequest = request(SECOND_REQUEST_ID, FIRST_REQUESTER_ID);
+
+        // when & then
+        assertThrows(
+                IllegalStateException.class,
+                () -> infoUpdateRequestAdapter.anonymizeAll(List.of(anonymizedRequest, notAnonymizedRequest))
+        );
+        then(infoUpdateRequestRepository).shouldHaveNoInteractions();
+    }
+
+    private InfoUpdateRequest anonymizedRequest(Long requestId) {
+        InfoUpdateRequest request = request(requestId, FIRST_REQUESTER_ID);
+        request.anonymize();
+        return request;
     }
 
     private InfoUpdateRequestJpaEntity pendingJpaEntity(Long requestId) {

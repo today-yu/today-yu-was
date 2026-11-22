@@ -19,6 +19,7 @@ import java.time.LocalDateTime;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class InfoRegistrationRequestMapperTest {
     private static final Long REQUEST_ID = 1L;
@@ -163,6 +164,49 @@ class InfoRegistrationRequestMapperTest {
         assertEquals(InfoRequestStatus.REJECTED, request.getStatus());
         assertNull(request.getInfoId());
         assertEquals(new RejectionReason(REJECTION_REASON), request.getRejectionReason());
+    }
+
+    @Test
+    @DisplayName("비식별화된 정보 등록 요청을 연락용 이메일이 없는 JPA 엔티티로 변환한다")
+    void toJpaEntity_anonymized() {
+        // given
+        InfoRegistrationRequest request = InfoRegistrationRequest.withId(
+                new InfoRegistrationRequestId(REQUEST_ID),
+                new MemberId(REQUESTER_ID),
+                InfoCategory.FACILITY,
+                new InfoRegistrationRequestTitle(TITLE),
+                new InfoRegistrationRequestContent(CONTENT),
+                InfoRequestStatus.ACCEPTED,
+                new InfoId(INFO_ID),
+                new Email(CONTACT_EMAIL),
+                null,
+                REQUESTED_AT
+        );
+        request.anonymize();
+
+        // when
+        InfoRegistrationRequestJpaEntity jpaEntity = mapper.toJpaEntity(request);
+
+        // then
+        assertNull(jpaEntity.getContactEmail());
+        assertEquals(InfoRequestStatus.ACCEPTED, jpaEntity.getStatus());
+        assertEquals(INFO_ID, jpaEntity.getInfoId());
+    }
+
+    @Test
+    @DisplayName("연락용 이메일이 없는 반영된 정보 등록 요청 JPA 엔티티를 비식별화된 정보 등록 요청으로 변환한다")
+    void toDomain_anonymized() {
+        // given
+        InfoRegistrationRequestJpaEntity jpaEntity = createJpaEntity(InfoRequestStatus.ACCEPTED, INFO_ID, null);
+        jpaEntity.anonymize();
+
+        // when
+        InfoRegistrationRequest request = mapper.toDomain(jpaEntity);
+
+        // then
+        assertNull(request.getContactEmail());
+        assertTrue(request.isAnonymized());
+        assertEquals(new InfoId(INFO_ID), request.getInfoId());
     }
 
     private InfoRegistrationRequestJpaEntity createJpaEntity(

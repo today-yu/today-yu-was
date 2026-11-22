@@ -70,8 +70,9 @@ public class InfoRegistrationRequest {
             Email contactEmail,
             LocalDateTime requestedAt
     ) {
-        validateRequiredFields(requesterId, category, title, content, contactEmail);
-        
+        validateRequiredFields(requesterId, category, title, content);
+        validateContactEmail(InfoRequestStatus.PENDING, contactEmail);
+
         return new InfoRegistrationRequest(
                 null,
                 requesterId,
@@ -102,8 +103,9 @@ public class InfoRegistrationRequest {
             throw new IllegalArgumentException("정보 등록 요청 ID는 비어있을 수 없습니다.");
         }
         
-        validateRequiredFields(requesterId, category, title, content, contactEmail);
+        validateRequiredFields(requesterId, category, title, content);
         validateStatus(status, infoId, rejectionReason);
+        validateContactEmail(status, contactEmail);
         
         return new InfoRegistrationRequest(
                 id,
@@ -126,22 +128,19 @@ public class InfoRegistrationRequest {
      * @param category     정보 카테고리
      * @param title        정보 등록 요청 제목
      * @param content      정보 등록 요청 내용
-     * @param contactEmail 정보 등록 요청자 연락 이메일
      * @throws IllegalArgumentException 필수 입력 필드가 누락된 경우
      * <ul>
      *     <li> {@code requesterId}가 비어있는 경우 </li>
      *     <li> {@code category}가 비어있는 경우 </li>
      *     <li> {@code title}가 비어있는 경우 </li>
      *     <li> {@code content}가 비어있는 경우 </li>
-     *     <li> {@code contactEmail}가 비어있는 경우 </li>
      * </ul>
      */
     private static void validateRequiredFields(
             MemberId requesterId,
             InfoCategory category,
             InfoRegistrationRequestTitle title,
-            InfoRegistrationRequestContent content,
-            Email contactEmail
+            InfoRegistrationRequestContent content
     ) {
         if (requesterId == null) {
             throw new IllegalArgumentException("정보 등록 요청 회원 ID는 비어있을 수 없습니다.");
@@ -158,8 +157,20 @@ public class InfoRegistrationRequest {
         if (content == null) {
             throw new IllegalArgumentException("정보 등록 요청 내용은 비어있을 수 없습니다.");
         }
-        
-        if (contactEmail == null) {
+    }
+
+    /**
+     * 정보 등록 요청 상태에 따라 연락 이메일({@link #contactEmail})이 유효한지 확인하는 정적 메서드
+     *
+     * <p> 연락 이메일은 필수이며, 비식별화({@link #anonymize()})된 {@link InfoRequestStatus#ACCEPTED} 요청만
+     *     연락 이메일이 없을 수 있다. </p>
+     *
+     * @param status       정보 등록 요청 상태
+     * @param contactEmail 정보 등록 요청자 연락 이메일
+     * @throws IllegalArgumentException {@link InfoRequestStatus#ACCEPTED}가 아닌 요청의 연락 이메일이 비어있는 경우
+     */
+    private static void validateContactEmail(InfoRequestStatus status, Email contactEmail) {
+        if (contactEmail == null && status != InfoRequestStatus.ACCEPTED) {
             throw new IllegalArgumentException("연락용 이메일은 비어있을 수 없습니다.");
         }
     }
@@ -203,5 +214,33 @@ public class InfoRegistrationRequest {
      */
     public boolean isRequester(MemberId memberId) {
         return requesterId.equals(memberId);
+    }
+    
+    /**
+     * 정보 등록 요청을 비식별화하는 메서드
+     *
+     * <p> 요청한 회원이 탈퇴한 경우, 반영된 요청은 발행된 정보의 근거이므로 삭제하지 않고 연락 이메일만 제거한다.
+     *     제목, 내용, 요청자 ID, 연결된 정보는 유지한다. </p>
+     *
+     * @throws IllegalStateException 요청 상태가 {@link InfoRequestStatus#ACCEPTED}가 아닌 경우
+     */
+    public void anonymize() {
+        if (this.status != InfoRequestStatus.ACCEPTED) {
+            throw new IllegalStateException("반영된 요청만 비식별화 할 수 있습니다.");
+        }
+        
+        this.contactEmail = null;
+    }
+    
+    /**
+     * 정보 등록 요청이 비식별화되었는지 확인하는 메서드
+     *
+     * <p> 연락 이메일은 비식별화({@link #anonymize()}) 시에만 제거되므로,
+     *     연락 이메일이 없는 반영된 요청을 비식별화된 요청으로 판단한다. </p>
+     *
+     * @return 요청 상태가 {@link InfoRequestStatus#ACCEPTED}이고 연락 이메일이 없으면 {@code true}
+     */
+    public boolean isAnonymized() {
+        return status == InfoRequestStatus.ACCEPTED && contactEmail == null;
     }
 }

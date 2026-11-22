@@ -20,9 +20,11 @@ import java.util.stream.Stream;
 
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class InfoRegistrationRequestTest {
     private static final InfoRegistrationRequestId REQUEST_ID = new InfoRegistrationRequestId(1L);
@@ -172,6 +174,76 @@ class InfoRegistrationRequestTest {
                 () -> InfoRegistrationRequest.withId(
                         REQUEST_ID, REQUESTER_ID, InfoCategory.ACADEMIC, TITLE, CONTENT, InfoRequestStatus.PENDING,
                         null, null, null, REQUESTED_AT));
+    }
+
+    @Test
+    @DisplayName("연락용 이메일 없이 반려된 정보 등록 요청을 생성할 수 없다")
+    void createWithIdWithoutContactEmailWhenRejected() {
+        assertThrows(IllegalArgumentException.class,
+                () -> InfoRegistrationRequest.withId(
+                        REQUEST_ID, REQUESTER_ID, InfoCategory.ACADEMIC, TITLE, CONTENT, InfoRequestStatus.REJECTED,
+                        null, null, REJECTION_REASON, REQUESTED_AT));
+    }
+
+    @Test
+    @DisplayName("연락용 이메일이 없는 반영된 정보 등록 요청은 비식별화된 요청으로 생성할 수 있다")
+    void createWithIdWithoutContactEmailWhenAccepted() {
+        InfoRegistrationRequest request = InfoRegistrationRequest.withId(
+                REQUEST_ID, REQUESTER_ID, InfoCategory.ACADEMIC, TITLE, CONTENT, InfoRequestStatus.ACCEPTED,
+                INFO_ID, null, null, REQUESTED_AT);
+
+        assertNull(request.getContactEmail());
+        assertTrue(request.isAnonymized());
+    }
+
+    @Test
+    @DisplayName("반영된 정보 등록 요청을 비식별화하면 연락용 이메일만 제거된다")
+    void anonymize() {
+        InfoRegistrationRequest request = InfoRegistrationRequest.withId(
+                REQUEST_ID, REQUESTER_ID, InfoCategory.ACADEMIC, TITLE, CONTENT, InfoRequestStatus.ACCEPTED,
+                INFO_ID, CONTACT_EMAIL, null, REQUESTED_AT);
+
+        request.anonymize();
+
+        assertNull(request.getContactEmail());
+        assertTrue(request.isAnonymized());
+        assertEquals(REQUESTER_ID, request.getRequesterId());
+        assertEquals(TITLE, request.getTitle());
+        assertEquals(CONTENT, request.getContent());
+        assertEquals(InfoRequestStatus.ACCEPTED, request.getStatus());
+        assertEquals(INFO_ID, request.getInfoId());
+    }
+
+    @Test
+    @DisplayName("검토 중인 정보 등록 요청은 비식별화할 수 없다")
+    void anonymizeWhenPending() {
+        InfoRegistrationRequest request = InfoRegistrationRequest.withId(
+                REQUEST_ID, REQUESTER_ID, InfoCategory.ACADEMIC, TITLE, CONTENT, InfoRequestStatus.PENDING,
+                null, CONTACT_EMAIL, null, REQUESTED_AT);
+
+        assertThrows(IllegalStateException.class, request::anonymize);
+        assertEquals(CONTACT_EMAIL, request.getContactEmail());
+    }
+
+    @Test
+    @DisplayName("반려된 정보 등록 요청은 비식별화할 수 없다")
+    void anonymizeWhenRejected() {
+        InfoRegistrationRequest request = InfoRegistrationRequest.withId(
+                REQUEST_ID, REQUESTER_ID, InfoCategory.ACADEMIC, TITLE, CONTENT, InfoRequestStatus.REJECTED,
+                null, CONTACT_EMAIL, REJECTION_REASON, REQUESTED_AT);
+
+        assertThrows(IllegalStateException.class, request::anonymize);
+        assertEquals(CONTACT_EMAIL, request.getContactEmail());
+    }
+
+    @Test
+    @DisplayName("연락용 이메일이 있는 반영된 정보 등록 요청은 비식별화된 요청이 아니다")
+    void isNotAnonymizedWithContactEmail() {
+        InfoRegistrationRequest request = InfoRegistrationRequest.withId(
+                REQUEST_ID, REQUESTER_ID, InfoCategory.ACADEMIC, TITLE, CONTENT, InfoRequestStatus.ACCEPTED,
+                INFO_ID, CONTACT_EMAIL, null, REQUESTED_AT);
+
+        assertFalse(request.isAnonymized());
     }
 
     @Test

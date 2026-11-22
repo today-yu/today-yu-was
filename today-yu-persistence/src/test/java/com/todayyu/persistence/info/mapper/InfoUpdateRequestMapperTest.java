@@ -17,6 +17,7 @@ import java.time.LocalDateTime;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class InfoUpdateRequestMapperTest {
     private static final Long REQUEST_ID = 1L;
@@ -133,6 +134,38 @@ class InfoUpdateRequestMapperTest {
         // then
         assertEquals(InfoRequestStatus.REJECTED, request.getStatus());
         assertEquals(new RejectionReason(REJECTION_REASON), request.getRejectionReason());
+    }
+
+    @Test
+    @DisplayName("비식별화된 정보 수정 요청을 연락용 이메일이 없는 JPA 엔티티로 변환한다")
+    void toJpaEntity_anonymized() {
+        // given
+        InfoUpdateRequest request = createDomain(InfoRequestStatus.ACCEPTED, null);
+        request.anonymize();
+
+        // when
+        InfoUpdateRequestJpaEntity jpaEntity = mapper.toJpaEntity(request);
+
+        // then
+        assertNull(jpaEntity.getContactEmail());
+        assertEquals(InfoRequestStatus.ACCEPTED, jpaEntity.getStatus());
+        assertEquals(INFO_ID, jpaEntity.getInfoId());
+    }
+
+    @Test
+    @DisplayName("연락용 이메일이 없는 반영된 정보 수정 요청 JPA 엔티티를 비식별화된 정보 수정 요청으로 변환한다")
+    void toDomain_anonymized() {
+        // given
+        InfoUpdateRequestJpaEntity jpaEntity = createJpaEntity(InfoRequestStatus.ACCEPTED, null);
+        jpaEntity.anonymize();
+
+        // when
+        InfoUpdateRequest request = mapper.toDomain(jpaEntity);
+
+        // then
+        assertNull(request.getContactEmail());
+        assertTrue(request.isAnonymized());
+        assertEquals(new InfoId(INFO_ID), request.getInfoId());
     }
 
     private InfoUpdateRequest createDomain(InfoRequestStatus status, RejectionReason rejectionReason) {
