@@ -38,7 +38,7 @@ public class InfoUpdateRequestJpaEntity {
     @Column(name = "content", nullable = false, columnDefinition = "TEXT")
     private String content;
     
-    @Column(name = "contact_email", nullable = false)
+    @Column(name = "contact_email", nullable = true)
     private String contactEmail;
     
     @Column(name = "rejection_reason")
