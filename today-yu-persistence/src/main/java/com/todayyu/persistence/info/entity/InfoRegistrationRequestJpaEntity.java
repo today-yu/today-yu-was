@@ -47,7 +47,7 @@ public class InfoRegistrationRequestJpaEntity {
     @Column(name = "info_id")
     private Long infoId;
     
-    @Column(name = "contact_email", nullable = false)
+    @Column(name = "contact_email", nullable = true)
     private String contactEmail;
     
     @Column(name = "rejection_reason")
