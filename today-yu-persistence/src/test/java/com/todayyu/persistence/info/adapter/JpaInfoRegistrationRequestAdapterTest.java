@@ -31,7 +31,9 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertSame;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.then;
@@ -202,6 +204,118 @@ class JpaInfoRegistrationRequestAdapterTest {
         assertSame(savedRequest, result);
         assertEquals(new InfoRegistrationRequestId(FIRST_REQUEST_ID), result.getId());
         then(infoRegistrationRequestRepository).should().save(newJpaEntity);
+    }
+
+    @Test
+    @DisplayName("회원 ID로 해당 회원의 모든 정보 등록 요청을 조회해 도메인 엔티티로 변환해 반환한다")
+    void readAllByMemberId() {
+        // given
+        InfoRegistrationRequestJpaEntity pendingJpaEntity = pendingJpaEntity(FIRST_REQUEST_ID);
+        InfoRegistrationRequestJpaEntity acceptedJpaEntity = jpaEntity(SECOND_REQUEST_ID, FIRST_REQUESTER_ID);
+        InfoRegistrationRequest pendingRequest = pendingRequest(FIRST_REQUEST_ID);
+        InfoRegistrationRequest acceptedRequest = request(SECOND_REQUEST_ID, FIRST_REQUESTER_ID);
+
+        given(infoRegistrationRequestRepository.findAllByRequesterId(FIRST_REQUESTER_ID))
+                .willReturn(List.of(pendingJpaEntity, acceptedJpaEntity));
+        given(infoRegistrationRequestMapper.toDomain(pendingJpaEntity)).willReturn(pendingRequest);
+        given(infoRegistrationRequestMapper.toDomain(acceptedJpaEntity)).willReturn(acceptedRequest);
+
+        // when
+        List<InfoRegistrationRequest> result =
+                infoRegistrationRequestAdapter.readAllByMemberId(new MemberId(FIRST_REQUESTER_ID));
+
+        // then
+        assertEquals(List.of(pendingRequest, acceptedRequest), result);
+    }
+
+    @Test
+    @DisplayName("회원의 정보 등록 요청이 없으면 빈 목록을 반환하고 변환하지 않는다")
+    void readAllByMemberIdWithoutRequests() {
+        // given
+        given(infoRegistrationRequestRepository.findAllByRequesterId(FIRST_REQUESTER_ID)).willReturn(List.of());
+
+        // when
+        List<InfoRegistrationRequest> result =
+                infoRegistrationRequestAdapter.readAllByMemberId(new MemberId(FIRST_REQUESTER_ID));
+
+        // then
+        assertTrue(result.isEmpty());
+        then(infoRegistrationRequestMapper).shouldHaveNoInteractions();
+    }
+
+    @Test
+    @DisplayName("정보 등록 요청 ID 목록을 원시 ID 목록으로 변환해 일괄 삭제한다")
+    void deleteByIds() {
+        // when
+        infoRegistrationRequestAdapter.deleteByIds(List.of(
+                new InfoRegistrationRequestId(FIRST_REQUEST_ID),
+                new InfoRegistrationRequestId(SECOND_REQUEST_ID)
+        ));
+
+        // then
+        then(infoRegistrationRequestRepository).should()
+                .deleteAllByIdInBatch(List.of(FIRST_REQUEST_ID, SECOND_REQUEST_ID));
+    }
+
+    @Test
+    @DisplayName("삭제할 정보 등록 요청 ID 목록이 비어있으면 삭제하지 않는다")
+    void deleteByIdsWithEmptyIds() {
+        // when
+        infoRegistrationRequestAdapter.deleteByIds(List.of());
+
+        // then
+        then(infoRegistrationRequestRepository).shouldHaveNoInteractions();
+    }
+
+    @Test
+    @DisplayName("비식별화된 정보 등록 요청의 JPA 엔티티를 조회해 연락 이메일을 제거한다")
+    void anonymizeAll() {
+        // given
+        InfoRegistrationRequest firstRequest = anonymizedRequest(FIRST_REQUEST_ID);
+        InfoRegistrationRequest secondRequest = anonymizedRequest(SECOND_REQUEST_ID);
+        InfoRegistrationRequestJpaEntity firstJpaEntity = jpaEntity(FIRST_REQUEST_ID, FIRST_REQUESTER_ID);
+        InfoRegistrationRequestJpaEntity secondJpaEntity = jpaEntity(SECOND_REQUEST_ID, FIRST_REQUESTER_ID);
+
+        given(infoRegistrationRequestRepository.findAllById(List.of(FIRST_REQUEST_ID, SECOND_REQUEST_ID)))
+                .willReturn(List.of(firstJpaEntity, secondJpaEntity));
+
+        // when
+        infoRegistrationRequestAdapter.anonymizeAll(List.of(firstRequest, secondRequest));
+
+        // then
+        assertNull(firstJpaEntity.getContactEmail());
+        assertNull(secondJpaEntity.getContactEmail());
+    }
+
+    @Test
+    @DisplayName("비식별화할 정보 등록 요청 목록이 비어있으면 조회하지 않는다")
+    void anonymizeAllWithEmptyRequests() {
+        // when
+        infoRegistrationRequestAdapter.anonymizeAll(List.of());
+
+        // then
+        then(infoRegistrationRequestRepository).shouldHaveNoInteractions();
+    }
+
+    @Test
+    @DisplayName("비식별화 처리하지 않은 정보 등록 요청이 포함되어 있으면 예외가 발생하고 갱신하지 않는다")
+    void anonymizeAllWithNotAnonymizedRequest() {
+        // given
+        InfoRegistrationRequest anonymizedRequest = anonymizedRequest(FIRST_REQUEST_ID);
+        InfoRegistrationRequest notAnonymizedRequest = request(SECOND_REQUEST_ID, FIRST_REQUESTER_ID);
+
+        // when & then
+        assertThrows(
+                IllegalStateException.class,
+                () -> infoRegistrationRequestAdapter.anonymizeAll(List.of(anonymizedRequest, notAnonymizedRequest))
+        );
+        then(infoRegistrationRequestRepository).shouldHaveNoInteractions();
+    }
+
+    private InfoRegistrationRequest anonymizedRequest(Long requestId) {
+        InfoRegistrationRequest request = request(requestId, FIRST_REQUESTER_ID);
+        request.anonymize();
+        return request;
     }
 
     private InfoRegistrationRequestJpaEntity pendingJpaEntity(Long requestId) {
