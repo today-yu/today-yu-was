@@ -205,11 +205,31 @@ public class InfoRegistrationRequest {
         return requesterId.equals(memberId);
     }
     
+    /**
+     * 정보 등록 요청을 비식별화하는 메서드
+     *
+     * <p> 요청한 회원이 탈퇴한 경우, 반영된 요청은 발행된 정보의 근거이므로 삭제하지 않고 연락 이메일만 제거한다.
+     *     제목, 내용, 요청자 ID, 연결된 정보는 유지한다. </p>
+     *
+     * @throws IllegalStateException 요청 상태가 {@link InfoRequestStatus#ACCEPTED}가 아닌 경우
+     */
     public void anonymize() {
         if (this.status != InfoRequestStatus.ACCEPTED) {
             throw new IllegalStateException("반영된 요청만 비식별화 할 수 있습니다.");
         }
         
         this.contactEmail = null;
+    }
+    
+    /**
+     * 정보 등록 요청이 비식별화되었는지 확인하는 메서드
+     *
+     * <p> 연락 이메일은 비식별화({@link #anonymize()}) 시에만 제거되므로,
+     *     연락 이메일이 없는 반영된 요청을 비식별화된 요청으로 판단한다. </p>
+     *
+     * @return 요청 상태가 {@link InfoRequestStatus#ACCEPTED}이고 연락 이메일이 없으면 {@code true}
+     */
+    public boolean isAnonymized() {
+        return status == InfoRequestStatus.ACCEPTED && contactEmail == null;
     }
 }
