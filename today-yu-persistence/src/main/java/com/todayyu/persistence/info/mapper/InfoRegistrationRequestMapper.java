@@ -27,7 +27,7 @@ public class InfoRegistrationRequestMapper {
                 .content(domainEntity.getContent().getValue())
                 .status(domainEntity.getStatus())
                 .infoId(domainEntity.getInfoId() == null ? null : domainEntity.getInfoId().getValue())
-                .contactEmail(domainEntity.getContactEmail().getValue())
+                .contactEmail(domainEntity.getContactEmail() == null ? null : domainEntity.getContactEmail().getValue())
                 .rejectionReason(domainEntity.getRejectionReason() == null ? null : domainEntity.getRejectionReason().getValue())
                 .requestedAt(domainEntity.getRequestedAt())
                 .build();
@@ -48,7 +48,7 @@ public class InfoRegistrationRequestMapper {
                 new InfoRegistrationRequestContent(jpaEntity.getContent()),
                 jpaEntity.getStatus(),
                 jpaEntity.getInfoId() == null ? null : new InfoId(jpaEntity.getInfoId()),
-                new Email(jpaEntity.getContactEmail()),
+                jpaEntity.getContactEmail() == null ? null : new Email(jpaEntity.getContactEmail()),
                 jpaEntity.getRejectionReason() == null ? null : new RejectionReason(jpaEntity.getRejectionReason()),
                 jpaEntity.getRequestedAt()
         );
