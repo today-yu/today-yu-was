@@ -70,4 +70,13 @@ public class InfoUpdateRequestJpaEntity {
         this.observedAt = observedAt;
         this.requestedAt = requestedAt;
     }
+
+    /**
+     * 정보 수정 요청의 연락 이메일을 제거하여 비식별화하는 메서드
+     *
+     * <p> 영속 상태에서 호출하면 더티 체킹을 통해 {@code contact_email} 컬럼이 {@code null}로 갱신된다. </p>
+     */
+    public void anonymize() {
+        this.contactEmail = null;
+    }
 }
