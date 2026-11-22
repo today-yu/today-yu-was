@@ -43,6 +43,19 @@ public class JpaInfoRegistrationRequestAdapter implements ReadInfoRegistrationRe
     }
     
     /**
+     * 회원 ID({@link MemberId})를 통해 해당 회원이 요청한 모든 정보 등록 요청을 조회하는 메서드
+     *
+     * @param memberId 정보 등록 요청자 ID
+     * @return 해당 회원의 정보 등록 요청 목록 (요청 상태와 무관하게 전부)
+     */
+    @Override
+    public List<InfoRegistrationRequest> readAllByMemberId(MemberId memberId) {
+        return infoRegistrationRequestRepository.findAllByRequesterId(memberId.getValue()).stream()
+                .map(infoRegistrationRequestMapper::toDomain)
+                .toList();
+    }
+    
+    /**
      * 정보 ID({@link InfoId})와 요청 상태({@link InfoRequestStatus})를 통해 정보 등록 요청 목록을
      * 요청자 닉네임과 함께 조회하는 메서드
      *
