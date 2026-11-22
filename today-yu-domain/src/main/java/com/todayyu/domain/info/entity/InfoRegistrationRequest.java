@@ -204,4 +204,12 @@ public class InfoRegistrationRequest {
     public boolean isRequester(MemberId memberId) {
         return requesterId.equals(memberId);
     }
+    
+    public void anonymize() {
+        if (this.status != InfoRequestStatus.ACCEPTED) {
+            throw new IllegalStateException("반영된 요청만 비식별화 할 수 있습니다.");
+        }
+        
+        this.contactEmail = null;
+    }
 }
