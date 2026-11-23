@@ -7,4 +7,5 @@ import com.todayyu.domain.member.vo.MemberId;
 public interface SaveHelpfulMarkPort {
     HelpfulMark save(HelpfulMark helpfulMark);
     void deleteByInfoIdAndMemberId(InfoId infoId, MemberId memberId);
+    void deleteAllByMemberId(MemberId memberId);
 }
