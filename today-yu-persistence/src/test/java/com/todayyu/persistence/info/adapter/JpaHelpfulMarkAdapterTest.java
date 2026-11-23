@@ -170,6 +170,17 @@ class JpaHelpfulMarkAdapterTest {
         then(helpfulMarkRepository).should().deleteByInfoIdAndMemberId(INFO_ID, MEMBER_ID);
     }
 
+    @Test
+    @DisplayName("회원 ID 값으로 해당 회원이 남긴 '도움이 되는 정보에요'를 일괄 삭제한다")
+    void deleteAllByMemberId() {
+        // when
+        helpfulMarkAdapter.deleteAllByMemberId(new MemberId(MEMBER_ID));
+
+        // then
+        then(helpfulMarkRepository).should().deleteAllByMemberIdInBatch(MEMBER_ID);
+        then(helpfulMarkMapper).shouldHaveNoInteractions();
+    }
+
     private HelpfulMarkJpaEntity jpaEntity(Long helpfulMarkId) {
         HelpfulMarkJpaEntity jpaEntity = HelpfulMarkJpaEntity.builder()
                 .infoId(INFO_ID)
