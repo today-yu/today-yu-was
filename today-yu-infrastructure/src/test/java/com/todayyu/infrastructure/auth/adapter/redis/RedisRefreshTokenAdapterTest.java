@@ -75,4 +75,12 @@ class RedisRefreshTokenAdapterTest {
 
         then(store).should().delete(String.valueOf(MEMBER_ID.getValue()), SESSION_ID.getValue());
     }
+
+    @Test
+    @DisplayName("회원 ID에 해당하는 모든 세션의 Refresh Token을 삭제한다")
+    void deleteAllByMemberId() {
+        adapter.deleteAllByMemberId(MEMBER_ID);
+
+        then(store).should().deleteAll(String.valueOf(MEMBER_ID.getValue()));
+    }
 }

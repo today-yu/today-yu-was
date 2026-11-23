@@ -63,4 +63,14 @@ public class RedisRefreshTokenAdapter implements ReadRefreshTokenPort, SaveRefre
     public void delete(MemberId memberId, SessionId sessionId) {
         refreshTokenStore.delete(String.valueOf(memberId.getValue()), sessionId.getValue());
     }
+    
+    /**
+     * Redis에 저장된 해당 회원의 모든 세션의 Refresh Token을 제거하는 메서드
+     *
+     * @param memberId 회원 ID
+     */
+    @Override
+    public void deleteAllByMemberId(MemberId memberId) {
+        refreshTokenStore.deleteAll(String.valueOf(memberId.getValue()));
+    }
 }
