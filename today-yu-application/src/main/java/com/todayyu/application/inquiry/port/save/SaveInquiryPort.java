@@ -2,9 +2,11 @@ package com.todayyu.application.inquiry.port.save;
 
 import com.todayyu.domain.inquiry.entity.Inquiry;
 import com.todayyu.domain.inquiry.vo.InquiryId;
+import com.todayyu.domain.member.vo.MemberId;
 
 public interface SaveInquiryPort {
     Inquiry save(Inquiry inquiry);
     Inquiry update(Inquiry inquiry);
     void deleteById(InquiryId id);
+    void deleteAllByMemberId(MemberId memberId);
 }
