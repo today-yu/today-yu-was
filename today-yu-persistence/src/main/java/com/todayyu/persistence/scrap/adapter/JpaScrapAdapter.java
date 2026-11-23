@@ -116,4 +116,16 @@ public class JpaScrapAdapter implements ReadScrapPort, SaveScrapPort {
     public void deleteByInfoIdAndMemberId(InfoId infoId, MemberId memberId) {
         scrapRepository.deleteByInfoIdAndMemberId(infoId.getValue(), memberId.getValue());
     }
+    
+    /**
+     * 회원 ID({@link MemberId})에 해당하는 회원의 스크랩을 정보와 관계없이 모두 삭제하는 메서드
+     *
+     * <p> 영속성 컨텍스트를 거치지 않고 단일 DELETE 쿼리로 삭제하며, 삭제할 스크랩이 없으면 아무것도 하지 않는다. </p>
+     *
+     * @param memberId 스크랩한 회원 ID
+     */
+    @Override
+    public void deleteAllByMemberId(MemberId memberId) {
+        scrapRepository.deleteAllByMemberIdInBatch(memberId.getValue());
+    }
 }
