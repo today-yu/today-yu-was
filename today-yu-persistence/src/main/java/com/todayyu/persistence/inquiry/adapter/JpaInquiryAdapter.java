@@ -106,4 +106,16 @@ public class JpaInquiryAdapter implements ReadInquiryPort, SaveInquiryPort {
     public void deleteById(InquiryId id) {
         inquiryRepository.deleteById(id.getValue());
     }
+
+    /**
+     * 회원 ID({@link MemberId})에 해당하는 회원이 작성한 문의를 상태와 관계없이 모두 삭제하는 메서드
+     *
+     * <p> 영속성 컨텍스트를 거치지 않고 단일 DELETE 쿼리로 삭제하며, 삭제할 문의가 없으면 아무것도 하지 않는다. </p>
+     *
+     * @param memberId 문의 작성 회원 ID
+     */
+    @Override
+    public void deleteAllByMemberId(MemberId memberId) {
+        inquiryRepository.deleteAllByMemberIdInBatch(memberId.getValue());
+    }
 }
