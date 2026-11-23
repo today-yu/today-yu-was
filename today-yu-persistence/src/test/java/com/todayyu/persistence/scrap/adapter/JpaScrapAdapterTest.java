@@ -197,6 +197,17 @@ class JpaScrapAdapterTest {
         then(scrapRepository).should().deleteByInfoIdAndMemberId(INFO_ID, MEMBER_ID);
     }
 
+    @Test
+    @DisplayName("회원 ID 값으로 해당 회원의 스크랩을 일괄 삭제한다")
+    void deleteAllByMemberId() {
+        // when
+        scrapAdapter.deleteAllByMemberId(new MemberId(MEMBER_ID));
+
+        // then
+        then(scrapRepository).should().deleteAllByMemberIdInBatch(MEMBER_ID);
+        then(scrapMapper).shouldHaveNoInteractions();
+    }
+
     private ScrapJpaEntity jpaEntity(Long scrapId) {
         ScrapJpaEntity jpaEntity = ScrapJpaEntity.builder()
                 .infoId(INFO_ID)
