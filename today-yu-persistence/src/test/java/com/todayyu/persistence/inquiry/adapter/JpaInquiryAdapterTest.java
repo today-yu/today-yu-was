@@ -212,6 +212,17 @@ class JpaInquiryAdapterTest {
         then(inquiryRepository).should().deleteById(INQUIRY_ID);
     }
 
+    @Test
+    @DisplayName("회원 ID 값으로 해당 회원이 작성한 문의를 일괄 삭제한다")
+    void deleteAllByMemberId() {
+        // when
+        inquiryAdapter.deleteAllByMemberId(new MemberId(MEMBER_ID));
+
+        // then
+        then(inquiryRepository).should().deleteAllByMemberIdInBatch(MEMBER_ID);
+        then(inquiryMapper).shouldHaveNoInteractions();
+    }
+
     private InquiryJpaEntity waitingJpaEntity(Long inquiryId) {
         InquiryJpaEntity jpaEntity = InquiryJpaEntity.builder()
                 .memberId(MEMBER_ID)
