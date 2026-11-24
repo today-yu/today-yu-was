@@ -16,6 +16,7 @@ public enum BusinessAuthErrorType implements BaseErrorType {
     FAIL_SIGNIN(ErrorCategory.UNAUTHORIZED, "AUTH-1003", "로그인에 실패하였습니다. 아이디와 비밀번호를 확인해주세요."),
     FAIL_REISSUE(ErrorCategory.UNAUTHORIZED, "AUTH-1004", "토큰 재발급에 실패하였습니다."),
     FAIL_SOCIAL_SIGNIN(ErrorCategory.UNAUTHORIZED, "AUTH-1005", "소셜 로그인에 실패하였습니다."),
+    FAIL_SOCIAL_UNLINK(ErrorCategory.SERVER, "AUTH-1006", "소셜 연동 해제에 실패하였습니다."),
     ;
     
     private final ErrorCategory category;
